@@ -10,9 +10,13 @@ const __dirname = dirname(__filename)
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const offlineMock = env.VITE_OFFLINE_MOCK === 'true'
+  const publicBasePath = env.VITE_PUBLIC_BASE_PATH || '/'
 
   return {
     logLevel: 'error',
+    // Use an absolute root base by default so deep links like /c/demo load /assets/* correctly.
+    // Override with VITE_PUBLIC_BASE_PATH when deploying under a subdirectory.
+    base: publicBasePath,
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
@@ -27,37 +31,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: {
       chunkSizeWarningLimit: 600,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            // Core React runtime — tiny, always cached separately
-            if (
-              id.includes('node_modules/react/') ||
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/react-router-dom/') ||
-              id.includes('node_modules/scheduler/')
-            ) return 'react-core';
-            // Supabase client
-            if (id.includes('@supabase/')) return 'supabase';
-            // Radix UI components
-            if (id.includes('@radix-ui/')) return 'radix-ui';
-            // TanStack Query
-            if (id.includes('@tanstack/')) return 'tanstack';
-            // Animation — not needed for public card
-            if (id.includes('framer-motion')) return 'framer-motion';
-            // Charts — only analytics pages
-            if (id.includes('recharts') || id.includes('d3-')) return 'charts';
-            // Heavy export tools
-            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('xlsx')) return 'export-tools';
-            // Rich text editor
-            if (id.includes('react-quill') || id.includes('quill')) return 'editor';
-            // Three.js
-            if (id.includes('node_modules/three')) return 'three';
-            // Everything else from node_modules
-            if (id.includes('node_modules')) return 'vendor';
-          }
-        }
-      }
+
     }
   }
 })
