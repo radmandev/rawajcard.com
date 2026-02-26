@@ -15,9 +15,13 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
-    checkUserAuth();
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      checkUserAuth();
+    checkUserAuth(true); // initial load — show spinner
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      // Only re-check on meaningful auth changes — NOT on every tab focus/token refresh
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        checkUserAuth(false); // silent re-check — no loading spinner
+      }
     });
 
     return () => {
@@ -26,10 +30,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const checkUserAuth = async () => {
+  const checkUserAuth = async (isInitialLoad = false) => {
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
+      // Only show loading spinner on the very first load, not on subsequent re-checks
+      if (isInitialLoad) setIsLoadingAuth(true);
       setAuthError(null);
 
       if (!isSupabaseConfigured) {
