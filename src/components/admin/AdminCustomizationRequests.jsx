@@ -19,7 +19,7 @@ export default function AdminCustomizationRequests() {
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['customization-requests'],
-    queryFn: () => api.entities.CustomizationRequest.list('-created_date')
+    queryFn: () => api.entities.CustomizationRequest.list('-created_at')
   });
 
   const { data: subscriptions = [] } = useQuery({
@@ -115,16 +115,16 @@ export default function AdminCustomizationRequests() {
                   <div className="space-y-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5 text-teal-600" />
-                      {request.customer_name || request.customer_email}
-                      {getPlanBadge(request.customer_email) && (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${getPlanBadge(request.customer_email).color}`}>
-                          {getPlanBadge(request.customer_email).label}
+                      {request.details?.customer_name || request.created_by}
+                      {getPlanBadge(request.details?.customer_email || request.created_by) && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${getPlanBadge(request.details?.customer_email || request.created_by).color}`}>
+                          {getPlanBadge(request.details?.customer_email || request.created_by).label}
                         </span>
                       )}
                     </CardTitle>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className="bg-slate-50">
-                        {pageNames[request.page]}
+                        {pageNames[request.details?.page] || request.details?.page}
                       </Badge>
                       <Badge className={statusColors[request.status]}>
                         {request.status}
@@ -133,7 +133,7 @@ export default function AdminCustomizationRequests() {
                   </div>
                   <div className="text-sm text-slate-500 flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {new Date(request.created_date).toLocaleDateString()}
+                    {new Date(request.created_at).toLocaleDateString()}
                   </div>
                 </div>
               </CardHeader>
@@ -144,7 +144,7 @@ export default function AdminCustomizationRequests() {
                     {isRTL ? 'التفاصيل:' : 'Request Details:'}
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                    {request.request_content}
+                    {request.details?.request_content || '—'}
                   </p>
                 </div>
 

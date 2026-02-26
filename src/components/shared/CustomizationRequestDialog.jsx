@@ -21,18 +21,25 @@ export default function CustomizationRequestDialog({ open, onOpenChange, page, p
   const submitRequestMutation = useMutation({
     mutationFn: async () => {
       await api.entities.CustomizationRequest.create({
-        customer_email: user.email,
-        customer_name: user.full_name,
-        page,
-        request_content: requestContent,
-        status: 'pending'
+        created_by: user?.email,
+        created_by_user_id: user?.id,
+        status: 'pending',
+        details: {
+          customer_name: user?.full_name || '',
+          customer_email: user?.email || '',
+          page,
+          request_content: requestContent,
+        },
       });
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم إرسال طلبك بنجاح!' : 'Request submitted successfully!');
       setRequestContent('');
       onOpenChange(false);
-    }
+    },
+    onError: (e) => {
+      toast.error(e.message || (isRTL ? 'حدث خطأ أثناء الإرسال' : 'Failed to submit request'));
+    },
   });
 
   const handleSubmit = (e) => {

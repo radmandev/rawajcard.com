@@ -212,13 +212,16 @@ export default function CRMSettings() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
             {isRTL ? 'إعدادات CRM' : 'CRM Settings'}
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+              ⏳ {isRTL ? 'قريباً' : 'Coming Soon'}
+            </span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
             {isRTL 
-              ? 'قم بربط CRM الخاص بك لمزامنة جهات الاتصال تلقائيًا'
-              : 'Connect your CRM to automatically sync contacts'
+              ? 'سيتوفر ربط CRM ومزامنة جهات الاتصال تلقائياً قريباً'
+              : 'CRM integration and automatic contact sync coming soon'
             }
           </p>
         </div>
@@ -241,17 +244,14 @@ export default function CRMSettings() {
           {crmProviders.map((provider) => (
             <Card 
               key={provider.id}
-              className="hover:shadow-lg transition-all cursor-pointer group"
-              onClick={() => handleConnectCRM(provider)}
+              className="transition-all opacity-80 cursor-default"
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="text-4xl mb-2">{provider.icon}</div>
-                  {provider.oauth && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      OAuth
-                    </Badge>
-                  )}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                    {isRTL ? 'قريباً' : 'Soon'}
+                  </span>
                 </div>
                 <CardTitle className="text-lg">{provider.name}</CardTitle>
                 <CardDescription className="text-sm">
@@ -259,9 +259,9 @@ export default function CRMSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full group-hover:bg-teal-600 transition-colors">
-                  <Zap className="h-4 w-4 mr-2" />
-                  {isRTL ? 'ربط' : 'Connect'}
+                <Button className="w-full" variant="outline" disabled>
+                  <Zap className="h-4 w-4 mr-2 opacity-50" />
+                  {isRTL ? 'قريباً...' : 'Coming Soon...'}
                 </Button>
               </CardContent>
             </Card>
