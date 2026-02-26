@@ -1,15 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 
 const pricingPlans = [
   {
-    name: "Starter",
-    nameAr: "البداية",
-    price: "Free",
-    priceAr: "مجاني",
+    name: "Free",
+    nameAr: "مجاني",
+    price: "SAR 0",
+    priceAr: "0 ريال",
+    pricePeriod: "/month",
+    pricePeriodAr: "/شهر",
     description: "Perfect for getting started",
     descriptionAr: "مثالي للبدء",
     features: [
@@ -28,72 +32,73 @@ const pricingPlans = [
     ],
     cta: "Get Started",
     ctaAr: "ابدأ الآن",
+    planKey: 'free',
     popular: false
   },
   {
-    name: "Professional",
-    nameAr: "احترافي",
-    price: "99",
-    priceAr: "99",
+    name: "Premium",
+    nameAr: "بريميوم",
+    price: "SAR 19",
+    priceAr: "19 ريال",
     pricePeriod: "/month",
     pricePeriodAr: "/شهر",
     description: "For growing professionals",
     descriptionAr: "للمحترفين المتنامين",
     features: [
-      "5 Digital Cards",
-      "Premium Templates",
-      "Advanced QR Codes",
-      "Full Analytics",
+      "Unlimited Cards",
+      "All Templates",
+      "Advanced Analytics",
       "Lead Capture",
-      "Team Members (3)",
+      "Custom Branding",
       "Priority Support",
-      "Custom Domain"
+      "Export Data"
     ],
     featuresAr: [
-      "5 بطاقات رقمية",
-      "قوالب متقدمة",
-      "رموز QR متقدمة",
-      "تحليلات كاملة",
+      "بطاقات غير محدودة",
+      "جميع القوالب",
+      "تحليلات متقدمة",
       "التقاط المتابعة",
-      "أعضاء الفريق (3)",
+      "علامة تجارية مخصصة",
       "دعم أولوي",
-      "نطاق مخصص"
+      "تصدير البيانات"
     ],
-    cta: "Start Free Trial",
-    ctaAr: "ابدأ تجربة مجانية",
+    cta: "Upgrade to Premium",
+    ctaAr: "الترقية إلى بريميوم",
+    planKey: 'premium',
     popular: true
   },
   {
     name: "Enterprise",
     nameAr: "مؤسسي",
-    price: "Custom",
-    priceAr: "مخصص",
-    description: "For large teams",
-    descriptionAr: "للفرق الكبيرة",
+    price: "SAR 99",
+    priceAr: "99 ريال",
+    pricePeriod: "/month",
+    pricePeriodAr: "/شهر",
+    description: "For large teams & organizations",
+    descriptionAr: "للفرق والمؤسسات الكبيرة",
     features: [
-      "Unlimited Cards",
-      "All Templates",
-      "Custom Branding",
-      "Advanced Analytics",
-      "CRM Integration",
+      "Up to 30 Digital Cards",
+      "Everything in Premium",
       "Unlimited Team Members",
-      "Dedicated Support",
+      "CRM Integration",
       "API Access",
-      "Custom Integrations"
+      "Dedicated Support",
+      "Custom Integrations",
+      "SLA Agreement"
     ],
     featuresAr: [
-      "بطاقات غير محدودة",
-      "جميع القوالب",
-      "علامة تجارية مخصصة",
-      "تحليلات متقدمة",
-      "تكامل CRM",
+      "حتى 30 بطاقة رقمية",
+      "كل شيء في بريميوم",
       "أعضاء فريق غير محدودين",
-      "دعم مخصص",
+      "تكامل CRM",
       "وصول API",
-      "تكاملات مخصصة"
+      "دعم مخصص",
+      "تكاملات مخصصة",
+      "اتفاقية مستوى الخدمة"
     ],
-    cta: "Contact Sales",
-    ctaAr: "اتصل بالمبيعات",
+    cta: "Upgrade to Enterprise",
+    ctaAr: "الترقية إلى المؤسسي",
+    planKey: 'enterprise',
     popular: false
   }
 ];
@@ -128,6 +133,7 @@ const faqs = [
 export default function Pricing() {
   const [language, setLanguage] = React.useState('en');
   const [expandedFaq, setExpandedFaq] = React.useState(null);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const handleDirChange = () => {
@@ -198,9 +204,12 @@ export default function Pricing() {
                 </div>
 
                 <Button
+                  onClick={() => navigate(createPageUrl('Upgrade'))}
                   className={`w-full mb-8 rounded-lg py-2 font-semibold ${
                     plan.popular
                       ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                      : plan.planKey === 'enterprise'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
                       : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white'
                   }`}
                 >
