@@ -373,19 +373,86 @@ export const api = {
   integrations: {
     Core: {
       /**
+       * Compress + convert an image to JPEG via canvas.
+       * Handles HEIC/HEIF (iOS), empty MIME types (Android), and oversized files.
+       * Falls back to original file if anything goes wrong.
+       */
+      _compressImage: (file, maxPx = 1400, quality = 0.85) => {
+        return new Promise((resolve) => {
+          const mimeType = file.type || '';
+          // Skip non-images and SVGs (can't canvas-draw SVG reliably)
+          if (mimeType === 'image/svg+xml') { resolve(file); return; }
+          // For any image/* type (including heic/heif) or empty type, attempt canvas conversion
+          if (mimeType && !mimeType.startsWith('image/')) { resolve(file); return; }
+
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const img = new Image();
+            img.onload = () => {
+              let { width, height } = img;
+              if (width > maxPx || height > maxPx) {
+                if (width >= height) {
+                  height = Math.round((height * maxPx) / width);
+                  width = maxPx;
+                } else {
+                  width = Math.round((width * maxPx) / height);
+                  height = maxPx;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              // White background (handles PNG transparency → JPEG)
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+              canvas.toBlob(
+                (blob) => {
+                  if (blob) {
+                    resolve(new File([blob], 'image.jpg', { type: 'image/jpeg' }));
+                  } else {
+                    resolve(file);
+                  }
+                },
+                'image/jpeg',
+                quality
+              );
+            };
+            img.onerror = () => resolve(file);
+            img.src = evt.target.result;
+          };
+          reader.onerror = () => resolve(file);
+          reader.readAsDataURL(file);
+        });
+      },
+
+      /**
        * Upload a file to Supabase Storage
        */
       UploadFile: async ({ file }) => {
         if (!file) return { file_url: null };
 
-        const bucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'public';
-        // Sanitize filename: replace spaces and special chars
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const path = `uploads/${Date.now()}_${sanitizedName}`;
+        // Compress + convert to JPEG (fixes HEIC, empty MIME type, large files)
+        let uploadFile = file;
+        try {
+          uploadFile = await api.integrations.Core._compressImage(file);
+        } catch {
+          // If compression fails for any reason, fall back to original
+          uploadFile = file;
+        }
 
-        const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+        const bucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'public';
+        // Always use a safe UUID-based path to avoid filename issues
+        const ext = uploadFile.type === 'image/jpeg' ? 'jpg'
+          : uploadFile.type === 'image/png' ? 'png'
+          : uploadFile.type === 'image/webp' ? 'webp'
+          : 'jpg';
+        const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const { data, error } = await supabase.storage.from(bucket).upload(path, uploadFile, {
           upsert: true,
-          contentType: file.type,
+          contentType: uploadFile.type || 'image/jpeg',
         });
 
         if (error) {
