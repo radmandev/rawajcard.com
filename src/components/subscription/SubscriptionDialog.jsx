@@ -68,9 +68,12 @@ const PLANS = [
     icon: Building2,
     name_en: 'Enterprise',
     name_ar: 'مؤسسي',
-    price_en: 'Custom',
-    price_ar: 'مخصص',
+    price_en: 'SAR 99',
+    price_ar: '99 ريال',
+    period_en: '/month',
+    period_ar: '/شهر',
     features_en: [
+      'Up to 30 Digital Cards',
       'Everything in Premium',
       'Unlimited Team Members',
       'CRM Integration',
@@ -80,6 +83,7 @@ const PLANS = [
       'SLA Agreement',
     ],
     features_ar: [
+      'حتى 30 بطاقة رقمية',
       'كل شيء في بريميوم',
       'أعضاء فريق غير محدودين',
       'تكامل CRM',
@@ -109,12 +113,7 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
   const handleUpgrade = async (planKey) => {
     if (planKey === 'free') return;
 
-    if (planKey === 'enterprise') {
-      window.open('mailto:sales@rawajcard.com?subject=Enterprise%20Plan%20Inquiry', '_blank');
-      return;
-    }
-
-    // Premium → Stripe checkout
+    // Both premium and enterprise use Stripe checkout
     setLoadingPlan(planKey);
     try {
       const result = await api.functions.invoke('createStripeCheckout', { plan: planKey });
@@ -237,12 +236,21 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                   </Button>
                 ) : plan.key === 'enterprise' ? (
                   <Button
-                    variant="outline"
-                    className="w-full border-purple-400 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                    className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 bg-transparent border"
                     onClick={() => handleUpgrade('enterprise')}
+                    disabled={loadingPlan === 'enterprise'}
                   >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    {isRTL ? 'تواصل معنا' : 'Contact Sales'}
+                    {loadingPlan === 'enterprise' ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        <Building2 className="h-4 w-4 mr-2" />
+                        {isRTL ? 'الترقية إلى مؤسسي' : 'Upgrade to Enterprise'}
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button

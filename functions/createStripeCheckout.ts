@@ -15,6 +15,7 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     const stripePremiumPriceId = Deno.env.get('STRIPE_PREMIUM_PRICE_ID');
+    const stripeEnterprisePriceId = Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID');
 
     if (!stripeSecretKey) {
       return Response.json(
@@ -43,13 +44,15 @@ Deno.serve(async (req: Request) => {
     let priceId: string | undefined;
     if (plan === 'premium') {
       priceId = stripePremiumPriceId;
+    } else if (plan === 'enterprise') {
+      priceId = stripeEnterprisePriceId;
     } else {
-      return Response.json({ error: 'Invalid plan. Only "premium" is supported.' }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: 'Invalid plan.' }, { status: 400, headers: corsHeaders });
     }
 
     if (!priceId) {
       return Response.json(
-        { error: 'Stripe price ID not configured. Set STRIPE_PREMIUM_PRICE_ID.' },
+        { error: `Stripe price ID not configured for plan: ${plan}.` },
         { status: 500, headers: corsHeaders }
       );
     }
