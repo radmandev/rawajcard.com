@@ -10,12 +10,13 @@ const __dirname = dirname(__filename)
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const offlineMock = env.VITE_OFFLINE_MOCK === 'true'
+  const publicBasePath = env.VITE_PUBLIC_BASE_PATH || '/'
 
   return {
     logLevel: 'error',
-    // Use relative asset paths so deployments from subfolders (common on shared hosting)
-    // do not request scripts/styles from domain root.
-    base: './',
+    // Use an absolute root base by default so deep links like /c/demo load /assets/* correctly.
+    // Override with VITE_PUBLIC_BASE_PATH when deploying under a subdirectory.
+    base: publicBasePath,
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
