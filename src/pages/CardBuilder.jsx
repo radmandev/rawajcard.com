@@ -257,6 +257,29 @@ export default function CardBuilder() {
     }
   };
 
+  const handleSaveDraftAndNavigateToPricing = async () => {
+    try {
+      const draftData = { ...card, status: 'draft' };
+      const { id, created_at, updated_at, created_by_user_id, user_id: _uid, ...cleanData } = draftData;
+      if (currentUser?.email) cleanData.created_by = currentUser.email;
+      let saved;
+      if (card.id) {
+        const { user_id: _drop, ...updateData } = cleanData;
+        saved = await api.entities.BusinessCard.update(card.id, updateData);
+      } else {
+        if (currentUser?.id) cleanData.user_id = currentUser.id;
+        saved = await api.entities.BusinessCard.create(cleanData);
+      }
+      setCard(saved);
+      queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+      toast.success(isRTL ? 'تم حفظ المسودة' : 'Draft saved!');
+    } catch (err) {
+      console.error('Save draft failed:', err);
+      toast.error(isRTL ? 'تعذّر حفظ المسودة' : 'Could not save draft');
+    }
+    navigate(createPageUrl('Pricing'));
+  };
+
   const handlePublish = async () => {
     // Check limit before publishing new card
     if (!card.id && !canCreateNewCard()) {
@@ -382,7 +405,7 @@ export default function CardBuilder() {
                     <CardTitle>{t('customize')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <SimpleForm card={card} onChange={setCard} />
+                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndNavigateToPricing} />
                   </CardContent>
                 </Card>
               </motion.div>

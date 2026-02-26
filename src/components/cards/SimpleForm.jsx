@@ -56,7 +56,7 @@ const Section = ({ id, icon: Icon, title, children, isExpanded, onToggle }) => {
   );
 };
 
-export default function SimpleForm({ card, onChange }) {
+export default function SimpleForm({ card, onChange, onSaveDraft }) {
   const { t, isRTL } = useLanguage();
   const [expandedSections, setExpandedSections] = useState(['personal']);
   const [subscription, setSubscription] = React.useState(null);
@@ -693,7 +693,7 @@ export default function SimpleForm({ card, onChange }) {
                 }
               </p>
               <Button
-                onClick={() => window.location.href = '/Pricing'}
+                onClick={onSaveDraft}
                 className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
               >
                 {isRTL ? 'ترقية الآن' : 'Upgrade Now'}
@@ -887,7 +887,7 @@ export default function SimpleForm({ card, onChange }) {
                 }
               </p>
               <Button
-                onClick={() => window.location.href = '/Pricing'}
+                onClick={onSaveDraft}
                 className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
               >
                 {isRTL ? 'ترقية الآن' : 'Upgrade Now'}
@@ -1001,7 +1001,7 @@ export default function SimpleForm({ card, onChange }) {
                 }
               </p>
               <Button
-                onClick={() => window.location.href = '/Pricing'}
+                onClick={onSaveDraft}
                 className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
               >
                 {isRTL ? 'ترقية الآن' : 'Upgrade Now'}
