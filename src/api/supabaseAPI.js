@@ -271,28 +271,23 @@ export const api = {
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      // Refresh the session — gets a guaranteed fresh access token from Supabase server
-      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      // Use the local cached session — no network call, no refresh loop
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
 
-      if (refreshError || !refreshed?.session?.access_token) {
-        // Refresh failed = session truly expired or revoked
-        // Sign out and send to login so they get a fresh session
-        await supabase.auth.signOut();
-        window.location.href = '/';
-        throw new Error('Session expired — please log in again.');
+      if (!token) {
+        throw new Error('Not authenticated — please log in.');
       }
 
-      const token = refreshed.session.access_token;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // Call function with only Authorization header (no apikey — that's for anon access only)
       const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'apikey': supabaseAnonKey, // Required by Supabase gateway even with user JWT
+          'apikey': supabaseAnonKey,
         },
         body: JSON.stringify(payload),
       });
@@ -306,16 +301,9 @@ export const api = {
 
       if (!res.ok) {
         const msg = data?.message || data?.error || `HTTP ${res.status}`;
-        // If still invalid JWT after fresh token, force re-login
-        if (res.status === 401) {
-          await supabase.auth.signOut();
-          window.location.href = '/';
-          throw new Error('Session invalid — please log in again.');
-        }
         throw new Error(msg);
       }
 
-      // Our functions return { error: '...' } with 200 for logical errors
       if (data?.error) {
         throw new Error(data.error);
       }

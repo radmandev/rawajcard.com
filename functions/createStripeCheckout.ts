@@ -1,4 +1,4 @@
-// Zero imports — uses raw fetch only, guaranteed to start
+// No imports — zero startup failures
 Deno.serve(async (req: Request) => {
   const cors = {
     'Access-Control-Allow-Origin': '*',
@@ -6,11 +6,9 @@ Deno.serve(async (req: Request) => {
     'Content-Type': 'application/json',
   };
 
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: cors });
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
-  // Always 200 so the JS client never throws before we can read the error
+  // Always HTTP 200 — errors go in { error }
   const ok = (data: unknown) =>
     new Response(JSON.stringify(data), { status: 200, headers: cors });
 
@@ -18,33 +16,35 @@ Deno.serve(async (req: Request) => {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     const premiumPrice = Deno.env.get('STRIPE_PREMIUM_PRICE_ID');
     const enterprisePrice = Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
-    if (!stripeKey)      return ok({ error: 'STRIPE_SECRET_KEY is not set in Supabase secrets.' });
-    if (!premiumPrice)   return ok({ error: 'STRIPE_PREMIUM_PRICE_ID is not set in Supabase secrets.' });
+    if (!stripeKey)       return ok({ error: 'STRIPE_SECRET_KEY is not set in Supabase secrets.' });
+    if (!premiumPrice)    return ok({ error: 'STRIPE_PREMIUM_PRICE_ID is not set in Supabase secrets.' });
     if (!enterprisePrice) return ok({ error: 'STRIPE_ENTERPRISE_PRICE_ID is not set in Supabase secrets.' });
 
-    // Validate the user token via Supabase Auth REST API — no SDK import needed
+    // Decode JWT — gateway already verified it, we just need user info
     const authHeader = req.headers.get('Authorization') ?? '';
-    if (!authHeader) return ok({ error: 'Not authenticated — please log in.' });
-
-    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        Authorization: authHeader,
-        apikey: supabaseAnonKey ?? '',
-      },
-    });
-
-    if (!userRes.ok) {
-      const body = await userRes.text();
-      return ok({ error: `Auth failed (${userRes.status}): ${body}` });
+    if (!authHeader.startsWith('Bearer ')) {
+      return ok({ error: 'Missing Authorization header. Please log in.' });
     }
 
-    const user = await userRes.json() as any;
-    if (!user?.id) return ok({ error: 'Could not retrieve user. Please log in again.' });
+    const jwt = authHeader.replace('Bearer ', '');
+    let userId: string;
+    let userEmail: string;
 
-    // Parse plan
+    try {
+      const parts = jwt.split('.');
+      if (parts.length !== 3) throw new Error('malformed');
+      // Pad base64 if needed
+      const pad = (s: string) => s + '='.repeat((4 - s.length % 4) % 4);
+      const payload = JSON.parse(atob(pad(parts[1].replace(/-/g, '+').replace(/_/g, '/'))));
+      userId = payload.sub;
+      userEmail = payload.email ?? '';
+      if (!userId) throw new Error('no sub');
+    } catch (e) {
+      return ok({ error: `Could not decode token: ${e.message}. Please log out and log in again.` });
+    }
+
+    // Parse plan from body
     let plan: string;
     try {
       const body = await req.json();
@@ -53,8 +53,11 @@ Deno.serve(async (req: Request) => {
       return ok({ error: 'Invalid JSON body.' });
     }
 
-    const priceId = plan === 'premium' ? premiumPrice : plan === 'enterprise' ? enterprisePrice : null;
-    if (!priceId) return ok({ error: `Unknown plan "${plan}". Must be "premium" or "enterprise".` });
+    const priceId = plan === 'premium' ? premiumPrice
+                  : plan === 'enterprise' ? enterprisePrice
+                  : null;
+
+    if (!priceId) return ok({ error: `Invalid plan "${plan}". Must be "premium" or "enterprise".` });
 
     const origin = req.headers.get('origin') || 'https://my.rawajcard.com';
 
@@ -64,9 +67,9 @@ Deno.serve(async (req: Request) => {
     params.set('line_items[0][quantity]', '1');
     params.set('success_url', `${origin}/CheckoutSuccess?stripe_subscription=true&plan=${plan}&session_id={CHECKOUT_SESSION_ID}`);
     params.set('cancel_url', `${origin}/Upgrade`);
-    params.set('customer_email', user.email ?? '');
-    params.set('metadata[user_id]', user.id);
-    params.set('metadata[user_email]', user.email ?? '');
+    if (userEmail) params.set('customer_email', userEmail);
+    params.set('metadata[user_id]', userId);
+    params.set('metadata[user_email]', userEmail);
     params.set('metadata[plan]', plan);
     params.set('allow_promotion_codes', 'true');
 
@@ -85,9 +88,7 @@ Deno.serve(async (req: Request) => {
       return ok({ error: `Stripe error: ${session?.error?.message ?? JSON.stringify(session)}` });
     }
 
-    if (!session?.url) {
-      return ok({ error: 'Stripe returned no checkout URL.' });
-    }
+    if (!session?.url) return ok({ error: 'Stripe did not return a checkout URL.' });
 
     return ok({ url: session.url });
 
