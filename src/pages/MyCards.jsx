@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
+import { useAuth } from '@/lib/AuthContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ import { toast } from 'sonner';
 
 export default function MyCards() {
   const { t, isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [deleteDialog, setDeleteDialog] = useState(null);
   const [qrDialog, setQrDialog] = useState(null);
@@ -76,7 +78,7 @@ export default function MyCards() {
         (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );
     },
-    initialData: [],
+    enabled: isAuthenticated,
     staleTime: 0
   });
 
@@ -106,9 +108,11 @@ export default function MyCards() {
             {t('myCards')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            {isRTL 
-              ? `لديك ${cards.length} بطاقة`
-              : `You have ${cards.length} card${cards.length !== 1 ? 's' : ''}`
+            {isLoading 
+              ? (isRTL ? 'جاري التحميل...' : 'Loading...')
+              : isRTL 
+                ? `لديك ${cards.length} بطاقة`
+                : `You have ${cards.length} card${cards.length !== 1 ? 's' : ''}`
             }
           </p>
         </div>

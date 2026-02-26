@@ -58,7 +58,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Home', '/Pricing', '/Products', '/Store'
+    '/', '/login', '/Pricing', '/Products', '/Store'
   ].includes(location.pathname) || location.pathname.startsWith('/c/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
@@ -106,11 +106,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/c/:slug" element={<PublicCard />} />
-        <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
-        } />
+        <Route path="/" element={<Login />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}
