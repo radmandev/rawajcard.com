@@ -111,28 +111,37 @@ export default function ClientDetails() {
 
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data) => {
+      const isSchemaError = (e) =>
+        e.message?.includes('schema cache') ||
+        e.message?.includes('column') ||
+        e.message?.includes('Could not find');
+
       if (subscription) {
-        try {
-          return await api.entities.Subscription.update(subscription.id, data);
-        } catch (e) {
-          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
-            const { card_limit, ...rest } = data;
-            return await api.entities.Subscription.update(subscription.id, rest);
-          }
-          throw e;
+        const attempts = [
+          data,
+          (({ card_limit, ...r }) => r)(data),
+          { plan: data.plan, status: data.status },
+        ];
+        let lastErr;
+        for (const payload of attempts) {
+          try { return await api.entities.Subscription.update(subscription.id, payload); }
+          catch (e) { lastErr = e; if (!isSchemaError(e)) throw e; }
         }
+        throw lastErr;
       } else {
-        const payload = { ...data };
-        if (user?.id) payload.created_by_user_id = user.id;
-        try {
-          return await api.entities.Subscription.create(payload);
-        } catch (e) {
-          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
-            const { card_limit, created_by, ...rest } = payload;
-            return await api.entities.Subscription.create(rest);
-          }
-          throw e;
+        const base = { plan: data.plan, status: data.status, metadata: { user_email: user?.email, user_id: user?.id } };
+        const attempts = [
+          { ...base, created_by_user_id: user?.id, created_by: user?.email, card_limit: data.card_limit },
+          { ...base, created_by_user_id: user?.id, card_limit: data.card_limit },
+          { ...base, card_limit: data.card_limit },
+          base,
+        ];
+        let lastErr;
+        for (const payload of attempts) {
+          try { return await api.entities.Subscription.create(payload); }
+          catch (e) { lastErr = e; if (!isSchemaError(e)) throw e; }
         }
+        throw lastErr;
       }
     },
     onSuccess: () => {

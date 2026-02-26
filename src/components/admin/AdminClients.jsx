@@ -79,12 +79,19 @@ export default function AdminClients() {
 
   const subscriptionMap = useMemo(() => {
     const map = {};
-    // Index by email (created_by) for direct lookup
-    subscriptions.forEach(s => { if (s.created_by) map[s.created_by] = s; });
-    // Also index by user UUID so we can fall back if created_by is missing
     const uuidMap = {};
-    subscriptions.forEach(s => { if (s.created_by_user_id) uuidMap[s.created_by_user_id] = s; });
-    // Merge: for every profile with no email match, try UUID match
+
+    subscriptions.forEach(s => {
+      // Primary: created_by email column (if it exists)
+      if (s.created_by)            map[s.created_by] = s;
+      // Fallback: metadata.user_email (set by admin mutation)
+      if (s.metadata?.user_email)  map[s.metadata.user_email] = s;
+      // UUID lookups
+      if (s.created_by_user_id)    uuidMap[s.created_by_user_id] = s;
+      if (s.metadata?.user_id)     uuidMap[s.metadata.user_id] = s;
+    });
+
+    // For profiles not matched by email, try UUID
     users.forEach(u => {
       if (!map[u.email] && u.id && uuidMap[u.id]) {
         map[u.email] = uuidMap[u.id];
@@ -135,31 +142,49 @@ export default function AdminClients() {
         return;
       }
 
-      // Build payload using only UUID — avoids "created_by column missing" error
-      // on databases where the migration hasn't been applied yet
-      const buildPayload = (includeCardLimit) => {
-        const p = { plan, status: 'active' };
-        if (userUuid) p.created_by_user_id = userUuid;
-        if (includeCardLimit) p.card_limit = LIMITS[plan] ?? 2;
-        return p;
-      };
+      // Always store user identity in metadata (guaranteed to exist)
+      const metadata = { user_email: userEmail, user_id: userUuid };
 
-      const trySave = async (saveFn) => {
-        try {
-          await saveFn(buildPayload(true));
-        } catch (e) {
-          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
-            await saveFn(buildPayload(false));
-          } else throw e;
+      // Progressive payloads — strip columns that don't exist until one succeeds
+      const isSchemaError = (e) =>
+        e.message?.includes('schema cache') ||
+        e.message?.includes('column') ||
+        e.message?.includes('Could not find');
+
+      const tryWithFallbacks = async (saveFn) => {
+        const attempts = [
+          { plan, status: 'active', metadata, created_by: userEmail, created_by_user_id: userUuid, card_limit: LIMITS[plan] ?? 2 },
+          { plan, status: 'active', metadata, created_by_user_id: userUuid, card_limit: LIMITS[plan] ?? 2 },
+          { plan, status: 'active', metadata, created_by: userEmail, card_limit: LIMITS[plan] ?? 2 },
+          { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
+          { plan, status: 'active', metadata },
+        ];
+        let lastError;
+        for (const payload of attempts) {
+          try { return await saveFn(payload); } catch (e) {
+            lastError = e;
+            if (!isSchemaError(e)) throw e; // non-schema error — stop retrying
+          }
         }
+        throw lastError;
       };
 
       if (existingSub) {
-        await trySave((payload) =>
-          api.entities.Subscription.update(existingSub.id, payload)
-        );
+        // For updates, don't re-send created_by* columns
+        const updateAttempts = [
+          { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
+          { plan, status: 'active', metadata },
+        ];
+        let lastError;
+        for (const payload of updateAttempts) {
+          try { return await api.entities.Subscription.update(existingSub.id, payload); } catch (e) {
+            lastError = e;
+            if (!isSchemaError(e)) throw e;
+          }
+        }
+        throw lastError;
       } else {
-        await trySave((payload) =>
+        return await tryWithFallbacks((payload) =>
           api.entities.Subscription.create(payload)
         );
       }
