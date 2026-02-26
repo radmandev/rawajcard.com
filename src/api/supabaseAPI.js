@@ -268,12 +268,30 @@ export const api = {
   functions: {
     /**
      * Invoke a Supabase Edge Function
+     * Properly surfaces the JSON error body from FunctionsHttpError
      */
     invoke: async (name, payload = {}) => {
       const { data, error } = await supabase.functions.invoke(name, {
         body: payload
       });
-      if (error) throw error;
+
+      if (error) {
+        // Try to extract the real error message from the edge function's JSON response
+        let message = error.message || `Edge function '${name}' failed`;
+        try {
+          const body = await error.context?.json?.();
+          if (body?.error) message = body.error;
+        } catch (_) {}
+        console.error(`[functions.invoke] ${name}:`, message);
+        throw new Error(message);
+      }
+
+      // Some edge functions return { error: '...' } with a 200 status
+      if (data?.error) {
+        console.error(`[functions.invoke] ${name}:`, data.error);
+        throw new Error(data.error);
+      }
+
       return data;
     }
   },

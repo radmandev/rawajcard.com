@@ -125,7 +125,19 @@ export default function Upgrade() {
       }
     } catch (err) {
       console.error('Stripe checkout error:', err);
-      toast.error(isRTL ? 'حدث خطأ في الدفع، حاول مرة أخرى' : 'Payment error, please try again');
+      const msg = err?.message || '';
+      // Show the real server error if available, otherwise a helpful hint
+      let display = isRTL ? 'حدث خطأ في الدفع، حاول مرة أخرى' : 'Payment error, please try again';
+      if (msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('stripe')) {
+        display = isRTL ? 'Stripe غير مهيأ على الخادم — تحقق من الإعدادات' : `Server error: ${msg}`;
+      } else if (msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('401')) {
+        display = isRTL ? 'يجب تسجيل الدخول أولاً' : 'Please log in and try again';
+      } else if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('404')) {
+        display = isRTL ? 'وظيفة الدفع غير موجودة — يجب نشرها على Supabase' : 'Payment function not deployed — deploy it on Supabase first';
+      } else if (msg) {
+        display = msg;
+      }
+      toast.error(display, { duration: 6000 });
       setLoadingPlan(null);
     }
   };
