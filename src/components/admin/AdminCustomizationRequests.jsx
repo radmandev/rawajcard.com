@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, User, Calendar, MessageSquare, Loader2 } from 'lucide-react';
+import { Sparkles, User, Calendar, MessageSquare, Loader2, Crown, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminCustomizationRequests() {
@@ -21,6 +21,24 @@ export default function AdminCustomizationRequests() {
     queryKey: ['customization-requests'],
     queryFn: () => api.entities.CustomizationRequest.list('-created_date')
   });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['admin-subscriptions'],
+    queryFn: () => api.entities.Subscription.list()
+  });
+
+  const subscriptionMap = React.useMemo(() => {
+    const map = {};
+    subscriptions.forEach(sub => { if (sub.created_by) map[sub.created_by] = sub; });
+    return map;
+  }, [subscriptions]);
+
+  const getPlanBadge = (email) => {
+    const plan = subscriptionMap[email]?.plan || 'free';
+    if (plan === 'premium') return { label: isRTL ? 'بريميوم' : 'Premium', color: 'bg-teal-100 text-teal-700 border-teal-200' };
+    if (plan === 'enterprise') return { label: isRTL ? 'مؤسسي' : 'Enterprise', color: 'bg-purple-100 text-purple-700 border-purple-200' };
+    return null;
+  };
 
   const updateRequestMutation = useMutation({
     mutationFn: async ({ id, updates }) => {
@@ -98,6 +116,11 @@ export default function AdminCustomizationRequests() {
                     <CardTitle className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5 text-teal-600" />
                       {request.customer_name || request.customer_email}
+                      {getPlanBadge(request.customer_email) && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${getPlanBadge(request.customer_email).color}`}>
+                          {getPlanBadge(request.customer_email).label}
+                        </span>
+                      )}
                     </CardTitle>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className="bg-slate-50">

@@ -28,6 +28,7 @@ export default function CardForm({ card, onChange }) {
   const [uploadingField, setUploadingField] = useState(null);
 
   const profileImageRef = useRef(null);
+  const profileCameraRef = useRef(null);
   const coverImageRef = useRef(null);
 
   const handleChange = (field, value) => {

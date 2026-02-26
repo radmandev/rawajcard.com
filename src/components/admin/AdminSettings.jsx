@@ -7,9 +7,27 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { api } from '@/api/supabaseAPI';
+import { useQuery } from '@tanstack/react-query';
+import { Users, Sparkles, Crown, TrendingUp, CreditCard } from 'lucide-react';
 
 export default function AdminSettings() {
   const { isRTL } = useLanguage();
+
+  const { data: users = [] } = useQuery({ queryKey: ['admin-users'], queryFn: () => api.entities.User.list() });
+  const { data: subscriptions = [] } = useQuery({ queryKey: ['admin-subscriptions'], queryFn: () => api.entities.Subscription.list() });
+
+  const subMap = React.useMemo(() => {
+    const m = {}; subscriptions.forEach(s => { if (s.created_by) m[s.created_by] = s; }); return m;
+  }, [subscriptions]);
+
+  const subStats = React.useMemo(() => {
+    const premium = subscriptions.filter(s => s.plan === 'premium').length;
+    const enterprise = subscriptions.filter(s => s.plan === 'enterprise').length;
+    const active = subscriptions.filter(s => s.status === 'active').length;
+    return { total: users.length, premium, enterprise, active, mrr: premium * 19 + enterprise * 99 };
+  }, [users, subscriptions]);
+
   const [settings, setSettings] = useState({
     siteName: 'Rawajcard',
     siteNameAr: 'بطاقة رواج',
@@ -32,6 +50,43 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Subscription Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-teal-600" />
+            {isRTL ? 'نظرة عامة على الاشتراكات' : 'Subscription Overview'}
+          </CardTitle>
+          <CardDescription>
+            {isRTL ? 'ملخص خطط المستخدمين' : "Summary of users' subscription plans"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+              <Users className="h-6 w-6 mx-auto mb-2 text-slate-500" />
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{subStats.total}</p>
+              <p className="text-xs text-slate-500 mt-1">{isRTL ? 'إجمالي المستخدمين' : 'Total Users'}</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-teal-50 dark:bg-teal-900/20">
+              <Sparkles className="h-6 w-6 mx-auto mb-2 text-teal-600" />
+              <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">{subStats.premium}</p>
+              <p className="text-xs text-teal-600 mt-1">{isRTL ? 'بريميوم' : 'Premium'}</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+              <Crown className="h-6 w-6 mx-auto mb-2 text-purple-600" />
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{subStats.enterprise}</p>
+              <p className="text-xs text-purple-600 mt-1">{isRTL ? 'مؤسسي' : 'Enterprise'}</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+              <CreditCard className="h-6 w-6 mx-auto mb-2 text-amber-600" />
+              <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">SAR {subStats.mrr.toLocaleString()}</p>
+              <p className="text-xs text-amber-600 mt-1">{isRTL ? 'إيرادات شهرية (تقدير)' : 'Est. MRR'}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>{isRTL ? 'الإعدادات العامة' : 'General Settings'}</CardTitle>

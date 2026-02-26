@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, ExternalLink, Pencil, Trash2, Eye } from 'lucide-react';
+import { Search, ExternalLink, Pencil, Trash2, Eye, Sparkles, Crown, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import moment from 'moment';
 
@@ -21,6 +21,24 @@ export default function AdminCards() {
     queryKey: ['admin-cards'],
     queryFn: () => api.entities.BusinessCard.list('-updated_date')
   });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['admin-subscriptions'],
+    queryFn: () => api.entities.Subscription.list()
+  });
+
+  const subscriptionMap = React.useMemo(() => {
+    const map = {};
+    subscriptions.forEach(sub => { if (sub.created_by) map[sub.created_by] = sub; });
+    return map;
+  }, [subscriptions]);
+
+  const getPlanBadge = (email) => {
+    const plan = subscriptionMap[email]?.plan || 'free';
+    if (plan === 'premium') return { label: 'Premium', color: 'bg-teal-100 text-teal-700 border-teal-200' };
+    if (plan === 'enterprise') return { label: 'Enterprise', color: 'bg-purple-100 text-purple-700 border-purple-200' };
+    return null;
+  };
 
   const deleteCardMutation = useMutation({
     mutationFn: (cardId) => api.entities.BusinessCard.delete(cardId),
@@ -91,6 +109,11 @@ export default function AdminCards() {
                     </div>
                     <div>
                       <span className="text-xs">{isRTL ? 'المالك:' : 'Owner:'} {card.created_by}</span>
+                      {getPlanBadge(card.created_by) && (
+                        <span className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs border ${getPlanBadge(card.created_by).color}`}>
+                          {getPlanBadge(card.created_by).label}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-4">
                       <span>{card.view_count || 0} {isRTL ? 'مشاهدة' : 'views'}</span>

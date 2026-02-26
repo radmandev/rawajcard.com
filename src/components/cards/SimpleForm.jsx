@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { Input } from '@/components/ui/input';
@@ -60,6 +60,9 @@ export default function SimpleForm({ card, onChange, onSaveDraft }) {
   const { t, isRTL } = useLanguage();
   const [expandedSections, setExpandedSections] = useState(['personal']);
   const [subscription, setSubscription] = React.useState(null);
+  const [uploadingProfileImage, setUploadingProfileImage] = React.useState(false);
+  const profileImageRef = useRef(null);
+  const profileCameraRef = useRef(null);
 
   React.useEffect(() => {
     async function fetchSubscription() {
@@ -162,21 +165,44 @@ export default function SimpleForm({ card, onChange, onSaveDraft }) {
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'profile_image')}
-                    />
-                    <Button variant="outline" size="sm" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {isRTL ? 'رفع' : 'Upload'}
-                      </span>
-                    </Button>
-                  </label>
+                  <input
+                    ref={profileImageRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfileImageUpload}
+                  />
+                  <input
+                    ref={profileCameraRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    className="hidden"
+                    onChange={handleProfileImageUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingProfileImage}
+                    onClick={() => profileImageRef.current?.click()}
+                  >
+                    {uploadingProfileImage ? (
+                      <span className="h-4 w-4 mr-2 inline-block animate-spin border-2 border-slate-300 border-t-teal-600 rounded-full" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    {uploadingProfileImage ? (isRTL ? 'جاري...' : 'Uploading...') : (isRTL ? 'رفع' : 'Upload')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingProfileImage}
+                    onClick={() => profileCameraRef.current?.click()}
+                  >
+                    📷 {isRTL ? 'التقاط' : 'Camera'}
+                  </Button>
                 </div>
               </div>
             </div>
