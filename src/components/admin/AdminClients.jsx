@@ -127,34 +127,41 @@ export default function AdminClients() {
   const manageSubMutation = useMutation({
     mutationFn: async ({ userEmail, plan, existingSub }) => {
       const LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
-      const card_limit = LIMITS[plan] ?? 2;
-      // Find the user's UUID from the already-loaded profiles list
       const userProfile = users.find(u => u.email === userEmail);
       const userUuid = userProfile?.id;
 
       if (plan === 'free') {
         if (existingSub) await api.entities.Subscription.delete(existingSub.id);
-      } else if (existingSub) {
-        // Update: only send columns we know exist; try with card_limit first, fall back without
+        return;
+      }
+
+      // Build payload using only UUID — avoids "created_by column missing" error
+      // on databases where the migration hasn't been applied yet
+      const buildPayload = (includeCardLimit) => {
+        const p = { plan, status: 'active' };
+        if (userUuid) p.created_by_user_id = userUuid;
+        if (includeCardLimit) p.card_limit = LIMITS[plan] ?? 2;
+        return p;
+      };
+
+      const trySave = async (saveFn) => {
         try {
-          await api.entities.Subscription.update(existingSub.id, { plan, card_limit, status: 'active' });
+          await saveFn(buildPayload(true));
         } catch (e) {
-          if (e.message?.includes('card_limit')) {
-            await api.entities.Subscription.update(existingSub.id, { plan, status: 'active' });
+          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
+            await saveFn(buildPayload(false));
           } else throw e;
         }
+      };
+
+      if (existingSub) {
+        await trySave((payload) =>
+          api.entities.Subscription.update(existingSub.id, payload)
+        );
       } else {
-        // Create: include created_by (email) and created_by_user_id (uuid) and card_limit
-        const payload = { plan, status: 'active' };
-        if (userEmail) payload.created_by = userEmail;
-        if (userUuid)  payload.created_by_user_id = userUuid;
-        try {
-          await api.entities.Subscription.create({ ...payload, card_limit });
-        } catch (e) {
-          if (e.message?.includes('card_limit')) {
-            await api.entities.Subscription.create(payload);
-          } else throw e;
-        }
+        await trySave((payload) =>
+          api.entities.Subscription.create(payload)
+        );
       }
     },
     onSuccess: () => {

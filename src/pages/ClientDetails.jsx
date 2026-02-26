@@ -70,12 +70,23 @@ export default function ClientDetails() {
   });
 
   const { data: subscription } = useQuery({
-    queryKey: ['client-subscription', user?.email],
+    queryKey: ['client-subscription', user?.id || user?.email],
     queryFn: async () => {
-      const subs = await api.entities.Subscription.filter({ created_by: user.email });
-      return subs[0] || null;
+      // Try UUID first (works even if created_by column is missing)
+      if (user?.id) {
+        const subs = await api.entities.Subscription.filter({ created_by_user_id: user.id });
+        if (subs.length) return subs[0];
+      }
+      // Fall back to email if UUID lookup returned nothing
+      if (user?.email) {
+        try {
+          const subs = await api.entities.Subscription.filter({ created_by: user.email });
+          return subs[0] || null;
+        } catch { return null; }
+      }
+      return null;
     },
-    enabled: !!user?.email
+    enabled: !!user
   });
 
   const { data: orders = [] } = useQuery({
@@ -101,13 +112,31 @@ export default function ClientDetails() {
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data) => {
       if (subscription) {
-        return api.entities.Subscription.update(subscription.id, data);
+        try {
+          return await api.entities.Subscription.update(subscription.id, data);
+        } catch (e) {
+          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
+            const { card_limit, ...rest } = data;
+            return await api.entities.Subscription.update(subscription.id, rest);
+          }
+          throw e;
+        }
       } else {
-        return api.entities.Subscription.create({ ...data, created_by: user.email });
+        const payload = { ...data };
+        if (user?.id) payload.created_by_user_id = user.id;
+        try {
+          return await api.entities.Subscription.create(payload);
+        } catch (e) {
+          if (e.message?.includes('card_limit') || e.message?.includes('schema cache')) {
+            const { card_limit, created_by, ...rest } = payload;
+            return await api.entities.Subscription.create(rest);
+          }
+          throw e;
+        }
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['client-subscription', user?.email]);
+      queryClient.invalidateQueries(['client-subscription', user?.id || user?.email]);
       setShowSubscriptionDialog(false);
       toast.success(isRTL ? 'تم تحديث الاشتراك' : 'Subscription updated');
     }
