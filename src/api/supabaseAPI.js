@@ -276,19 +276,39 @@ export const api = {
       });
 
       if (error) {
-        // Try to extract the real error message from the edge function's JSON response
         let message = error.message || `Edge function '${name}' failed`;
+
+        // context can be a Response object OR a string depending on client version
         try {
-          const body = await error.context?.json?.();
-          if (body?.error) message = body.error;
+          const ctx = error.context;
+          if (ctx) {
+            if (typeof ctx === 'string') {
+              // context is already the raw body text
+              const parsed = JSON.parse(ctx);
+              if (parsed?.error) message = parsed.error;
+              else if (typeof parsed === 'string') message = parsed;
+            } else if (typeof ctx.text === 'function') {
+              // context is a Response object — read the body
+              const text = await ctx.text();
+              if (text) {
+                try {
+                  const parsed = JSON.parse(text);
+                  if (parsed?.error) message = parsed.error;
+                } catch {
+                  message = text; // plain text error
+                }
+              }
+            }
+          }
         } catch (_) {}
-        console.error(`[functions.invoke] ${name}:`, message);
+
+        console.error(`[functions.invoke] ${name} error:`, message);
         throw new Error(message);
       }
 
       // Some edge functions return { error: '...' } with a 200 status
       if (data?.error) {
-        console.error(`[functions.invoke] ${name}:`, data.error);
+        console.error(`[functions.invoke] ${name} returned error:`, data.error);
         throw new Error(data.error);
       }
 
