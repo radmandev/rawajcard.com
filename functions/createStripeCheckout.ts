@@ -1,87 +1,79 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Always return HTTP 200 — errors go in { error: '...' } so the JS client never throws
-const json = (data: unknown) =>
-  new Response(JSON.stringify(data), {
-    status: 200,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-
+// Zero imports — uses raw fetch only, guaranteed to start
 Deno.serve(async (req: Request) => {
+  const cors = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Content-Type': 'application/json',
+  };
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
 
+  // Always 200 so the JS client never throws before we can read the error
+  const ok = (data: unknown) =>
+    new Response(JSON.stringify(data), { status: 200, headers: cors });
+
   try {
-    // --- Check Stripe secrets first ---
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-    const stripePremiumPriceId = Deno.env.get('STRIPE_PREMIUM_PRICE_ID');
-    const stripeEnterprisePriceId = Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID');
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const premiumPrice = Deno.env.get('STRIPE_PREMIUM_PRICE_ID');
+    const enterprisePrice = Deno.env.get('STRIPE_ENTERPRISE_PRICE_ID');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
-    if (!stripeSecretKey) {
-      return json({ error: 'STRIPE_SECRET_KEY secret is not set in Supabase → Project Settings → Edge Functions → Secrets.' });
-    }
+    if (!stripeKey)      return ok({ error: 'STRIPE_SECRET_KEY is not set in Supabase secrets.' });
+    if (!premiumPrice)   return ok({ error: 'STRIPE_PREMIUM_PRICE_ID is not set in Supabase secrets.' });
+    if (!enterprisePrice) return ok({ error: 'STRIPE_ENTERPRISE_PRICE_ID is not set in Supabase secrets.' });
 
-    // --- Auth: anon key + forwarded Authorization header (official Supabase pattern) ---
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    const authHeader = req.headers.get('Authorization');
+    // Validate the user token via Supabase Auth REST API — no SDK import needed
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader) return ok({ error: 'Not authenticated — please log in.' });
 
-    if (!authHeader) {
-      return json({ error: 'Unauthorized: no Authorization header. Please log in.' });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: authHeader,
+        apikey: supabaseAnonKey ?? '',
+      },
     });
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return json({ error: `Unauthorized: ${authError?.message ?? 'invalid session — please log in again.'}` });
+    if (!userRes.ok) {
+      const body = await userRes.text();
+      return ok({ error: `Auth failed (${userRes.status}): ${body}` });
     }
 
-    // --- Parse request body ---
+    const user = await userRes.json() as any;
+    if (!user?.id) return ok({ error: 'Could not retrieve user. Please log in again.' });
+
+    // Parse plan
     let plan: string;
     try {
       const body = await req.json();
-      plan = body?.plan;
+      plan = body?.plan ?? '';
     } catch {
-      return json({ error: 'Invalid request body — expected JSON with { plan }.' });
+      return ok({ error: 'Invalid JSON body.' });
     }
 
-    if (!plan || !['premium', 'enterprise'].includes(plan)) {
-      return json({ error: `Invalid plan "${plan}". Must be "premium" or "enterprise".` });
-    }
+    const priceId = plan === 'premium' ? premiumPrice : plan === 'enterprise' ? enterprisePrice : null;
+    if (!priceId) return ok({ error: `Unknown plan "${plan}". Must be "premium" or "enterprise".` });
 
-    const priceId = plan === 'premium' ? stripePremiumPriceId : stripeEnterprisePriceId;
-    if (!priceId) {
-      return json({ error: `STRIPE_${plan.toUpperCase()}_PRICE_ID secret is not set in Supabase → Project Settings → Edge Functions → Secrets.` });
-    }
-
-    // --- Create Stripe checkout session ---
     const origin = req.headers.get('origin') || 'https://my.rawajcard.com';
 
     const params = new URLSearchParams();
-    params.append('mode', 'subscription');
-    params.append('line_items[0][price]', priceId);
-    params.append('line_items[0][quantity]', '1');
-    params.append('success_url', `${origin}/CheckoutSuccess?stripe_subscription=true&plan=${plan}&session_id={CHECKOUT_SESSION_ID}`);
-    params.append('cancel_url', `${origin}/Upgrade`);
-    params.append('customer_email', user.email ?? '');
-    params.append('metadata[user_id]', user.id);
-    params.append('metadata[user_email]', user.email ?? '');
-    params.append('metadata[plan]', plan);
-    params.append('allow_promotion_codes', 'true');
+    params.set('mode', 'subscription');
+    params.set('line_items[0][price]', priceId);
+    params.set('line_items[0][quantity]', '1');
+    params.set('success_url', `${origin}/CheckoutSuccess?stripe_subscription=true&plan=${plan}&session_id={CHECKOUT_SESSION_ID}`);
+    params.set('cancel_url', `${origin}/Upgrade`);
+    params.set('customer_email', user.email ?? '');
+    params.set('metadata[user_id]', user.id);
+    params.set('metadata[user_email]', user.email ?? '');
+    params.set('metadata[plan]', plan);
+    params.set('allow_promotion_codes', 'true');
 
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${stripeSecretKey}`,
+        Authorization: `Bearer ${stripeKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
@@ -90,19 +82,16 @@ Deno.serve(async (req: Request) => {
     const session = await stripeRes.json() as any;
 
     if (!stripeRes.ok) {
-      const stripeError = session?.error?.message ?? JSON.stringify(session);
-      console.error('Stripe API error:', stripeError);
-      return json({ error: `Stripe error: ${stripeError}` });
+      return ok({ error: `Stripe error: ${session?.error?.message ?? JSON.stringify(session)}` });
     }
 
-    if (!session.url) {
-      return json({ error: 'Stripe did not return a checkout URL.' });
+    if (!session?.url) {
+      return ok({ error: 'Stripe returned no checkout URL.' });
     }
 
-    return json({ url: session.url });
+    return ok({ url: session.url });
 
   } catch (err: any) {
-    console.error('createStripeCheckout unhandled error:', err);
-    return json({ error: `Server error: ${err?.message ?? 'unknown'}` });
+    return ok({ error: `Unhandled error: ${err?.message ?? String(err)}` });
   }
 });
