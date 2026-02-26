@@ -271,32 +271,28 @@ export const api = {
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      // First try to refresh the session to get a guaranteed fresh token
-      let token;
-      try {
-        const { data: refreshed } = await supabase.auth.refreshSession();
-        token = refreshed?.session?.access_token;
-      } catch (_) {}
+      // Refresh the session — gets a guaranteed fresh access token from Supabase server
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
 
-      // Fallback to existing session if refresh fails (e.g. offline)
-      if (!token) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        token = sessionData?.session?.access_token;
+      if (refreshError || !refreshed?.session?.access_token) {
+        // Refresh failed = session truly expired or revoked
+        // Sign out and send to login so they get a fresh session
+        await supabase.auth.signOut();
+        window.location.href = '/';
+        throw new Error('Session expired — please log in again.');
       }
 
-      if (!token) {
-        throw new Error('Not authenticated — please log in and try again.');
-      }
-
+      const token = refreshed.session.access_token;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+      // Call function with only Authorization header (no apikey — that's for anon access only)
       const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'apikey': supabaseAnonKey,
+          'apikey': supabaseAnonKey, // Required by Supabase gateway even with user JWT
         },
         body: JSON.stringify(payload),
       });
@@ -305,12 +301,17 @@ export const api = {
       try {
         data = await res.json();
       } catch {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Edge function '${name}' returned non-JSON response (${res.status}): ${text}`);
+        throw new Error(`Function '${name}' returned non-JSON (HTTP ${res.status})`);
       }
 
       if (!res.ok) {
-        const msg = data?.message || data?.error || `Edge function failed with status ${res.status}`;
+        const msg = data?.message || data?.error || `HTTP ${res.status}`;
+        // If still invalid JWT after fresh token, force re-login
+        if (res.status === 401) {
+          await supabase.auth.signOut();
+          window.location.href = '/';
+          throw new Error('Session invalid — please log in again.');
+        }
         throw new Error(msg);
       }
 
