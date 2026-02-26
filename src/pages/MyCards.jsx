@@ -54,7 +54,27 @@ export default function MyCards() {
     queryKey: ['my-cards'],
     queryFn: async () => {
       const me = await api.auth.me();
-      return api.entities.BusinessCard.filter({ created_by: me.email }, '-created_date');
+      if (!me) return [];
+
+      const [byEmail, byUserId] = await Promise.all([
+        me.email
+          ? api.entities.BusinessCard.filter({ created_by: me.email }, '-created_at')
+          : Promise.resolve([]),
+        me.id
+          ? api.entities.BusinessCard.filter({ created_by_user_id: me.id }, '-created_at')
+          : Promise.resolve([])
+      ]);
+
+      const uniqueCards = new Map();
+      [...byEmail, ...byUserId].forEach((card) => {
+        if (card?.id) {
+          uniqueCards.set(card.id, card);
+        }
+      });
+
+      return Array.from(uniqueCards.values()).sort(
+        (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+      );
     },
     initialData: [],
     staleTime: 0
