@@ -266,14 +266,57 @@ export const api = {
 
   // Supabase functions (serverless)
   functions: {
+    _decodeJwtPayload: (token) => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = payload + '='.repeat((4 - payload.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      } catch {
+        return null;
+      }
+    },
+
+    _getAccessToken: async (forceRefresh = false) => {
+      const readToken = async () => {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          throw new Error(`Session error: ${sessionError.message}`);
+        }
+        return sessionData?.session?.access_token || null;
+      };
+
+      let token = await readToken();
+      if (!token) return null;
+
+      const payload = api.functions._decodeJwtPayload(token);
+      const expMs = Number(payload?.exp || 0) * 1000;
+      const almostExpired = !expMs || (Date.now() + 60_000) >= expMs;
+
+      if (forceRefresh || almostExpired) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed?.session?.access_token) {
+          return refreshed.session.access_token;
+        }
+
+        if (forceRefresh) {
+          const detail = refreshError?.message || 'unknown refresh failure';
+          throw new Error(`Session refresh failed: ${detail}. Please log in again.`);
+        }
+
+        // Non-forced path: keep existing token, gateway retry flow will decide.
+      }
+
+      return token;
+    },
+
     /**
      * Invoke a Supabase Edge Function — explicitly attaches the current JWT
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      // Use the local cached session — no network call, no refresh loop
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      let token = await api.functions._getAccessToken(false);
 
       if (!token) {
         throw new Error('Not authenticated — please log in.');
@@ -282,15 +325,27 @@ export const api = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
+      const callFunction = async (jwt) => fetch(`${supabaseUrl}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwt}`,
           'apikey': supabaseAnonKey,
         },
         body: JSON.stringify(payload),
       });
+
+      let res = await callFunction(token);
+
+      // Supabase gateway rejects invalid/expired JWTs before function code runs.
+      // Retry once with a forced refresh to recover OAuth/local-session drift.
+      if (res.status === 401) {
+        token = await api.functions._getAccessToken(true);
+        if (!token) {
+          throw new Error('Session expired — please log in again.');
+        }
+        res = await callFunction(token);
+      }
 
       let data;
       try {
