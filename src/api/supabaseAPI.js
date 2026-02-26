@@ -267,48 +267,46 @@ export const api = {
   // Supabase functions (serverless)
   functions: {
     /**
-     * Invoke a Supabase Edge Function
-     * Properly surfaces the JSON error body from FunctionsHttpError
+     * Invoke a Supabase Edge Function — explicitly attaches the current JWT
+     * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      const { data, error } = await supabase.functions.invoke(name, {
-        body: payload
-      });
+      // Get a fresh session token every time — don't rely on the SDK auto-attach
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
 
-      if (error) {
-        let message = error.message || `Edge function '${name}' failed`;
-
-        // context can be a Response object OR a string depending on client version
-        try {
-          const ctx = error.context;
-          if (ctx) {
-            if (typeof ctx === 'string') {
-              // context is already the raw body text
-              const parsed = JSON.parse(ctx);
-              if (parsed?.error) message = parsed.error;
-              else if (typeof parsed === 'string') message = parsed;
-            } else if (typeof ctx.text === 'function') {
-              // context is a Response object — read the body
-              const text = await ctx.text();
-              if (text) {
-                try {
-                  const parsed = JSON.parse(text);
-                  if (parsed?.error) message = parsed.error;
-                } catch {
-                  message = text; // plain text error
-                }
-              }
-            }
-          }
-        } catch (_) {}
-
-        console.error(`[functions.invoke] ${name} error:`, message);
-        throw new Error(message);
+      if (!token) {
+        throw new Error('Not authenticated — please log in and try again.');
       }
 
-      // Some edge functions return { error: '...' } with a 200 status
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Edge function '${name}' returned non-JSON response (${res.status}): ${text}`);
+      }
+
+      if (!res.ok) {
+        const msg = data?.message || data?.error || `Edge function failed with status ${res.status}`;
+        throw new Error(msg);
+      }
+
+      // Our functions return { error: '...' } with 200 for logical errors
       if (data?.error) {
-        console.error(`[functions.invoke] ${name} returned error:`, data.error);
         throw new Error(data.error);
       }
 
