@@ -8,7 +8,8 @@ const ADMIN_EMAILS = [
 
 // Table name mapping for entity names
 const entityTableMap = {
-  User: 'users',
+  User: 'profiles',
+  Profile: 'profiles',
   BusinessCard: 'business_cards',
   ContactSubmission: 'contact_submissions',
   CardView: 'card_views',

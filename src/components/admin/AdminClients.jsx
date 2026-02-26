@@ -4,13 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Mail, CreditCard, Calendar, Ban, CheckCircle, ExternalLink, Crown, Sparkles, Users, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import {
+  Search, Mail, CreditCard, Calendar, Ban, CheckCircle,
+  Crown, Sparkles, Users, TrendingUp, Settings, Eye, Shield
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
-import moment from 'moment';
 
 const PLAN_CONFIG = {
   premium: {
@@ -31,22 +39,26 @@ const PLAN_CONFIG = {
 };
 
 const FILTERS = [
-  { key: 'all', en: 'All', ar: 'الكل' },
+  { key: 'all',        en: 'All',        ar: 'الكل' },
   { key: 'subscribed', en: 'Subscribed', ar: 'مشتركون' },
-  { key: 'premium', en: 'Premium', ar: 'بريميوم' },
+  { key: 'premium',    en: 'Premium',    ar: 'بريميوم' },
   { key: 'enterprise', en: 'Enterprise', ar: 'مؤسسي' },
-  { key: 'free', en: 'Free', ar: 'مجاني' },
+  { key: 'free',       en: 'Free',       ar: 'مجاني' },
 ];
 
 export default function AdminClients() {
   const { isRTL } = useLanguage();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
+  const [subDialog, setSubDialog] = useState(null);
+  const [subPlan, setSubPlan] = useState('free');
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: () => api.entities.User.list(),
+    queryKey: ['admin-profiles'],
+    queryFn: () => api.entities.User.list('-created_at'),
   });
 
   const { data: allCards = [] } = useQuery({
@@ -61,46 +73,72 @@ export default function AdminClients() {
 
   const subscriptionMap = useMemo(() => {
     const map = {};
-    subscriptions.forEach(sub => { if (sub.created_by) map[sub.created_by] = sub; });
+    subscriptions.forEach(s => { if (s.created_by) map[s.created_by] = s; });
     return map;
   }, [subscriptions]);
 
-  const toggleUserStatusMutation = useMutation({
-    mutationFn: async ({ userId, currentRole }) => {
-      const newRole = currentRole === 'user' ? 'admin' : 'user';
-      await api.entities.User.update(userId, { role: newRole });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-users']);
-      toast.success(isRTL ? 'تم تحديث حالة المستخدم' : 'User status updated');
-    },
-  });
-
-  const getUserCardCount = (email) => allCards.filter(c => c.created_by === email).length;
-  const getUserPlan = (email) => subscriptionMap[email]?.plan || 'free';
-  const getUserSub = (email) => subscriptionMap[email];
+  const getUserPlan  = (email) => subscriptionMap[email]?.plan || 'free';
+  const getUserSub   = (email) => subscriptionMap[email];
+  const getUserCards = (email) => allCards.filter(c => c.created_by === email).length;
 
   const stats = useMemo(() => {
-    const premium = users.filter(u => getUserPlan(u.email) === 'premium').length;
+    const premium    = users.filter(u => getUserPlan(u.email) === 'premium').length;
     const enterprise = users.filter(u => getUserPlan(u.email) === 'enterprise').length;
     return {
-      total: users.length,
+      total:      users.length,
       subscribed: premium + enterprise,
       premium,
       enterprise,
       mrr: premium * 19 + enterprise * 99,
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, subscriptionMap]);
 
+  const deactivateMutation = useMutation({
+    mutationFn: ({ userId, suspend }) =>
+      api.entities.User.update(userId, { role: suspend ? 'suspended' : 'user' }),
+    onSuccess: (_, { suspend }) => {
+      queryClient.invalidateQueries(['admin-profiles']);
+      toast.success(suspend
+        ? (isRTL ? 'تم إيقاف المستخدم' : 'User deactivated')
+        : (isRTL ? 'تم تفعيل المستخدم' : 'User activated'));
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const manageSubMutation = useMutation({
+    mutationFn: async ({ userEmail, plan, existingSub }) => {
+      if (plan === 'free') {
+        if (existingSub) await api.entities.Subscription.delete(existingSub.id);
+      } else if (existingSub) {
+        await api.entities.Subscription.update(existingSub.id, { plan, status: 'active' });
+      } else {
+        await api.entities.Subscription.create({ created_by: userEmail, plan, status: 'active' });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin-subscriptions']);
+      toast.success(isRTL ? 'تم تحديث الاشتراك' : 'Subscription updated');
+      setSubDialog(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-    if (planFilter === 'all') return true;
+    const q = searchQuery.toLowerCase();
+    const matchSearch =
+      user.email?.toLowerCase().includes(q) ||
+      user.full_name?.toLowerCase().includes(q);
+    if (!matchSearch) return false;
+    if (planFilter === 'all')        return true;
     if (planFilter === 'subscribed') return ['premium', 'enterprise'].includes(getUserPlan(user.email));
     return getUserPlan(user.email) === planFilter;
   });
+
+  const openSubDialog = (user) => {
+    setSubPlan(getUserPlan(user.email));
+    setSubDialog(user);
+  };
 
   if (isLoading) {
     return (
@@ -112,13 +150,14 @@ export default function AdminClients() {
 
   return (
     <div className="space-y-4">
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { key: 'all', label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: stats.total, color: 'text-slate-800 dark:text-white' },
-          { key: 'subscribed', label: isRTL ? 'المشتركون' : 'Subscribed', value: stats.subscribed, color: 'text-teal-600' },
-          { key: 'premium', label: isRTL ? 'بريميوم' : 'Premium', value: stats.premium, color: 'text-teal-600' },
-          { key: 'enterprise', label: isRTL ? 'مؤسسي' : 'Enterprise', value: stats.enterprise, color: 'text-purple-600' },
+          { key: 'all',        label: isRTL ? 'إجمالي المستخدمين' : 'Total Users',  value: stats.total,      color: 'text-slate-800 dark:text-white' },
+          { key: 'subscribed', label: isRTL ? 'المشتركون'         : 'Subscribed',    value: stats.subscribed, color: 'text-teal-600' },
+          { key: 'premium',    label: isRTL ? 'بريميوم'           : 'Premium',       value: stats.premium,    color: 'text-teal-600' },
+          { key: 'enterprise', label: isRTL ? 'مؤسسي'             : 'Enterprise',    value: stats.enterprise, color: 'text-purple-600' },
         ].map(s => (
           <Card
             key={s.key}
@@ -144,17 +183,25 @@ export default function AdminClients() {
         </div>
       </Card>
 
+      {/* Client list */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle>{isRTL ? 'إدارة العملاء' : 'Client Management'}</CardTitle>
+            <CardTitle>
+              {isRTL ? 'إدارة العملاء' : 'Client Management'}
+              <span className="text-sm font-normal text-slate-400 ml-2">({filteredUsers.length})</span>
+            </CardTitle>
             {planFilter !== 'all' && (
-              <button onClick={() => setPlanFilter('all')} className="text-xs text-slate-500 hover:text-slate-800 underline">
+              <button
+                onClick={() => setPlanFilter('all')}
+                className="text-xs text-slate-500 hover:text-slate-800 underline"
+              >
                 {isRTL ? 'مسح الفلتر' : 'Clear filter'}
               </button>
             )}
           </div>
         </CardHeader>
+
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -184,68 +231,106 @@ export default function AdminClients() {
 
           <div className="space-y-2">
             {filteredUsers.map((user) => {
-              const cardCount = getUserCardCount(user.email);
-              const plan = getUserPlan(user.email);
-              const sub = getUserSub(user.email);
-              const cfg = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
-              const PlanIcon = cfg.icon;
+              const plan        = getUserPlan(user.email);
+              const sub         = getUserSub(user.email);
+              const cardCount   = getUserCards(user.email);
+              const cfg         = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
+              const PlanIcon    = cfg.icon;
+              const isSuspended = user.role === 'suspended';
+              const isAdmin     = user.role === 'admin';
 
               return (
-                <Card key={user.id} className="p-4">
+                <Card key={user.id} className={`p-4 transition-opacity ${isSuspended ? 'opacity-60' : ''}`}>
                   <div className="flex items-start justify-between gap-4">
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-semibold text-slate-900 dark:text-white truncate">
-                          {user.full_name || user.email}
+                          {user.full_name || user.email?.split('@')[0]}
                         </h3>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
-                        </Badge>
+                        {isAdmin && (
+                          <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
+                            <Shield className="h-3 w-3 mr-1" />Admin
+                          </Badge>
+                        )}
+                        {isSuspended && (
+                          <Badge variant="destructive" className="text-xs">
+                            {isRTL ? 'موقوف' : 'Suspended'}
+                          </Badge>
+                        )}
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}>
                           <PlanIcon className="h-3 w-3" />
                           {isRTL ? cfg.labelAr : cfg.label}
-                          {sub?.status && sub.status !== 'active' && (
-                            <span className="opacity-60 ml-1">· {sub.status}</span>
-                          )}
                         </span>
                       </div>
+
                       <div className="space-y-1 text-sm text-slate-500">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3" />
+                          <Mail className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{user.email}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-3 w-3" />
-                          <span>{cardCount} {isRTL ? 'بطاقة' : 'cards'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          <span>{isRTL ? 'انضم' : 'Joined'} {moment(user.created_date).format('MMM D, YYYY')}</span>
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <CreditCard className="h-3 w-3" />
+                            <span>{cardCount} {isRTL ? 'بطاقة' : cardCount === 1 ? 'card' : 'cards'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              {isRTL ? 'انضم' : 'Joined'}{' '}
+                              {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
+                            </span>
+                          </div>
                         </div>
                         {sub && plan !== 'free' && (
-                          <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-medium">
-                            <Sparkles className="h-3 w-3" />
-                            <span>{isRTL ? 'اشترك في' : 'Subscribed'} {moment(sub.created_at).format('MMM D, YYYY')}</span>
+                          <div className="text-xs text-teal-600 dark:text-teal-400 font-medium">
+                            <Sparkles className="h-3 w-3 inline mr-1" />
+                            {isRTL ? 'اشترك في' : 'Subscribed'}{' '}
+                            {new Date(sub.created_at).toLocaleDateString()} · {sub.status}
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Link to={createPageUrl(`ClientDetails?userId=${user.id}`)}>
-                        <Button size="sm" variant="outline" className="w-full">
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          {isRTL ? 'التفاصيل' : 'Details'}
-                        </Button>
-                      </Link>
+
+                    {/* Quick actions */}
+                    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-[100px]">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => toggleUserStatusMutation.mutate({ userId: user.id, currentRole: user.role })}
+                        className="text-xs h-7 px-2 w-full justify-start"
+                        onClick={() => navigate(createPageUrl('ClientDetails') + '?userId=' + user.id)}
                       >
-                        {user.role === 'admin' ? (
-                          <><Ban className="h-3 w-3 mr-1" />{isRTL ? 'إزالة الصلاحية' : 'Remove Admin'}</>
+                        <Eye className="h-3 w-3 mr-1.5" />
+                        {isRTL ? 'عرض' : 'View'}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-2 w-full justify-start"
+                        onClick={() => openSubDialog(user)}
+                      >
+                        <Settings className="h-3 w-3 mr-1.5" />
+                        {isRTL ? 'الاشتراك' : 'Subscription'}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isAdmin || deactivateMutation.isPending}
+                        className={`text-xs h-7 px-2 w-full justify-start ${
+                          isSuspended
+                            ? 'border-green-400 text-green-600 hover:bg-green-50'
+                            : 'border-red-200 text-red-500 hover:bg-red-50'
+                        }`}
+                        onClick={() =>
+                          deactivateMutation.mutate({ userId: user.id, suspend: !isSuspended })
+                        }
+                      >
+                        {isSuspended ? (
+                          <><CheckCircle className="h-3 w-3 mr-1.5" />{isRTL ? 'تفعيل' : 'Activate'}</>
                         ) : (
-                          <><CheckCircle className="h-3 w-3 mr-1" />{isRTL ? 'جعله مسؤولاً' : 'Make Admin'}</>
+                          <><Ban className="h-3 w-3 mr-1.5" />{isRTL ? 'إيقاف' : 'Deactivate'}</>
                         )}
                       </Button>
                     </div>
@@ -262,6 +347,50 @@ export default function AdminClients() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Manage Subscription Dialog */}
+      <Dialog open={!!subDialog} onOpenChange={() => setSubDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'إدارة الاشتراك' : 'Manage Subscription'}</DialogTitle>
+          </DialogHeader>
+          {subDialog && (
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-slate-500 truncate">{subDialog.full_name || subDialog.email}</p>
+              <Select value={subPlan} onValueChange={setSubPlan}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                  <SelectItem value="premium">Premium — SAR 19/mo</SelectItem>
+                  <SelectItem value="enterprise">Enterprise — SAR 99/mo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubDialog(null)}>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              disabled={manageSubMutation.isPending}
+              onClick={() =>
+                subDialog &&
+                manageSubMutation.mutate({
+                  userEmail: subDialog.email,
+                  plan: subPlan,
+                  existingSub: getUserSub(subDialog.email),
+                })
+              }
+            >
+              {manageSubMutation.isPending
+                ? (isRTL ? 'جاري...' : 'Saving...')
+                : (isRTL ? 'حفظ' : 'Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
