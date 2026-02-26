@@ -1,189 +1,135 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-
+// No imports — avoid Deno npm/esm startup failures
 Deno.serve(async (req: Request) => {
+  const cors = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Content-Type': 'application/json',
+  };
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: cors });
   }
+
+  // Always return 200 so frontend can read error messages consistently
+  const ok = (data: unknown) =>
+    new Response(JSON.stringify(data), { status: 200, headers: cors });
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
 
-    if (!supabaseUrl || !supabaseServiceKey || !stripeSecretKey) {
-      return json({ error: 'Server env vars not configured.' }, 500);
+    if (!supabaseUrl) return ok({ error: 'SUPABASE_URL is not configured.' });
+    if (!serviceRoleKey) return ok({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured.' });
+    if (!stripeSecretKey) return ok({ error: 'STRIPE_SECRET_KEY is not configured.' });
+
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return ok({ error: 'Missing Authorization header. Please log in.' });
     }
 
-    // Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return json({ error: 'Unauthorized' }, 401);
+    const jwt = authHeader.replace('Bearer ', '');
+    let userId = '';
+    let userEmail = '';
+
+    try {
+      const parts = jwt.split('.');
+      if (parts.length !== 3) throw new Error('malformed');
+      const pad = (s: string) => s + '='.repeat((4 - s.length % 4) % 4);
+      const payload = JSON.parse(atob(pad(parts[1].replace(/-/g, '+').replace(/_/g, '/'))));
+      userId = payload.sub ?? '';
+      userEmail = payload.email ?? '';
+      if (!userId) throw new Error('missing sub');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return ok({ error: `Could not decode token: ${message}. Please log out and log in again.` });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return json({ error: `Unauthorized: ${authError?.message ?? 'invalid token'}` }, 401);
+    let sessionId = '';
+    try {
+      const body = await req.json();
+      sessionId = body?.sessionId ?? '';
+    } catch {
+      return ok({ error: 'Invalid JSON body.' });
     }
 
-    const { sessionId } = await req.json();
     if (!sessionId) {
-      return json({ error: 'sessionId is required' }, 400);
+      return ok({ error: 'sessionId is required.' });
     }
 
-    // Verify the Stripe checkout session
     const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
       headers: { Authorization: `Bearer ${stripeSecretKey}` },
     });
-    const session = await stripeRes.json() as any;
+    const session = await stripeRes.json() as Record<string, any>;
 
     if (!stripeRes.ok) {
-      return json({ error: session?.error?.message ?? 'Failed to fetch Stripe session' }, 500);
+      return ok({ error: `Stripe verification failed: ${session?.error?.message ?? JSON.stringify(session)}` });
     }
 
-    if (session.payment_status !== 'paid') {
-      return json({ error: 'Payment not completed yet' }, 400);
+    const paidStatuses = new Set(['paid', 'no_payment_required']);
+    if (!paidStatuses.has(String(session?.payment_status ?? ''))) {
+      return ok({ error: `Payment not completed yet (status: ${session?.payment_status ?? 'unknown'}).` });
     }
 
-    const plan = session.metadata?.plan ?? 'premium';
+    const plan = session?.metadata?.plan ?? 'premium';
 
-    // Upsert subscription record
-    const { data: existing } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('created_by_user_id', user.id)
-      .maybeSingle();
-
-    const subData = {
-      plan,
-      status: 'active',
-      metadata: {
-        stripe_session_id: sessionId,
-        stripe_subscription_id: session.subscription ?? null,
-        activated_at: new Date().toISOString(),
-      },
+    const restHeaders = {
+      'Content-Type': 'application/json',
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Prefer: 'return=representation',
     };
 
-    if (existing?.id) {
-      await supabase.from('subscriptions').update(subData).eq('id', existing.id);
-    } else {
-      await supabase.from('subscriptions').insert({
-        ...subData,
-        created_by: user.email,
-        created_by_user_id: user.id,
-      });
-    }
-
-    return json({ success: true, plan });
-
-  } catch (err: any) {
-    console.error('activateSubscription unhandled error:', err);
-    return json({ error: err?.message ?? 'Internal server error' }, 500);
-  }
-});
-
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!;
-
-    // Authenticate user
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
-    }
-
-    const { sessionId } = await req.json();
-    if (!sessionId) {
-      return Response.json({ error: 'sessionId is required' }, { status: 400, headers: corsHeaders });
-    }
-
-    // Verify the Stripe checkout session
-    const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
-      headers: { Authorization: `Bearer ${stripeSecretKey}` },
-    });
-    const session = await stripeRes.json();
-
-    if (!stripeRes.ok) {
-      throw new Error(session.error?.message ?? 'Failed to fetch Stripe session');
-    }
-
-    if (session.payment_status !== 'paid') {
-      return Response.json(
-        { error: 'Payment not completed yet' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    const plan = session.metadata?.plan ?? 'premium';
-
-    // Upsert subscription record
-    const { data: existing } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('created_by_user_id', user.id)
-      .maybeSingle();
-
-    const subData = {
-      plan,
-      status: 'active',
-      metadata: {
-        stripe_session_id: sessionId,
-        stripe_subscription_id: session.subscription ?? null,
-        activated_at: new Date().toISOString(),
-      },
-    };
-
-    if (existing?.id) {
-      await supabase
-        .from('subscriptions')
-        .update(subData)
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('subscriptions').insert({
-        ...subData,
-        created_by: user.email,
-        created_by_user_id: user.id,
-      });
-    }
-
-    return Response.json({ success: true, plan }, { headers: corsHeaders });
-  } catch (err: any) {
-    console.error('activateSubscription error:', err);
-    return Response.json(
-      { error: err.message ?? 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+    const existingRes = await fetch(
+      `${supabaseUrl}/rest/v1/subscriptions?select=id&created_by_user_id=eq.${encodeURIComponent(userId)}&limit=1`,
+      { headers: restHeaders },
     );
+
+    const existingRows = await existingRes.json() as Array<{ id: string }> | { message?: string };
+    if (!existingRes.ok || !Array.isArray(existingRows)) {
+      return ok({ error: `Failed to read current subscription: ${JSON.stringify(existingRows)}` });
+    }
+
+    const subData = {
+      plan,
+      status: 'active',
+      metadata: {
+        stripe_session_id: sessionId,
+        stripe_subscription_id: session?.subscription ?? null,
+        activated_at: new Date().toISOString(),
+      },
+    };
+
+    let writeRes: Response;
+    if (existingRows[0]?.id) {
+      writeRes = await fetch(
+        `${supabaseUrl}/rest/v1/subscriptions?id=eq.${encodeURIComponent(existingRows[0].id)}`,
+        {
+          method: 'PATCH',
+          headers: restHeaders,
+          body: JSON.stringify(subData),
+        },
+      );
+    } else {
+      writeRes = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
+        method: 'POST',
+        headers: restHeaders,
+        body: JSON.stringify({
+          ...subData,
+          created_by: userEmail,
+          created_by_user_id: userId,
+        }),
+      });
+    }
+
+    if (!writeRes.ok) {
+      const writeBody = await writeRes.text();
+      return ok({ error: `Failed to save subscription: ${writeBody}` });
+    }
+
+    return ok({ success: true, plan });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return ok({ error: `Unhandled error: ${message}` });
   }
 });

@@ -266,14 +266,29 @@ export const api = {
 
   // Supabase functions (serverless)
   functions: {
+    _getAccessToken: async (forceRefresh = false) => {
+      if (forceRefresh) {
+        // Network-backed call: validates/refreshes auth session when possible.
+        const { error } = await supabase.auth.getUser();
+        if (error) {
+          throw new Error(`Authentication expired: ${error.message}`);
+        }
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+
+      return sessionData?.session?.access_token || null;
+    },
+
     /**
      * Invoke a Supabase Edge Function — explicitly attaches the current JWT
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      // Use the local cached session — no network call, no refresh loop
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      let token = await api.functions._getAccessToken(false);
 
       if (!token) {
         throw new Error('Not authenticated — please log in.');
@@ -282,15 +297,27 @@ export const api = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const res = await fetch(`${supabaseUrl}/functions/v1/${name}`, {
+      const callFunction = async (jwt) => fetch(`${supabaseUrl}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwt}`,
           'apikey': supabaseAnonKey,
         },
         body: JSON.stringify(payload),
       });
+
+      let res = await callFunction(token);
+
+      // Supabase gateway can reject stale cached JWTs before function code runs.
+      // Retry once after forcing auth validation/refresh via getUser().
+      if (res.status === 401) {
+        token = await api.functions._getAccessToken(true);
+        if (!token) {
+          throw new Error('Session expired — please log in again.');
+        }
+        res = await callFunction(token);
+      }
 
       let data;
       try {
