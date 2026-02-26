@@ -1,93 +1,279 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Check, Sparkles, Zap, Building2, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/components/shared/LanguageContext';
-import { createPageUrl } from '@/utils';
-import { useNavigate } from 'react-router-dom';
+import { api } from '@/api/supabaseAPI';
+import { useQuery } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-export default function SubscriptionDialog({ open, onOpenChange, reason = 'unlimited_cards' }) {
-  const { t, isRTL } = useLanguage();
-  const navigate = useNavigate();
+const PLANS = [
+  {
+    key: 'free',
+    icon: Zap,
+    name_en: 'Free',
+    name_ar: 'مجاني',
+    price_en: 'SAR 0',
+    price_ar: '0 ريال',
+    period_en: '/month',
+    period_ar: '/شهر',
+    features_en: [
+      '1 Digital Card',
+      'Basic Templates',
+      'QR Code',
+      'Limited Analytics',
+      'Email Support',
+    ],
+    features_ar: [
+      'بطاقة رقمية واحدة',
+      'قوالب أساسية',
+      'رمز QR',
+      'تحليلات محدودة',
+      'دعم البريد الإلكتروني',
+    ],
+  },
+  {
+    key: 'premium',
+    icon: Sparkles,
+    name_en: 'Premium',
+    name_ar: 'بريميوم',
+    price_en: 'SAR 49',
+    price_ar: '49 ريال',
+    period_en: '/month',
+    period_ar: '/شهر',
+    popular: true,
+    features_en: [
+      'Unlimited Cards',
+      'All Templates',
+      'Advanced Analytics',
+      'Lead Capture',
+      'Custom Branding',
+      'Priority Support',
+      'Export Data',
+    ],
+    features_ar: [
+      'بطاقات غير محدودة',
+      'جميع القوالب',
+      'تحليلات متقدمة',
+      'التقاط المتابعة',
+      'علامة تجارية مخصصة',
+      'دعم أولوي',
+      'تصدير البيانات',
+    ],
+  },
+  {
+    key: 'enterprise',
+    icon: Building2,
+    name_en: 'Enterprise',
+    name_ar: 'مؤسسي',
+    price_en: 'Custom',
+    price_ar: 'مخصص',
+    features_en: [
+      'Everything in Premium',
+      'Unlimited Team Members',
+      'CRM Integration',
+      'API Access',
+      'Dedicated Support',
+      'Custom Integrations',
+      'SLA Agreement',
+    ],
+    features_ar: [
+      'كل شيء في بريميوم',
+      'أعضاء فريق غير محدودين',
+      'تكامل CRM',
+      'وصول API',
+      'دعم مخصص',
+      'تكاملات مخصصة',
+      'اتفاقية مستوى الخدمة',
+    ],
+  },
+];
 
-  const reasons = {
-    unlimited_cards: {
-      title_en: 'Upgrade to Premium',
-      title_ar: 'الترقية إلى بريميوم',
-      description_en: 'Free users can only create 1 card. Upgrade to premium for unlimited cards and advanced analytics.',
-      description_ar: 'يمكن للمستخدمين المجانيين إنشاء بطاقة واحدة فقط. قم بالترقية إلى بريميوم للحصول على بطاقات غير محدودة وتحليلات متقدمة.'
+export default function SubscriptionDialog({ open, onOpenChange }) {
+  const { isRTL } = useLanguage();
+  const [loadingPlan, setLoadingPlan] = useState(null);
+
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: async () => {
+      const subs = await api.entities.Subscription.list();
+      return subs[0] || { plan: 'free' };
     },
-    advanced_analytics: {
-      title_en: 'Unlock Advanced Analytics',
-      title_ar: 'فتح التحليلات المتقدمة',
-      description_en: 'View detailed analytics including activity charts, visitor insights, and performance metrics.',
-      description_ar: 'اعرض التحليلات التفصيلية بما في ذلك رسوم النشاط ورؤى الزوار ومقاييس الأداء.'
+    enabled: open,
+  });
+
+  const currentPlan = subscription?.plan || 'free';
+
+  const handleUpgrade = async (planKey) => {
+    if (planKey === 'free') return;
+
+    if (planKey === 'enterprise') {
+      window.open('mailto:sales@rawajcard.com?subject=Enterprise%20Plan%20Inquiry', '_blank');
+      return;
+    }
+
+    // Premium → Stripe checkout
+    setLoadingPlan(planKey);
+    try {
+      const result = await api.functions.invoke('createStripeCheckout', { plan: planKey });
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err) {
+      console.error('Stripe checkout error:', err);
+      toast.error(isRTL ? 'حدث خطأ في الدفع، حاول مرة أخرى' : 'Payment error, please try again');
+    } finally {
+      setLoadingPlan(null);
     }
   };
 
-  const currentReason = reasons[reason] || reasons.unlimited_cards;
-
-  const premiumFeatures = [
-    { label_en: 'Unlimited Cards', label_ar: 'بطاقات غير محدودة' },
-    { label_en: 'Advanced Analytics', label_ar: 'تحليلات متقدمة' },
-    { label_en: 'Custom Branding', label_ar: 'علامة تجارية مخصصة' },
-    { label_en: 'Priority Support', label_ar: 'دعم ذو أولوية' },
-    { label_en: 'Export Data', label_ar: 'تصدير البيانات' }
-  ];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
-            {isRTL ? currentReason.title_ar : currentReason.title_en}
-          </DialogTitle>
-          <DialogDescription>
-            {isRTL ? currentReason.description_ar : currentReason.description_en}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl w-full p-0 overflow-hidden">
+        <div className="p-6 pb-4">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-teal-500" />
+              {isRTL ? 'اختر خطتك' : 'Choose Your Plan'}
+            </DialogTitle>
+            <DialogDescription>
+              {isRTL
+                ? 'قم بالترقية للحصول على مزيد من الميزات والإمكانيات'
+                : 'Upgrade for more features and capabilities'}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>{isRTL ? 'خطة بريميوم' : 'Premium Plan'}</span>
-              <span className="text-2xl font-bold text-amber-600">
-                {isRTL ? 'ريال' : 'SAR'} 20<span className="text-sm">/{isRTL ? 'شهر' : 'month'}</span>
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {premiumFeatures.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <span className="text-sm">{isRTL ? feature.label_ar : feature.label_en}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {PLANS.map((plan) => {
+            const Icon = plan.icon;
+            const isCurrent = currentPlan === plan.key;
+            const isPopular = plan.popular;
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1"
-          >
-            {isRTL ? 'إلغاء' : 'Cancel'}
-          </Button>
-          <Button
-            onClick={() => {
-              navigate(createPageUrl('Pricing'));
-              onOpenChange(false);
-            }}
-            className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            {isRTL ? 'الترقية الآن' : 'Upgrade Now'}
-          </Button>
+            return (
+              <div
+                key={plan.key}
+                className={cn(
+                  'relative rounded-2xl border p-5 flex flex-col gap-4 transition-all',
+                  isPopular
+                    ? 'border-teal-500 ring-2 ring-teal-500/30 bg-gradient-to-b from-teal-50/60 to-white dark:from-teal-950/20 dark:to-slate-900'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900',
+                  plan.key === 'enterprise' && 'border-purple-200 dark:border-purple-800/50'
+                )}
+              >
+                {isPopular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-teal-600 text-white text-xs px-3 shadow">
+                      {isRTL ? 'الأكثر شعبية' : 'Most Popular'}
+                    </Badge>
+                  </div>
+                )}
+
+                {isCurrent && (
+                  <div className="absolute -top-3 right-4">
+                    <Badge variant="outline" className="text-xs border-slate-400 bg-white dark:bg-slate-900">
+                      {isRTL ? 'خطتك الحالية' : 'Current Plan'}
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Plan Header */}
+                <div>
+                  <div className={cn(
+                    'inline-flex p-2 rounded-lg mb-3',
+                    plan.key === 'free' && 'bg-slate-100 dark:bg-slate-800',
+                    plan.key === 'premium' && 'bg-teal-100 dark:bg-teal-900/30',
+                    plan.key === 'enterprise' && 'bg-purple-100 dark:bg-purple-900/30',
+                  )}>
+                    <Icon className={cn(
+                      'h-5 w-5',
+                      plan.key === 'free' && 'text-slate-500',
+                      plan.key === 'premium' && 'text-teal-600',
+                      plan.key === 'enterprise' && 'text-purple-600',
+                    )} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    {isRTL ? plan.name_ar : plan.name_en}
+                  </h3>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {isRTL ? plan.price_ar : plan.price_en}
+                    </span>
+                    {plan.period_en && (
+                      <span className="text-sm text-slate-500">
+                        {isRTL ? plan.period_ar : plan.period_en}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul className="flex-1 space-y-2">
+                  {(isRTL ? plan.features_ar : plan.features_en).map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <Check className={cn(
+                        'h-4 w-4 flex-shrink-0',
+                        plan.key === 'premium' ? 'text-teal-600' :
+                        plan.key === 'enterprise' ? 'text-purple-600' :
+                        'text-slate-400'
+                      )} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                {isCurrent ? (
+                  <Button disabled variant="outline" className="w-full">
+                    {isRTL ? 'خطتك الحالية' : 'Current Plan'}
+                  </Button>
+                ) : plan.key === 'free' ? (
+                  <Button disabled variant="outline" className="w-full opacity-50">
+                    {isRTL ? 'مجاني دائماً' : 'Always Free'}
+                  </Button>
+                ) : plan.key === 'enterprise' ? (
+                  <Button
+                    variant="outline"
+                    className="w-full border-purple-400 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                    onClick={() => handleUpgrade('enterprise')}
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    {isRTL ? 'تواصل معنا' : 'Contact Sales'}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                    onClick={() => handleUpgrade(plan.key)}
+                    disabled={loadingPlan === plan.key}
+                  >
+                    {loadingPlan === plan.key ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        {isRTL ? 'الترقية الآن' : 'Upgrade Now'}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="px-6 pb-5 text-center">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            {isRTL
+              ? '🔒 المدفوعات آمنة ومشفرة عبر Stripe • يمكنك الإلغاء في أي وقت'
+              : '🔒 Payments are secure & encrypted via Stripe • Cancel anytime'}
+          </p>
         </div>
       </DialogContent>
     </Dialog>
