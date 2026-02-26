@@ -79,9 +79,19 @@ export default function AdminClients() {
 
   const subscriptionMap = useMemo(() => {
     const map = {};
+    // Index by email (created_by) for direct lookup
     subscriptions.forEach(s => { if (s.created_by) map[s.created_by] = s; });
+    // Also index by user UUID so we can fall back if created_by is missing
+    const uuidMap = {};
+    subscriptions.forEach(s => { if (s.created_by_user_id) uuidMap[s.created_by_user_id] = s; });
+    // Merge: for every profile with no email match, try UUID match
+    users.forEach(u => {
+      if (!map[u.email] && u.id && uuidMap[u.id]) {
+        map[u.email] = uuidMap[u.id];
+      }
+    });
     return map;
-  }, [subscriptions]);
+  }, [subscriptions, users]);
 
   const getUserPlan  = (email) => subscriptionMap[email]?.plan || 'free';
   const getUserSub   = (email) => subscriptionMap[email];
@@ -118,12 +128,33 @@ export default function AdminClients() {
     mutationFn: async ({ userEmail, plan, existingSub }) => {
       const LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
       const card_limit = LIMITS[plan] ?? 2;
+      // Find the user's UUID from the already-loaded profiles list
+      const userProfile = users.find(u => u.email === userEmail);
+      const userUuid = userProfile?.id;
+
       if (plan === 'free') {
         if (existingSub) await api.entities.Subscription.delete(existingSub.id);
       } else if (existingSub) {
-        await api.entities.Subscription.update(existingSub.id, { plan, card_limit, status: 'active' });
+        // Update: only send columns we know exist; try with card_limit first, fall back without
+        try {
+          await api.entities.Subscription.update(existingSub.id, { plan, card_limit, status: 'active' });
+        } catch (e) {
+          if (e.message?.includes('card_limit')) {
+            await api.entities.Subscription.update(existingSub.id, { plan, status: 'active' });
+          } else throw e;
+        }
       } else {
-        await api.entities.Subscription.create({ created_by: userEmail, plan, card_limit, status: 'active' });
+        // Create: include created_by (email) and created_by_user_id (uuid) and card_limit
+        const payload = { plan, status: 'active' };
+        if (userEmail) payload.created_by = userEmail;
+        if (userUuid)  payload.created_by_user_id = userUuid;
+        try {
+          await api.entities.Subscription.create({ ...payload, card_limit });
+        } catch (e) {
+          if (e.message?.includes('card_limit')) {
+            await api.entities.Subscription.create(payload);
+          } else throw e;
+        }
       }
     },
     onSuccess: () => {
