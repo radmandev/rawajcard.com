@@ -266,21 +266,49 @@ export const api = {
 
   // Supabase functions (serverless)
   functions: {
+    _decodeJwtPayload: (token) => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = payload + '='.repeat((4 - payload.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      } catch {
+        return null;
+      }
+    },
+
     _getAccessToken: async (forceRefresh = false) => {
-      if (forceRefresh) {
-        // Network-backed call: validates/refreshes auth session when possible.
-        const { error } = await supabase.auth.getUser();
-        if (error) {
-          throw new Error(`Authentication expired: ${error.message}`);
+      const readToken = async () => {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          throw new Error(`Session error: ${sessionError.message}`);
         }
+        return sessionData?.session?.access_token || null;
+      };
+
+      let token = await readToken();
+      if (!token) return null;
+
+      const payload = api.functions._decodeJwtPayload(token);
+      const expMs = Number(payload?.exp || 0) * 1000;
+      const almostExpired = !expMs || (Date.now() + 60_000) >= expMs;
+
+      if (forceRefresh || almostExpired) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed?.session?.access_token) {
+          return refreshed.session.access_token;
+        }
+
+        if (forceRefresh) {
+          const detail = refreshError?.message || 'unknown refresh failure';
+          throw new Error(`Session refresh failed: ${detail}. Please log in again.`);
+        }
+
+        // Non-forced path: keep existing token, gateway retry flow will decide.
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        throw new Error(`Session error: ${sessionError.message}`);
-      }
-
-      return sessionData?.session?.access_token || null;
+      return token;
     },
 
     /**
@@ -309,8 +337,8 @@ export const api = {
 
       let res = await callFunction(token);
 
-      // Supabase gateway can reject stale cached JWTs before function code runs.
-      // Retry once after forcing auth validation/refresh via getUser().
+      // Supabase gateway rejects invalid/expired JWTs before function code runs.
+      // Retry once with a forced refresh to recover OAuth/local-session drift.
       if (res.status === 401) {
         token = await api.functions._getAccessToken(true);
         if (!token) {
