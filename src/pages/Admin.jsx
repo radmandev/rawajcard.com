@@ -12,7 +12,7 @@ import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-const ADMIN_EMAILS = ['emadradman.dev@gmail.com'];
+const ADMIN_EMAILS = ['emadradman.dev@gmail.com', 'admin@rawajcard.com'];
 
 export default function Admin() {
   const { t, isRTL } = useLanguage();

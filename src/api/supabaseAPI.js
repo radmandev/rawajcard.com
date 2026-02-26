@@ -2,7 +2,8 @@ import { supabase } from '@/lib/supabaseClient';
 
 // Hardcoded admin emails — users with these emails always get admin role
 const ADMIN_EMAILS = [
-  'emadradman.dev@gmail.com'
+  'emadradman.dev@gmail.com',
+  'admin@rawajcard.com'
 ];
 
 // Table name mapping for entity names
