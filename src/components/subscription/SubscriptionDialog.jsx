@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Zap, Building2, Users } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Users, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/supabaseAPI';
@@ -120,9 +120,10 @@ const PLANS = [
   },
 ];
 
-export default function SubscriptionDialog({ open, onOpenChange }) {
+export default function SubscriptionDialog({ open, onOpenChange, onSelectPlan, forcedCurrentPlan, title, savingPlan }) {
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
+  const adminMode = !!onSelectPlan;
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription'],
@@ -130,14 +131,18 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
       const subs = await api.entities.Subscription.list();
       return subs[0] || { plan: 'free' };
     },
-    enabled: open,
+    enabled: open && !adminMode,
   });
 
-  const currentPlan = subscription?.plan || 'free';
+  const currentPlan = forcedCurrentPlan ?? subscription?.plan ?? 'free';
 
   const handleUpgrade = (planKey) => {
-    onOpenChange(false);
-    navigate(createPageUrl('Upgrade'));
+    if (adminMode) {
+      onSelectPlan(planKey);
+    } else {
+      onOpenChange(false);
+      navigate(createPageUrl('Upgrade'));
+    }
   };
 
   return (
@@ -154,12 +159,12 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
             <DialogHeader>
               <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
                 <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-teal-500" />
-                {isRTL ? 'اختر خطتك' : 'Choose Your Plan'}
+                {title || (isRTL ? 'اختر خطتك' : 'Choose Your Plan')}
               </DialogTitle>
               <DialogDescription>
-                {isRTL
-                  ? 'قم بالترقية للحصول على مزيد من الميزات والإمكانيات'
-                  : 'Upgrade for more features and capabilities'}
+                {adminMode
+                  ? (isRTL ? 'اختر الخطة للعميل' : 'Select a plan for this client')
+                  : (isRTL ? 'قم بالترقية للحصول على مزيد من الميزات والإمكانيات' : 'Upgrade for more features and capabilities')}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -246,35 +251,53 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                 </ul>
 
                 {/* CTA Button */}
-                {isCurrent ? (
+                {isCurrent && !adminMode ? (
                   <Button disabled variant="outline" className="w-full">
                     {isRTL ? 'خطتك الحالية' : 'Current Plan'}
                   </Button>
-                ) : plan.key === 'free' ? (
+                ) : plan.key === 'free' && !adminMode ? (
                   <Button disabled variant="outline" className="w-full opacity-50">
                     {isRTL ? 'مجاني دائماً' : 'Always Free'}
+                  </Button>
+                ) : plan.key === 'free' && adminMode ? (
+                  <Button
+                    variant={isCurrent ? 'outline' : 'ghost'}
+                    className="w-full border-slate-300"
+                    disabled={savingPlan === 'free'}
+                    onClick={() => handleUpgrade('free')}
+                  >
+                    {savingPlan === 'free'
+                      ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      : null
+                    }
+                    {isCurrent ? (isRTL ? '✓ الحالية' : '✓ Current') : (isRTL ? 'تعيين مجاني' : 'Set Free')}
                   </Button>
                 ) : (
                   <Button
                     className={cn(
                       'w-full text-white',
+                      isCurrent && adminMode && 'opacity-70 ring-2 ring-offset-1 ring-teal-400',
                       plan.key === 'enterprise'
                         ? 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'
                         : plan.key === 'teams'
                         ? 'bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-600 dark:hover:bg-cyan-700'
                         : 'bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600'
                     )}
+                    disabled={savingPlan === plan.key}
                     onClick={() => handleUpgrade(plan.key)}
                   >
-                    {plan.key === 'enterprise'
-                      ? <Building2 className="h-4 w-4 mr-2" />
-                      : plan.key === 'teams'
-                      ? <Users className="h-4 w-4 mr-2" />
-                      : <Sparkles className="h-4 w-4 mr-2" />
-                    }
-                    {isRTL
-                      ? `الترقية إلى ${plan.name_ar}`
-                      : `Upgrade to ${plan.name_en}`
+                    {savingPlan === plan.key ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : plan.key === 'enterprise' ? (
+                      <Building2 className="h-4 w-4 mr-2" />
+                    ) : plan.key === 'teams' ? (
+                      <Users className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
+                    {adminMode
+                      ? (isCurrent ? (isRTL ? '✓ الحالية' : '✓ Current') : (isRTL ? `تعيين ${plan.name_ar}` : `Set ${plan.name_en}`))
+                      : (isRTL ? `الترقية إلى ${plan.name_ar}` : `Upgrade to ${plan.name_en}`)
                     }
                   </Button>
                 )}
@@ -284,6 +307,7 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
           </div>{/* end plans grid */}
 
           {/* Sticky Footer */}
+          {!adminMode && (
           <div className="px-6 py-3 text-center flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {isRTL
@@ -291,6 +315,7 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                 : '🔒 Payments are secure & encrypted via Stripe • Cancel anytime'}
             </p>
           </div>
+          )}
 
         </div>{/* end inner flex wrapper */}
       </DialogContent>

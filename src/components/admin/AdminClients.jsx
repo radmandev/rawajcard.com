@@ -4,12 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
-} from '@/components/ui/dialog';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select';
+import SubscriptionDialog from '@/components/subscription/SubscriptionDialog';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -60,7 +55,7 @@ export default function AdminClients() {
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
   const [subDialog, setSubDialog] = useState(null);
-  const [subPlan, setSubPlan] = useState('free');
+  const [savingPlan, setSavingPlan] = useState(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-profiles'],
@@ -192,9 +187,10 @@ export default function AdminClients() {
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-subscriptions']);
       toast.success(isRTL ? 'تم تحديث الاشتراك' : 'Subscription updated');
+      setSavingPlan(null);
       setSubDialog(null);
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => { setSavingPlan(null); toast.error(e.message); },
   });
 
   const filteredUsers = users.filter(user => {
@@ -208,10 +204,7 @@ export default function AdminClients() {
     return getUserPlan(user.email) === planFilter;
   });
 
-  const openSubDialog = (user) => {
-    setSubPlan(getUserPlan(user.email));
-    setSubDialog(user);
-  };
+  const openSubDialog = (user) => setSubDialog(user);
 
   if (isLoading) {
     return (
@@ -421,50 +414,23 @@ export default function AdminClients() {
         </CardContent>
       </Card>
 
-      {/* Manage Subscription Dialog */}
-      <Dialog open={!!subDialog} onOpenChange={() => setSubDialog(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{isRTL ? 'إدارة الاشتراك' : 'Manage Subscription'}</DialogTitle>
-          </DialogHeader>
-          {subDialog && (
-            <div className="space-y-3 py-2">
-              <p className="text-sm text-slate-500 truncate">{subDialog.full_name || subDialog.email}</p>
-              <Select value={subPlan} onValueChange={setSubPlan}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                  <SelectItem value="premium">Premium — SAR 19/mo</SelectItem>
-                  <SelectItem value="teams">Teams — SAR 49/mo</SelectItem>
-                  <SelectItem value="enterprise">Enterprise — SAR 99/mo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSubDialog(null)}>
-              {isRTL ? 'إلغاء' : 'Cancel'}
-            </Button>
-            <Button
-              disabled={manageSubMutation.isPending}
-              onClick={() =>
-                subDialog &&
-                manageSubMutation.mutate({
-                  userEmail: subDialog.email,
-                  plan: subPlan,
-                  existingSub: getUserSub(subDialog.email),
-                })
-              }
-            >
-              {manageSubMutation.isPending
-                ? (isRTL ? 'جاري...' : 'Saving...')
-                : (isRTL ? 'حفظ' : 'Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Manage Subscription Dialog — reuses the same rich plan picker */}
+      <SubscriptionDialog
+        open={!!subDialog}
+        onOpenChange={(v) => { if (!v) setSubDialog(null); }}
+        title={subDialog ? (isRTL ? `اشتراك: ${subDialog.full_name || subDialog.email}` : `Subscription: ${subDialog.full_name || subDialog.email}`) : ''}
+        forcedCurrentPlan={subDialog ? getUserPlan(subDialog.email) : 'free'}
+        savingPlan={savingPlan}
+        onSelectPlan={(planKey) => {
+          if (!subDialog) return;
+          setSavingPlan(planKey);
+          manageSubMutation.mutate({
+            userEmail: subDialog.email,
+            plan: planKey,
+            existingSub: getUserSub(subDialog.email),
+          });
+        }}
+      />
     </div>
   );
 }
