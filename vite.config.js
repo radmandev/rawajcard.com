@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     logLevel: 'error',
+    // Use relative asset paths so deployments from subfolders (common on shared hosting)
+    // do not request scripts/styles from domain root.
+    base: './',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
