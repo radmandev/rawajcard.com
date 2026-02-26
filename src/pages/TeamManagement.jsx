@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
@@ -28,7 +28,8 @@ import {
   Crown,
   Building2,
   Upload,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -284,16 +285,27 @@ export default function TeamManagement() {
     }
   });
 
+  const logoInputRef = useRef(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
 
+    setUploadingLogo(true);
     try {
       const { file_url } = await api.integrations.Core.UploadFile({ file });
-      setCompanyInfo({ ...companyInfo, company_logo: file_url });
-      toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
+      if (file_url) {
+        setCompanyInfo((prev) => ({ ...prev, company_logo: file_url }));
+        toast.success(isRTL ? 'تم رفع الشعار' : 'Logo uploaded');
+      } else {
+        throw new Error('No URL returned');
+      }
     } catch (error) {
       toast.error(isRTL ? 'فشل رفع الشعار' : 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -621,13 +633,16 @@ export default function TeamManagement() {
                     <Building2 className="h-8 w-8 text-slate-400" />
                   </div>
                 )}
-                <label className="cursor-pointer">
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                  <div className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    {isRTL ? 'رفع شعار' : 'Upload Logo'}
-                  </div>
-                </label>
+                <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                <Button
+                  type="button"
+                  disabled={uploadingLogo}
+                  onClick={() => logoInputRef.current?.click()}
+                  className="bg-teal-600 text-white hover:bg-teal-700 flex items-center gap-2"
+                >
+                  {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadingLogo ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...') : (isRTL ? 'رفع شعار' : 'Upload Logo')}
+                </Button>
               </div>
             </div>
 

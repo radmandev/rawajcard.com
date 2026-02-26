@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { Input } from '@/components/ui/input';
@@ -19,11 +19,16 @@ import {
   Share2, 
   Palette,
   Upload,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 export default function CardForm({ card, onChange }) {
   const { t, isRTL } = useLanguage();
+  const [uploadingField, setUploadingField] = useState(null);
+
+  const profileImageRef = useRef(null);
+  const coverImageRef = useRef(null);
 
   const handleChange = (field, value) => {
     onChange({ ...card, [field]: value });
@@ -52,9 +57,23 @@ export default function CardForm({ card, onChange }) {
   const handleImageUpload = async (e, field) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so same file can be re-selected
+    e.target.value = '';
 
-    const { file_url } = await api.integrations.Core.UploadFile({ file });
-    handleChange(field, file_url);
+    setUploadingField(field);
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      if (file_url) {
+        handleChange(field, file_url);
+      } else {
+        throw new Error('No URL returned');
+      }
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert(isRTL ? 'فشل رفع الصورة. يرجى المحاولة مرة أخرى.' : 'Image upload failed. Please try again.');
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const socialPlatforms = [
@@ -113,6 +132,7 @@ export default function CardForm({ card, onChange }) {
                       className="h-20 w-20 rounded-full object-cover"
                     />
                     <button
+                      type="button"
                       onClick={() => handleChange('profile_image', '')}
                       className="absolute -top-1 -right-1 p-1 bg-red-500 rounded-full text-white"
                     >
@@ -124,26 +144,42 @@ export default function CardForm({ card, onChange }) {
                     <User className="h-8 w-8 text-slate-400" />
                   </div>
                 )}
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleImageUpload(e, 'profile_image')}
-                  />
-                  <Button variant="outline" size="sm" asChild>
-                    <span>
-                      <Upload className="h-4 w-4 mr-2" />
-                      {isRTL ? 'رفع صورة' : 'Upload'}
-                    </span>
-                  </Button>
-                </label>
+                <input
+                  ref={profileImageRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageUpload(e, 'profile_image')}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingField === 'profile_image'}
+                  onClick={() => profileImageRef.current?.click()}
+                >
+                  {uploadingField === 'profile_image' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {uploadingField === 'profile_image'
+                    ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...')
+                    : (isRTL ? 'رفع صورة' : 'Upload')}
+                </Button>
               </div>
             </div>
 
             {/* Cover Image */}
             <div className="space-y-2">
               <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+              <input
+                ref={coverImageRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e, 'cover_image')}
+              />
               <div className="space-y-2">
                 {card.cover_image ? (
                   <div className="relative">
@@ -152,30 +188,47 @@ export default function CardForm({ card, onChange }) {
                       alt="Cover"
                       className="h-24 w-full rounded-lg object-cover"
                     />
-                    <button
-                      onClick={() => handleChange('cover_image', '')}
-                      className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => coverImageRef.current?.click()}
+                        disabled={uploadingField === 'cover_image'}
+                        className="p-1 bg-teal-600 rounded-full text-white hover:bg-teal-700"
+                        title={isRTL ? 'استبدال الصورة' : 'Replace image'}
+                      >
+                        {uploadingField === 'cover_image'
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <Upload className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleChange('cover_image', '')}
+                        className="p-1 bg-red-500 rounded-full text-white"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <label className="cursor-pointer block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'cover_image')}
-                    />
-                    <div className="h-24 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center hover:border-teal-400 transition-colors">
-                      <div className="text-center">
+                  <button
+                    type="button"
+                    disabled={uploadingField === 'cover_image'}
+                    onClick={() => coverImageRef.current?.click()}
+                    className="w-full h-24 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center hover:border-teal-400 transition-colors disabled:opacity-50"
+                  >
+                    <div className="text-center">
+                      {uploadingField === 'cover_image' ? (
+                        <Loader2 className="h-6 w-6 mx-auto text-teal-500 animate-spin mb-1" />
+                      ) : (
                         <Upload className="h-6 w-6 mx-auto text-slate-400 mb-1" />
-                        <span className="text-sm text-slate-500">
-                          {isRTL ? 'انقر للرفع' : 'Click to upload'}
-                        </span>
-                      </div>
+                      )}
+                      <span className="text-sm text-slate-500">
+                        {uploadingField === 'cover_image'
+                          ? (isRTL ? 'جارٍ الرفع...' : 'Uploading...')
+                          : (isRTL ? 'انقر للرفع' : 'Click to upload')}
+                      </span>
                     </div>
-                  </label>
+                  </button>
                 )}
               </div>
             </div>

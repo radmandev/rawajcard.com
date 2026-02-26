@@ -288,16 +288,22 @@ export const api = {
         if (!file) return { file_url: null };
 
         const bucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'public';
-        const path = `uploads/${Date.now()}_${file.name}`;
+        // Sanitize filename: replace spaces and special chars
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `uploads/${Date.now()}_${sanitizedName}`;
 
-        const { error } = await supabase.storage.from(bucket).upload(path, file, {
-          upsert: true
+        const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+          upsert: true,
+          contentType: file.type,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase storage upload error:', error);
+          throw new Error(error.message || 'Upload failed');
+        }
 
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-        return { file_url: data?.publicUrl || null };
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+        return { file_url: urlData?.publicUrl || null };
       },
 
       /**
