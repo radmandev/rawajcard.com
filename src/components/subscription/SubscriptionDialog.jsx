@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Zap, Building2, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2 } from 'lucide-react';
 import { useLanguage } from '@/components/shared/LanguageContext';
-import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/supabaseAPI';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { createPageUrl } from '@/utils';
 
 const PLANS = [
   {
@@ -97,7 +98,7 @@ const PLANS = [
 
 export default function SubscriptionDialog({ open, onOpenChange }) {
   const { isRTL } = useLanguage();
-  const [loadingPlan, setLoadingPlan] = useState(null);
+  const navigate = useNavigate();
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription'],
@@ -110,24 +111,9 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
 
   const currentPlan = subscription?.plan || 'free';
 
-  const handleUpgrade = async (planKey) => {
-    if (planKey === 'free') return;
-
-    // Both premium and enterprise use Stripe checkout
-    setLoadingPlan(planKey);
-    try {
-      const result = await api.functions.invoke('createStripeCheckout', { plan: planKey });
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (err) {
-      console.error('Stripe checkout error:', err);
-      toast.error(isRTL ? 'حدث خطأ في الدفع، حاول مرة أخرى' : 'Payment error, please try again');
-    } finally {
-      setLoadingPlan(null);
-    }
+  const handleUpgrade = (planKey) => {
+    onOpenChange(false);
+    navigate(createPageUrl('Upgrade'));
   };
 
   return (
@@ -234,41 +220,24 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                   <Button disabled variant="outline" className="w-full opacity-50">
                     {isRTL ? 'مجاني دائماً' : 'Always Free'}
                   </Button>
-                ) : plan.key === 'enterprise' ? (
-                  <Button
-                    className="w-full border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 bg-transparent border"
-                    onClick={() => handleUpgrade('enterprise')}
-                    disabled={loadingPlan === 'enterprise'}
-                  >
-                    {loadingPlan === 'enterprise' ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {isRTL ? 'جاري التحميل...' : 'Loading...'}
-                      </>
-                    ) : (
-                      <>
-                        <Building2 className="h-4 w-4 mr-2" />
-                        {isRTL ? 'الترقية إلى مؤسسي' : 'Upgrade to Enterprise'}
-                      </>
-                    )}
-                  </Button>
                 ) : (
                   <Button
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-                    onClick={() => handleUpgrade(plan.key)}
-                    disabled={loadingPlan === plan.key}
-                  >
-                    {loadingPlan === plan.key ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {isRTL ? 'جاري التحميل...' : 'Loading...'}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        {isRTL ? 'الترقية الآن' : 'Upgrade Now'}
-                      </>
+                    className={cn(
+                      'w-full text-white',
+                      plan.key === 'enterprise'
+                        ? 'bg-purple-600 hover:bg-purple-700'
+                        : 'bg-teal-600 hover:bg-teal-700'
                     )}
+                    onClick={() => handleUpgrade(plan.key)}
+                  >
+                    {plan.key === 'enterprise'
+                      ? <Building2 className="h-4 w-4 mr-2" />
+                      : <Sparkles className="h-4 w-4 mr-2" />
+                    }
+                    {isRTL
+                      ? `الترقية إلى ${plan.name_ar}`
+                      : `Upgrade to ${plan.name_en}`
+                    }
                   </Button>
                 )}
               </div>

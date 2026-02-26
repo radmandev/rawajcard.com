@@ -70,6 +70,7 @@ const Store           = lazy(() => import('./pages/Store'));
 const TeamManagement  = lazy(() => import('./pages/TeamManagement'));
 const TemplateAnalytics = lazy(() => import('./pages/TemplateAnalytics'));
 const TemplateEditor  = lazy(() => import('./pages/TemplateEditor'));
+const Upgrade         = lazy(() => import('./pages/Upgrade'));
 
 
 export const PAGES = {
@@ -93,6 +94,7 @@ export const PAGES = {
     "TeamManagement": TeamManagement,
     "TemplateAnalytics": TemplateAnalytics,
     "TemplateEditor": TemplateEditor,
+    "Upgrade": Upgrade,
 }
 
 export const pagesConfig = {
