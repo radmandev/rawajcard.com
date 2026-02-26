@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useUpgrade } from '@/lib/UpgradeContext';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 
 export default function TeamManagement() {
   const { t, isRTL } = useLanguage();
+  const { openUpgradeDialog } = useUpgrade();
   const queryClient = useQueryClient();
   
   const [showCreateTeam, setShowCreateTeam] = useState(false);
@@ -337,12 +338,10 @@ export default function TeamManagement() {
                 : 'Team management is available for Premium users only. Upgrade to access team collaboration and shared card management.'
               }
             </p>
-            <Link to={createPageUrl('Pricing')}>
-              <Button className="bg-amber-600 hover:bg-amber-700">
-                <Crown className="h-4 w-4 mr-2" />
-                {isRTL ? 'الترقية إلى بريميوم' : 'Upgrade to Premium'}
-              </Button>
-            </Link>
+            <Button className="bg-amber-600 hover:bg-amber-700" onClick={openUpgradeDialog}>
+              <Crown className="h-4 w-4 mr-2" />
+              {isRTL ? 'الترقية إلى بريميوم' : 'Upgrade to Premium'}
+            </Button>
           </CardContent>
         </Card>
       </div>

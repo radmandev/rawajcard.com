@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
+import { useUpgrade } from '@/lib/UpgradeContext';
 import { useTheme } from '@/components/shared/ThemeContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -140,6 +141,7 @@ export default function Settings() {
     }
   };
 
+  const { openUpgradeDialog } = useUpgrade();
   const isPremium = subscription?.plan === 'premium';
 
   return (
@@ -225,14 +227,12 @@ export default function Settings() {
           )}
 
           <div className="flex gap-3">
-            <Link to={createPageUrl('Pricing')} className="flex-1">
-              <Button variant="outline" className="w-full">
-                {isPremium 
-                  ? (isRTL ? 'إدارة الاشتراك' : 'Manage Plan') 
-                  : (isRTL ? 'الترقية إلى بريميوم' : 'Upgrade to Premium')
-                }
-              </Button>
-            </Link>
+            <Button variant="outline" className="flex-1" onClick={openUpgradeDialog}>
+              {isPremium 
+                ? (isRTL ? 'إدارة الاشتراك' : 'Manage Plan') 
+                : (isRTL ? 'الترقية إلى بريميوم' : 'Upgrade to Premium')
+              }
+            </Button>
           </div>
         </CardContent>
       </Card>

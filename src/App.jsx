@@ -8,6 +8,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { UpgradeProvider } from '@/lib/UpgradeContext';
 import { LanguageProvider } from '@/components/shared/LanguageContext';
 import { ThemeProvider } from '@/components/shared/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -136,8 +137,10 @@ function App() {
           <AuthProvider>
             <QueryClientProvider client={queryClientInstance}>
               <Router>
-                <NavigationTracker />
-                <AuthenticatedApp />
+                <UpgradeProvider>
+                  <NavigationTracker />
+                  <AuthenticatedApp />
+                </UpgradeProvider>
               </Router>
               <Toaster />
               <SonnerToaster position="top-center" richColors />

@@ -5,7 +5,7 @@ import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import StatsCard from '@/components/dashboard/StatsCard';
 import AnalyticsChart from '@/components/analytics/AnalyticsChart';
-import SubscriptionDialog from '@/components/subscription/SubscriptionDialog';
+import { useUpgrade } from '@/lib/UpgradeContext';
 import CustomizationRequestDialog from '@/components/shared/CustomizationRequestDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +37,7 @@ export default function Analytics() {
 
   const [selectedCard, setSelectedCard] = useState(preselectedCard || 'all');
   const [timeRange, setTimeRange] = useState('week');
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const { openUpgradeDialog } = useUpgrade();
   const [showRequestDialog, setShowRequestDialog] = useState(false);
 
   const { data: subscription } = useQuery({
@@ -137,11 +137,7 @@ export default function Analytics() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <SubscriptionDialog 
-        open={showUpgradeDialog} 
-        onOpenChange={setShowUpgradeDialog}
-        reason="advanced_analytics"
-      />
+
       
       <CustomizationRequestDialog
         open={showRequestDialog}
@@ -243,7 +239,7 @@ export default function Analytics() {
               {!isPremium && (
                 <div className="absolute inset-0 backdrop-blur-sm bg-white/30 dark:bg-slate-900/30 z-10 rounded-lg flex items-center justify-center">
                   <Button
-                    onClick={() => setShowUpgradeDialog(true)}
+                    onClick={openUpgradeDialog}
                     size="sm"
                     className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                   >
@@ -279,7 +275,7 @@ export default function Analytics() {
               {!isPremium && (
                 <div className="absolute inset-0 backdrop-blur-sm bg-white/30 dark:bg-slate-900/30 z-10 rounded-lg flex items-center justify-center">
                   <Button
-                    onClick={() => setShowUpgradeDialog(true)}
+                    onClick={openUpgradeDialog}
                     size="sm"
                     className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                   >
@@ -316,7 +312,7 @@ export default function Analytics() {
             {!isPremium && (
               <div className="absolute inset-0 backdrop-blur-sm bg-white/30 dark:bg-slate-900/30 z-10 rounded-lg flex items-center justify-center">
                 <Button
-                  onClick={() => setShowUpgradeDialog(true)}
+                  onClick={openUpgradeDialog}
                   size="sm"
                   className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                 >
@@ -414,7 +410,7 @@ export default function Analytics() {
               {!isPremium && (
                 <div className="absolute inset-0 backdrop-blur-sm bg-white/30 dark:bg-slate-900/30 z-10 rounded-lg flex items-center justify-center">
                   <Button
-                    onClick={() => setShowUpgradeDialog(true)}
+                    onClick={openUpgradeDialog}
                     size="sm"
                     className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                   >

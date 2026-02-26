@@ -7,7 +7,7 @@ import { api } from '@/api/supabaseAPI';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatsCard from '@/components/dashboard/StatsCard';
 import AnalyticsChart from '@/components/analytics/AnalyticsChart';
-import SubscriptionDialog from '@/components/subscription/SubscriptionDialog';
+import { useUpgrade } from '@/lib/UpgradeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -27,7 +27,7 @@ import { format } from 'date-fns';
 export default function Dashboard() {
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
-  const [showUpgradeDialog, setShowUpgradeDialog] = React.useState(false);
+  const { openUpgradeDialog } = useUpgrade();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [startY, setStartY] = useState(0);
@@ -137,11 +137,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <SubscriptionDialog 
-        open={showUpgradeDialog} 
-        onOpenChange={setShowUpgradeDialog}
-        reason="advanced_analytics"
-      />
+
       
       {/* Welcome Section */}
       <motion.div
@@ -234,7 +230,7 @@ export default function Dashboard() {
                       {isRTL ? 'اشترك لعرض التحليلات المتقدمة' : 'Subscribe to view advanced analytics'}
                     </p>
                     <Button
-                      onClick={() => setShowUpgradeDialog(true)}
+                      onClick={openUpgradeDialog}
                       className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                       size="sm"
                     >

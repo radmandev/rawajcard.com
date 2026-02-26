@@ -14,7 +14,7 @@ import SlugInput from '@/components/cards/SlugInput';
 import QRCodeDisplay from '@/components/cards/QRCodeDisplay';
 import QRCodeCustomizer from '@/components/cards/QRCodeCustomizer';
 import NFCCardAd from '@/components/cards/NFCCardAd';
-import SubscriptionDialog from '@/components/subscription/SubscriptionDialog';
+import { useUpgrade } from '@/lib/UpgradeContext';
 import FloatingActions from '@/components/cards/FloatingActions';
 import confetti from 'canvas-confetti';
 import { 
@@ -47,7 +47,7 @@ export default function CardBuilder() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [focusedTemplate, setFocusedTemplate] = useState('navy_gold');
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const { openUpgradeDialog } = useUpgrade();
   const [limitChecked, setLimitChecked] = useState(false);
   const [previewEditMode, setPreviewEditMode] = useState(false);
   const [slugValid, setSlugValid] = useState(false);
@@ -112,7 +112,7 @@ export default function CardBuilder() {
   useEffect(() => {
     if (!cardId && !limitChecked && subscription && existingCards) {
       if (!canCreateNewCard()) {
-        setShowUpgradeDialog(true);
+        openUpgradeDialog();
       }
       setLimitChecked(true);
     }
@@ -277,13 +277,13 @@ export default function CardBuilder() {
       console.error('Save draft failed:', err);
       toast.error(isRTL ? 'تعذّر حفظ المسودة' : 'Could not save draft');
     }
-    setShowUpgradeDialog(true);
+    openUpgradeDialog();
   };
 
   const handlePublish = async () => {
     // Check limit before publishing new card
     if (!card.id && !canCreateNewCard()) {
-      setShowUpgradeDialog(true);
+      openUpgradeDialog();
       toast.error(isRTL ? 'الرجاء الترقية للحصول على بطاقات غير محدودة' : 'Please upgrade for unlimited cards');
       return;
     }
@@ -317,11 +317,7 @@ export default function CardBuilder() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <SubscriptionDialog 
-        open={showUpgradeDialog} 
-        onOpenChange={setShowUpgradeDialog}
-        reason="unlimited_cards"
-      />
+
       
       {/* Stepper */}
       <div className="mb-8">
@@ -377,7 +373,7 @@ export default function CardBuilder() {
                      selectedTemplate={card.template}
                      onSelect={(template, moveNext) => {
                        if (!cardId && !canCreateNewCard()) {
-                         setShowUpgradeDialog(true);
+                         openUpgradeDialog();
                          return;
                        }
                        setCard({ ...card, template });
@@ -580,7 +576,7 @@ export default function CardBuilder() {
                 <Button
                   onClick={() => {
                     if (!cardId && !canCreateNewCard() && currentStep === 0) {
-                      setShowUpgradeDialog(true);
+                      openUpgradeDialog();
                       return;
                     }
                     handleNext();
