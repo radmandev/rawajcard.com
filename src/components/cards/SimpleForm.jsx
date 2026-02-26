@@ -116,6 +116,21 @@ export default function SimpleForm({ card, onChange, onSaveDraft }) {
     handleChange(field, file_url);
   };
 
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingProfileImage(true);
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      handleChange('profile_image', file_url);
+    } catch (err) {
+      toast.error(isRTL ? 'فشل رفع الصورة' : 'Failed to upload image');
+      console.error(err);
+    } finally {
+      setUploadingProfileImage(false);
+    }
+  };
+
   const socialPlatforms = [
     { key: 'linkedin', label: 'LinkedIn', prefix: 'https://linkedin.com/in/', placeholder: 'yourname' },
     { key: 'twitter', label: 'Twitter / X', prefix: 'https://twitter.com/', placeholder: 'yourname' },
