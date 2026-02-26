@@ -257,7 +257,7 @@ export default function CardBuilder() {
     }
   };
 
-  const handleSaveDraftAndNavigateToPricing = async () => {
+  const handleSaveDraftAndOpenPricing = async () => {
     try {
       const draftData = { ...card, status: 'draft' };
       const { id, created_at, updated_at, created_by_user_id, user_id: _uid, ...cleanData } = draftData;
@@ -277,7 +277,7 @@ export default function CardBuilder() {
       console.error('Save draft failed:', err);
       toast.error(isRTL ? 'تعذّر حفظ المسودة' : 'Could not save draft');
     }
-    navigate(createPageUrl('Pricing'));
+    setShowUpgradeDialog(true);
   };
 
   const handlePublish = async () => {
@@ -405,7 +405,7 @@ export default function CardBuilder() {
                     <CardTitle>{t('customize')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndNavigateToPricing} />
+                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndOpenPricing} />
                   </CardContent>
                 </Card>
               </motion.div>
