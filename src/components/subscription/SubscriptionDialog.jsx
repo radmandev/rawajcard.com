@@ -196,12 +196,14 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                     'inline-flex p-2 rounded-lg mb-3',
                     plan.key === 'free' && 'bg-slate-100 dark:bg-slate-800',
                     plan.key === 'premium' && 'bg-teal-100 dark:bg-teal-900/30',
+                    plan.key === 'teams' && 'bg-cyan-100 dark:bg-cyan-900/30',
                     plan.key === 'enterprise' && 'bg-purple-100 dark:bg-purple-900/30',
                   )}>
                     <Icon className={cn(
                       'h-5 w-5',
                       plan.key === 'free' && 'text-slate-500',
                       plan.key === 'premium' && 'text-teal-600',
+                      plan.key === 'teams' && 'text-cyan-700 dark:text-cyan-400',
                       plan.key === 'enterprise' && 'text-purple-600',
                     )} />
                   </div>
@@ -249,13 +251,17 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
                     className={cn(
                       'w-full text-white',
                       plan.key === 'enterprise'
-                        ? 'bg-purple-600 hover:bg-purple-700'
-                        : 'bg-teal-600 hover:bg-teal-700'
+                        ? 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'
+                        : plan.key === 'teams'
+                        ? 'bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-600 dark:hover:bg-cyan-700'
+                        : 'bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600'
                     )}
                     onClick={() => handleUpgrade(plan.key)}
                   >
                     {plan.key === 'enterprise'
                       ? <Building2 className="h-4 w-4 mr-2" />
+                      : plan.key === 'teams'
+                      ? <Users className="h-4 w-4 mr-2" />
                       : <Sparkles className="h-4 w-4 mr-2" />
                     }
                     {isRTL
