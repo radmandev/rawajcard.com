@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate, Navig
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/components/shared/LanguageContext';
+import { ThemeProvider } from '@/components/shared/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
@@ -129,17 +130,19 @@ function App() {
 
   return (
     <AppErrorBoundary>
-      <LanguageProvider>
-        <AuthProvider>
-          <QueryClientProvider client={queryClientInstance}>
-            <Router>
-              <NavigationTracker />
-              <AuthenticatedApp />
-            </Router>
-            <Toaster />
-          </QueryClientProvider>
-        </AuthProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <QueryClientProvider client={queryClientInstance}>
+              <Router>
+                <NavigationTracker />
+                <AuthenticatedApp />
+              </Router>
+              <Toaster />
+            </QueryClientProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </AppErrorBoundary>
   )
 }

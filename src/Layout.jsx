@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageProvider, useLanguage } from '@/components/shared/LanguageContext';
-import { ThemeProvider } from '@/components/shared/ThemeContext';
 import Header from '@/components/shared/Header';
 import Sidebar from '@/components/shared/Sidebar';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
@@ -119,10 +118,8 @@ function LayoutContent({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <ThemeProvider>
-      <LayoutContent currentPageName={currentPageName}>
-        {children}
-      </LayoutContent>
-    </ThemeProvider>
+    <LayoutContent currentPageName={currentPageName}>
+      {children}
+    </LayoutContent>
   );
 }
