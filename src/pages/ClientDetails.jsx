@@ -135,6 +135,7 @@ export default function ClientDetails() {
           { ...base, created_by_user_id: user?.id, card_limit: data.card_limit },
           { ...base, card_limit: data.card_limit },
           base,
+          { plan: data.plan, status: data.status },
         ];
         let lastErr;
         for (const payload of attempts) {

@@ -153,6 +153,7 @@ export default function AdminClients() {
           { plan, status: 'active', metadata, created_by: userEmail, card_limit: LIMITS[plan] ?? 2 },
           { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
           { plan, status: 'active', metadata },
+          { plan, status: 'active' },
         ];
         let lastError;
         for (const payload of attempts) {
@@ -169,6 +170,7 @@ export default function AdminClients() {
         const updateAttempts = [
           { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
           { plan, status: 'active', metadata },
+          { plan, status: 'active' },
         ];
         let lastError;
         for (const payload of updateAttempts) {
