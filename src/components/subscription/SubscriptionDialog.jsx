@@ -142,22 +142,30 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full p-0 overflow-hidden">
-        <div className="p-6 pb-4">
-          <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-teal-500" />
-              {isRTL ? 'اختر خطتك' : 'Choose Your Plan'}
-            </DialogTitle>
-            <DialogDescription>
-              {isRTL
-                ? 'قم بالترقية للحصول على مزيد من الميزات والإمكانيات'
-                : 'Upgrade for more features and capabilities'}
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+      <DialogContent className="max-w-4xl w-full p-0 overflow-hidden
+        top-auto bottom-0 translate-y-0 translate-x-[-50%] rounded-t-2xl rounded-b-none
+        sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-2xl">
+        <div className="flex flex-col max-h-[92dvh] sm:max-h-[88dvh]">
 
-        <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Sticky Header */}
+          <div className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
+            {/* Drag handle for mobile */}
+            <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-4" />
+            <DialogHeader>
+              <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-teal-500" />
+                {isRTL ? 'اختر خطتك' : 'Choose Your Plan'}
+              </DialogTitle>
+              <DialogDescription>
+                {isRTL
+                  ? 'قم بالترقية للحصول على مزيد من الميزات والإمكانيات'
+                  : 'Upgrade for more features and capabilities'}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          {/* Scrollable Plans Grid */}
+          <div className="px-4 sm:px-6 py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 overflow-y-auto flex-1 min-h-0">
           {PLANS.map((plan) => {
             const Icon = plan.icon;
             const isCurrent = currentPlan === plan.key;
@@ -273,15 +281,18 @@ export default function SubscriptionDialog({ open, onOpenChange }) {
               </div>
             );
           })}
-        </div>
+          </div>{/* end plans grid */}
 
-        <div className="px-6 pb-5 text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            {isRTL
-              ? '🔒 المدفوعات آمنة ومشفرة عبر Stripe • يمكنك الإلغاء في أي وقت'
-              : '🔒 Payments are secure & encrypted via Stripe • Cancel anytime'}
-          </p>
-        </div>
+          {/* Sticky Footer */}
+          <div className="px-6 py-3 text-center flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              {isRTL
+                ? '🔒 المدفوعات آمنة ومشفرة عبر Stripe • يمكنك الإلغاء في أي وقت'
+                : '🔒 Payments are secure & encrypted via Stripe • Cancel anytime'}
+            </p>
+          </div>
+
+        </div>{/* end inner flex wrapper */}
       </DialogContent>
     </Dialog>
   );
