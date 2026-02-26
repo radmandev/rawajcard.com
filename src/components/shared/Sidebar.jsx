@@ -91,8 +91,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         collapsed ? "w-20" : "w-64",
         isOpen ? "translate-x-0" : isRTL ? "translate-x-full md:translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
-        {/* Nav Items */}
-        <nav className="flex-1 p-4 space-y-2">
+        {/* Nav Items — scrollable so logout is always visible */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.key}

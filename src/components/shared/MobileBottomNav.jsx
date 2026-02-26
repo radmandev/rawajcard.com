@@ -3,11 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
-import { LayoutDashboard, CreditCard, Store, Users } from 'lucide-react';
+import { api } from '@/api/supabaseAPI';
+import { LayoutDashboard, CreditCard, Store, Users, LogOut } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const location = useLocation();
   const { t, isRTL } = useLanguage();
+
+  const handleLogout = () => {
+    api.auth.logout(createPageUrl('Home'));
+  };
 
   const navItems = [
     { 
@@ -63,6 +68,13 @@ export default function MobileBottomNav() {
             <span className="text-xs font-medium">{label}</span>
           </Link>
         ))}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors text-red-500 dark:text-red-400"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="text-xs font-medium">{t('logout')}</span>
+        </button>
       </div>
     </nav>
   );
