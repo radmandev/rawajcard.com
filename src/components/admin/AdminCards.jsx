@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 
 const PLAN_CONFIG = {
   premium:    { label: 'Premium',    color: 'bg-teal-100 text-teal-700 border-teal-200',   icon: Sparkles },
+  teams:      { label: 'Teams',      color: 'bg-blue-100 text-blue-700 border-blue-200',    icon: Users },
   enterprise: { label: 'Enterprise', color: 'bg-purple-100 text-purple-700 border-purple-200', icon: Crown },
   free:       { label: 'Free',       color: 'bg-slate-100 text-slate-500 border-slate-200', icon: Users },
 };

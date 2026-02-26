@@ -44,7 +44,7 @@ export default function Analytics() {
     queryKey: ['subscription'],
     queryFn: async () => {
       const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free', card_limit: 1 };
+      return subs[0] || { plan: 'free', card_limit: 2 };
     }
   });
 

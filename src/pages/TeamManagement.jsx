@@ -72,7 +72,7 @@ export default function TeamManagement() {
     queryKey: ['subscription'],
     queryFn: async () => {
       const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free', card_limit: 1, status: 'active' };
+      return subs[0] || { plan: 'free', card_limit: 2, status: 'active' };
     }
   });
 

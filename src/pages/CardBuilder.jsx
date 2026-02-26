@@ -73,7 +73,7 @@ export default function CardBuilder() {
     queryKey: ['subscription'],
     queryFn: async () => {
       const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free', card_limit: 1 };
+      return subs[0] || { plan: 'free' };
     }
   });
 
@@ -149,12 +149,15 @@ export default function CardBuilder() {
     }
   }, [currentStep, card.status]);
 
+  // Plan card limits (single source of truth)
+  const PLAN_LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
+
   // Check card limit before creating new card
   const canCreateNewCard = () => {
     if (cardId) return true; // Editing existing card
     if (!subscription) return true; // Loading
-    if (subscription.plan === 'premium') return true;
-    return existingCards.length < subscription.card_limit;
+    const limit = PLAN_LIMITS[subscription.plan] ?? 2;
+    return existingCards.length < limit;
   };
 
   // Save mutation

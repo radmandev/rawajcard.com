@@ -26,6 +26,11 @@ const PLAN_CONFIG = {
     color: 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700',
     icon: Sparkles,
   },
+  teams: {
+    label: 'Teams', labelAr: 'الفرق',
+    color: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+    icon: Users,
+  },
   enterprise: {
     label: 'Enterprise', labelAr: 'مؤسسي',
     color: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
@@ -42,6 +47,7 @@ const FILTERS = [
   { key: 'all',        en: 'All',        ar: 'الكل' },
   { key: 'subscribed', en: 'Subscribed', ar: 'مشتركون' },
   { key: 'premium',    en: 'Premium',    ar: 'بريميوم' },
+  { key: 'teams',      en: 'Teams',      ar: 'الفرق' },
   { key: 'enterprise', en: 'Enterprise', ar: 'مؤسسي' },
   { key: 'free',       en: 'Free',       ar: 'مجاني' },
 ];
@@ -83,13 +89,15 @@ export default function AdminClients() {
 
   const stats = useMemo(() => {
     const premium    = users.filter(u => getUserPlan(u.email) === 'premium').length;
+    const teams      = users.filter(u => getUserPlan(u.email) === 'teams').length;
     const enterprise = users.filter(u => getUserPlan(u.email) === 'enterprise').length;
     return {
       total:      users.length,
-      subscribed: premium + enterprise,
+      subscribed: premium + teams + enterprise,
       premium,
+      teams,
       enterprise,
-      mrr: premium * 19 + enterprise * 99,
+      mrr: premium * 19 + teams * 49 + enterprise * 99,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, subscriptionMap]);
@@ -108,12 +116,14 @@ export default function AdminClients() {
 
   const manageSubMutation = useMutation({
     mutationFn: async ({ userEmail, plan, existingSub }) => {
+      const LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
+      const card_limit = LIMITS[plan] ?? 2;
       if (plan === 'free') {
         if (existingSub) await api.entities.Subscription.delete(existingSub.id);
       } else if (existingSub) {
-        await api.entities.Subscription.update(existingSub.id, { plan, status: 'active' });
+        await api.entities.Subscription.update(existingSub.id, { plan, card_limit, status: 'active' });
       } else {
-        await api.entities.Subscription.create({ created_by: userEmail, plan, status: 'active' });
+        await api.entities.Subscription.create({ created_by: userEmail, plan, card_limit, status: 'active' });
       }
     },
     onSuccess: () => {
@@ -131,7 +141,7 @@ export default function AdminClients() {
       user.full_name?.toLowerCase().includes(q);
     if (!matchSearch) return false;
     if (planFilter === 'all')        return true;
-    if (planFilter === 'subscribed') return ['premium', 'enterprise'].includes(getUserPlan(user.email));
+    if (planFilter === 'subscribed') return ['premium', 'teams', 'enterprise'].includes(getUserPlan(user.email));
     return getUserPlan(user.email) === planFilter;
   });
 
@@ -364,6 +374,7 @@ export default function AdminClients() {
                 <SelectContent>
                   <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
                   <SelectItem value="premium">Premium — SAR 19/mo</SelectItem>
+                  <SelectItem value="teams">Teams — SAR 49/mo</SelectItem>
                   <SelectItem value="enterprise">Enterprise — SAR 99/mo</SelectItem>
                 </SelectContent>
               </Select>

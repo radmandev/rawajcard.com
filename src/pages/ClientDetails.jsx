@@ -43,8 +43,7 @@ export default function ClientDetails() {
   const [subscriptionData, setSubscriptionData] = useState({
     plan: 'free',
     status: 'active',
-    card_limit: 1
-  });
+    card_limit: 2  });
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['client-details', userId],
@@ -417,7 +416,7 @@ export default function ClientDetails() {
                   setSubscriptionData({
                     plan: subscription?.plan || 'free',
                     status: subscription?.status || 'active',
-                    card_limit: subscription?.card_limit || 1
+                    card_limit: subscription?.card_limit || 2
                   });
                   setShowSubscriptionDialog(true);
                 }}
@@ -447,13 +446,18 @@ export default function ClientDetails() {
           <div className="space-y-4">
             <div>
               <Label>{isRTL ? 'الخطة' : 'Plan'}</Label>
-              <Select value={subscriptionData.plan} onValueChange={(val) => setSubscriptionData({...subscriptionData, plan: val, card_limit: val === 'premium' ? 999 : 1})}>
+              <Select value={subscriptionData.plan} onValueChange={(val) => {
+                const limits = { free: 2, premium: 2, teams: 10, enterprise: 30 };
+                setSubscriptionData({...subscriptionData, plan: val, card_limit: limits[val] ?? 2});
+              }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
                   <SelectItem value="premium">{isRTL ? 'بريميوم' : 'Premium'}</SelectItem>
+                  <SelectItem value="teams">{isRTL ? 'الفرق' : 'Teams'}</SelectItem>
+                  <SelectItem value="enterprise">{isRTL ? 'مؤسسي' : 'Enterprise'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -72,7 +72,7 @@ export default function Settings() {
     queryKey: ['subscription'],
     queryFn: async () => {
       const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free', card_limit: 1, status: 'active' };
+      return subs[0] || { plan: 'free', card_limit: 2, status: 'active' };
     }
   });
 
@@ -210,7 +210,7 @@ export default function Settings() {
                 <p className="text-sm text-slate-600 dark:text-slate-400">
                   {isPremium 
                     ? (isRTL ? 'بطاقات غير محدودة' : 'Unlimited cards')
-                    : (isRTL ? `${subscription?.card_limit || 1} بطاقة` : `${subscription?.card_limit || 1} card`)
+                    : (isRTL ? `${subscription?.card_limit || 2} بطاقة` : `${subscription?.card_limit || 2} card`)
                   }
                 </p>
               </div>

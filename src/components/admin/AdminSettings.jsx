@@ -22,10 +22,11 @@ export default function AdminSettings() {
   }, [subscriptions]);
 
   const subStats = React.useMemo(() => {
-    const premium = subscriptions.filter(s => s.plan === 'premium').length;
+    const premium    = subscriptions.filter(s => s.plan === 'premium').length;
+    const teams      = subscriptions.filter(s => s.plan === 'teams').length;
     const enterprise = subscriptions.filter(s => s.plan === 'enterprise').length;
-    const active = subscriptions.filter(s => s.status === 'active').length;
-    return { total: users.length, premium, enterprise, active, mrr: premium * 19 + enterprise * 99 };
+    const active     = subscriptions.filter(s => s.status === 'active').length;
+    return { total: users.length, premium, teams, enterprise, active, mrr: premium * 19 + teams * 49 + enterprise * 99 };
   }, [users, subscriptions]);
 
   const [settings, setSettings] = useState({

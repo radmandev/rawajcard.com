@@ -6,7 +6,7 @@ import { api } from '@/api/supabaseAPI';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Zap, Building2, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Check, Sparkles, Zap, Building2, Users, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -22,14 +22,14 @@ const PLANS = [
     period_en: '/month',
     period_ar: '/شهر',
     features_en: [
-      '1 Digital Card',
+      '2 Digital Cards',
       'Basic Templates',
       'QR Code',
       'Limited Analytics',
       'Email Support',
     ],
     features_ar: [
-      'بطاقة رقمية واحدة',
+      'بطاقتان رقميتان',
       'قوالب أساسية',
       'رمز QR',
       'تحليلات محدودة',
@@ -45,9 +45,8 @@ const PLANS = [
     price_ar: '19 ريال',
     period_en: '/month',
     period_ar: '/شهر',
-    popular: true,
     features_en: [
-      'Unlimited Cards',
+      '2 Digital Cards',
       'All Templates',
       'Advanced Analytics',
       'Lead Capture',
@@ -56,13 +55,38 @@ const PLANS = [
       'Export Data',
     ],
     features_ar: [
-      'بطاقات غير محدودة',
+      'بطاقتان رقميتان',
       'جميع القوالب',
       'تحليلات متقدمة',
       'التقاط المتابعة',
       'علامة تجارية مخصصة',
       'دعم أولوي',
       'تصدير البيانات',
+    ],
+  },
+  {
+    key: 'teams',
+    icon: Users,
+    name_en: 'Teams',
+    name_ar: 'الفرق',
+    price_en: 'SAR 49',
+    price_ar: '49 ريال',
+    period_en: '/month',
+    period_ar: '/شهر',
+    popular: true,
+    features_en: [
+      'Up to 10 Digital Cards',
+      'Everything in Premium',
+      'Team Collaboration',
+      'Shared Analytics',
+      'Priority Support',
+    ],
+    features_ar: [
+      'حتى 10 بطاقات رقمية',
+      'كل شيء في بريميوم',
+      'تعاون الفريق',
+      'تحليلات مشتركة',
+      'دعم أولوي',
     ],
   },
   {
@@ -76,7 +100,7 @@ const PLANS = [
     period_ar: '/شهر',
     features_en: [
       'Up to 30 Digital Cards',
-      'Everything in Premium',
+      'Everything in Teams',
       'Unlimited Team Members',
       'CRM Integration',
       'API Access',
@@ -86,7 +110,7 @@ const PLANS = [
     ],
     features_ar: [
       'حتى 30 بطاقة رقمية',
-      'كل شيء في بريميوم',
+      'كل شيء في خطة الفرق',
       'أعضاء فريق غير محدودين',
       'تكامل CRM',
       'وصول API',
