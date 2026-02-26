@@ -271,9 +271,18 @@ export const api = {
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      // Get a fresh session token every time — don't rely on the SDK auto-attach
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      // First try to refresh the session to get a guaranteed fresh token
+      let token;
+      try {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        token = refreshed?.session?.access_token;
+      } catch (_) {}
+
+      // Fallback to existing session if refresh fails (e.g. offline)
+      if (!token) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData?.session?.access_token;
+      }
 
       if (!token) {
         throw new Error('Not authenticated — please log in and try again.');
