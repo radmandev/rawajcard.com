@@ -138,20 +138,21 @@ export default function AdminClients() {
       }
 
       // Discover which columns actually exist in the live DB (cached after first call)
-      const DESIRED = ['plan', 'status', 'metadata', 'user_id', 'created_by', 'created_by_user_id', 'card_limit'];
+      const DESIRED = ['plan', 'plan_type', 'status', 'metadata', 'user_id', 'created_by', 'created_by_user_id', 'card_limit'];
       const validCols = await probeTableColumns('subscriptions', DESIRED);
 
-      if (!validCols.includes('plan')) {
+      if (!validCols.includes('plan') && !validCols.includes('plan_type')) {
         throw new Error(
           isRTL
             ? 'جدول الاشتراكات لا يحتوي على عمود plan — يرجى تشغيل الـ migrations من لوحة Supabase'
-            : "'plan' column missing from subscriptions table — please run the SQL migrations in your Supabase dashboard"
+            : "No plan column found in subscriptions table — please run the SQL migrations in your Supabase dashboard"
         );
       }
 
       const metadata = { user_email: userEmail, user_id: userUuid };
       const full = {
         plan,
+        plan_type: plan,
         status: 'active',
         metadata,
         user_id: userUuid,

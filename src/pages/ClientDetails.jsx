@@ -111,19 +111,20 @@ export default function ClientDetails() {
 
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data) => {
-      const DESIRED = ['plan', 'status', 'metadata', 'user_id', 'created_by', 'created_by_user_id', 'card_limit'];
+      const DESIRED = ['plan', 'plan_type', 'status', 'metadata', 'user_id', 'created_by', 'created_by_user_id', 'card_limit'];
       const validCols = await probeTableColumns('subscriptions', DESIRED);
 
-      if (!validCols.includes('plan')) {
+      if (!validCols.includes('plan') && !validCols.includes('plan_type')) {
         throw new Error(
           isRTL
             ? 'جدول الاشتراكات لا يحتوي على عمود plan — يرجى تشغيل migrations من Supabase'
-            : "'plan' column missing — run SQL migrations in Supabase dashboard"
+            : "No plan column found — run SQL migrations in Supabase dashboard"
         );
       }
 
       const full = {
         plan: data.plan,
+        plan_type: data.plan,
         status: data.status,
         metadata: { user_email: user?.email, user_id: user?.id },
         user_id: user?.id,

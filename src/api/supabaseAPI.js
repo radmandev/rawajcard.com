@@ -32,8 +32,19 @@ const getTableName = (entityName) => {
  * @param {string} entityName - Name of the entity
  * @returns {Object} Entity API with filter, list, create, update, delete, get methods
  */
+/**
+ * Normalize a subscription row so callers always see a `plan` field,
+ * regardless of whether the live DB uses `plan` or `plan_type`.
+ */
+const normalizeSubscription = (row) => {
+  if (!row) return row;
+  if (!row.plan && row.plan_type) return { ...row, plan: row.plan_type };
+  return row;
+};
+
 const createEntityApi = (entityName) => {
   const tableName = getTableName(entityName);
+  const isSubscription = entityName === 'Subscription';
 
   return {
     /**
@@ -61,7 +72,8 @@ const createEntityApi = (entityName) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      return isSubscription ? rows.map(normalizeSubscription) : rows;
     },
 
     /**
@@ -87,7 +99,8 @@ const createEntityApi = (entityName) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      return isSubscription ? rows.map(normalizeSubscription) : rows;
     },
 
     /**
@@ -103,7 +116,7 @@ const createEntityApi = (entityName) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return isSubscription ? normalizeSubscription(data) : data;
     },
 
     /**
