@@ -1,59 +1,82 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProductCard from '@/components/store/ProductCard';
 import ProductPreviewModal from '@/components/store/ProductPreviewModal';
 import Navbar from '@/components/landing/Navbar';
-import { 
-  ShoppingCart, 
-  CreditCard as NFCIcon, 
-  Sparkles, 
-  Package,
-  Star,
-  Check,
-  X
-} from 'lucide-react';
+import { ShoppingCart, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 import { productsData, productCategories } from '@/components/shared/productsData';
 import { useCart } from '@/contexts/CartContext';
 
-// Use shared products data
-const sampleProducts = productsData.map(p => ({
+// Map a Supabase products row → shape that ProductCard expects
+const normalizeProduct = (p) => ({
+  ...p,
+  image: p.main_image,
+  // sale_price is the discounted price; price is the regular/base price
+  price: p.sale_price ?? p.price,
+  originalPrice: p.sale_price ? p.price : null,
+  product_name: p.name,
+  product_price: p.sale_price ?? p.price,
+  product_image: p.main_image,
+  features: Array.isArray(p.features_en) ? p.features_en : [],
+  features_ar: Array.isArray(p.features_ar) ? p.features_ar : [],
+});
+
+// Static fallback (shown while loading or if table is empty)
+const staticProducts = productsData.map((p) => ({
   ...p,
   image: p.image_url,
   originalPrice: p.original_price,
-  category: p.category === 'business_cards' ? 'nfc_card' : p.category,
+  product_name: p.name_en,
+  product_price: p.price,
+  product_image: p.image_url,
   features: p.features_en,
-  features_ar: p.features_ar
+  name: p.name_en,
 }));
+
+const CATEGORY_TABS = [
+  { value: 'all',            en: '🛍️ All',            ar: '🛍️ الكل' },
+  { value: 'business_cards', en: '📱 Business Cards',  ar: '📱 بطاقات الأعمال' },
+  { value: 'keychains',      en: '🔑 Keychains',       ar: '🔑 تعليقات المفاتيح' },
+  { value: 'stands',         en: '📊 Table Stands',    ar: '📊 ستاندات الطاولة' },
+];
 
 export default function Store() {
   const { t, isRTL } = useLanguage();
   const [category, setCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Global cart context (localStorage-based, works for all users)
-  const { items: cartItems, addItem, updateQuantity, removeItem, isCartOpen, setIsCartOpen, totalCount } = useCart();
+  const { items: cartItems, addItem, setIsCartOpen, totalCount } = useCart();
 
-  const filteredProducts = category === 'all' 
-    ? sampleProducts 
-    : sampleProducts.filter(p => p.category === category);
+  // Fetch from Supabase; fall back to static data while loading
+  const { data: dbProducts, isLoading } = useQuery({
+    queryKey: ['store-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'published')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return (data || []).map(normalizeProduct);
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', {
-      style: 'currency',
-      currency: 'SAR'
-    }).format(price);
-  };
+  const products = dbProducts?.length ? dbProducts : staticProducts;
 
-  const hasDiscount = (product) => product.originalPrice && product.originalPrice > product.price;
+  const filteredProducts = category === 'all'
+    ? products
+    : products.filter((p) => p.category === category);
+
+  const formatPrice = (price) =>
+    new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', { style: 'currency', currency: 'SAR' }).format(price);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -89,17 +112,21 @@ export default function Store() {
 
       {/* Categories */}
       <Tabs value={category} onValueChange={setCategory}>
-        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1">
-          {productCategories.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value === 'business_cards' ? 'nfc_card' : cat.value} className="flex items-center gap-2">
-              <span>{cat.icon}</span>
-              {isRTL ? cat.label_ar : cat.label_en}
+        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 flex-wrap h-auto">
+          {CATEGORY_TABS.map((cat) => (
+            <TabsTrigger key={cat.value} value={cat.value}>
+              {isRTL ? cat.ar : cat.en}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
       {/* Products Grid */}
+      {isLoading && !dbProducts ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product, index) => (
           <motion.div
@@ -116,6 +143,7 @@ export default function Store() {
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* Product Preview Modal (reusable) */}
       <ProductPreviewModal
