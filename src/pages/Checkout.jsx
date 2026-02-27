@@ -78,7 +78,7 @@ export default function Checkout() {
   // ── Stripe: one-time card payment ─────────────────────────
   const stripeOrderMutation = useMutation({
     mutationFn: async () => {
-      const result = await api.functions.invoke('createStripeOrderCheckout', {
+      return await api.functions.invoke('createStripeOrderCheckout', {
         cartItems: cartItems.map((i) => ({
           product_name: i.product_name,
           product_price: i.product_price,
@@ -87,7 +87,6 @@ export default function Checkout() {
         })),
         shippingInfo,
       });
-      return result.data;
     },
     onSuccess: (data) => {
       if (data?.url) {
@@ -102,11 +101,10 @@ export default function Checkout() {
   // ── PayPal order ───────────────────────────────────────────
   const createPayPalOrderMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.functions.invoke('createPayPalOrder', {
+      return await api.functions.invoke('createPayPalOrder', {
         amount: total,
         orderData: { cartItems, shippingInfo },
       });
-      return response.data;
     },
     onSuccess: (data) => {
       if (data?.approvalUrl) {
