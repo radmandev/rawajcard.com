@@ -732,12 +732,7 @@ export default function CardBuilder() {
                   ) : (
                     <>
                       <CardPreview 
-                        card={{
-                          ...card,
-                          profile_image: card.profile_image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-                          company_logo: card.company_logo || 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=200&fit=crop',
-                          cover_image: card.cover_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop'
-                        }} 
+                        card={card} 
                         template={card.template}
                         showPlaceholder={!card.name}
                         editMode={previewEditMode}

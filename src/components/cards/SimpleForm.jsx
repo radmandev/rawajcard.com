@@ -147,6 +147,7 @@ export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow
   ];
 
   return (
+    <FormContext.Provider value={{ sectionsToShow }}>
     <div className="space-y-4">
       {/* Personal Information */}
       <Section 
