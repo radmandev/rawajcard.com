@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -177,7 +177,7 @@ const FEATURES = [
 ];
 
 /* ─── ProductCard ───────────────────────────────────────────────────── */
-function ProductCard({ product, index }) {
+function ProductCard({ product, index, onAddToCart, onView, onBuyNow }) {
   const [hovered, setHovered] = useState(false);
   return (
     <Reveal delay={index * 0.07}>
@@ -185,6 +185,7 @@ function ProductCard({ product, index }) {
         className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer border border-slate-100"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={onView}
       >
         <div className="relative overflow-hidden bg-slate-50 aspect-square">
           <motion.img
@@ -204,11 +205,21 @@ function ProductCard({ product, index }) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 8 }}
             transition={{ duration: 0.22 }}
-            className="absolute inset-x-3 bottom-3"
+            className="absolute inset-x-3 bottom-3 flex flex-col gap-2"
           >
-            <button className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg">
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddToCart?.(); }}
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
+            >
               <ShoppingCart className="h-4 w-4" />
               أضف إلى السلة
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onBuyNow?.(); }}
+              className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Zap className="h-4 w-4" />
+              اشتر الآن
             </button>
           </motion.div>
         </div>
@@ -243,6 +254,8 @@ export default function TestLanding() {
   const [activeTab, setActiveTab] = useState('all');
   const [heroProduct, setHeroProduct] = useState(0);
   const [previewProduct, setPreviewProduct] = useState(null);
+  const { addItem } = useCart();
+  const navigate = useNavigate();
 
   /* set RTL + Arabic for this page, restore on leave */
   useEffect(() => {
@@ -521,7 +534,14 @@ export default function TestLanding() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {(filteredProducts.length > 0 ? filteredProducts : PRODUCTS).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                index={i}
+                onAddToCart={() => addItem(product)}
+                onView={() => setPreviewProduct(product)}
+                onBuyNow={() => { addItem(product); navigate(createPageUrl('Checkout')); }}
+              />
             ))}
           </div>
 

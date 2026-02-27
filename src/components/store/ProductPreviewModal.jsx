@@ -1,15 +1,18 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Check, Star, X } from 'lucide-react';
+import { ShoppingCart, Check, Star, Zap } from 'lucide-react';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
 import { cn } from '@/lib/utils';
+import { createPageUrl } from '@/utils';
 
 export default function ProductPreviewModal({ product, onClose }) {
   const { isRTL } = useLanguage();
   const { addItem } = useCart();
+  const navigate = useNavigate();
 
   if (!product) return null;
 
@@ -28,6 +31,12 @@ export default function ProductPreviewModal({ product, onClose }) {
   const handleAdd = () => {
     addItem(product);
     onClose();
+  };
+
+  const handleBuyNow = () => {
+    addItem(product);
+    onClose();
+    navigate(createPageUrl('Checkout'));
   };
 
   return (
@@ -105,6 +114,15 @@ export default function ProductPreviewModal({ product, onClose }) {
             >
               <ShoppingCart className={cn('h-5 w-5', isRTL ? 'ml-2' : 'mr-2')} />
               {isRTL ? 'أضف إلى السلة' : 'Add to Cart'}
+            </Button>
+            <Button
+              onClick={handleBuyNow}
+              size="lg"
+              variant="outline"
+              className="w-full border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+              <Zap className={cn('h-5 w-5 text-amber-500', isRTL ? 'ml-2' : 'mr-2')} />
+              {isRTL ? 'اشتر الآن' : 'Buy Now'}
             </Button>
           </div>
         </div>

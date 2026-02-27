@@ -1,12 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { createPageUrl } from '@/utils';
+import { useCart } from '@/contexts/CartContext';
 
 export default function ProductCard({ product, onAddToCart, onView }) {
+  const navigate = useNavigate();
+  const { addItem } = useCart();
   const { isRTL } = useLanguage();
 
   const formatPrice = (price) => {
@@ -76,6 +81,14 @@ export default function ProductCard({ product, onAddToCart, onView }) {
             <Eye className="h-4 w-4 mr-1" />
             {isRTL ? 'عرض' : 'View'}
           </Button>
+          <Button
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); addItem(product); onAddToCart && onAddToCart(product); }}
+            className="bg-teal-600 hover:bg-teal-700 text-white"
+          >
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            {isRTL ? 'أضف' : 'Add'}
+          </Button>
         </div>
       </div>
 
@@ -105,14 +118,25 @@ export default function ProductCard({ product, onAddToCart, onView }) {
               </p>
             )}
           </div>
-          <Button
-            size="sm"
-            onClick={() => onAddToCart(product)}
-            className="bg-teal-600 hover:bg-teal-700"
-          >
-            <ShoppingCart className="h-4 w-4 mr-1" />
-            {isRTL ? 'أضف' : 'Add'}
-          </Button>
+          <div className="flex flex-col gap-1.5">
+            <Button
+              size="sm"
+              onClick={() => onAddToCart(product)}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              <ShoppingCart className="h-4 w-4 mr-1" />
+              {isRTL ? 'أضف' : 'Add'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { addItem(product); navigate(createPageUrl('Checkout')); }}
+              className="border-slate-300 dark:border-slate-600 text-xs"
+            >
+              <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+              {isRTL ? 'اشتر الآن' : 'Buy Now'}
+            </Button>
+          </div>
         </div>
       </div>
     </motion.div>
