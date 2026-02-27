@@ -392,14 +392,19 @@ export const api = {
      * so Supabase gateway never returns 401 due to a missing/stale session header
      */
     invoke: async (name, payload = {}) => {
-      let token = await api.functions._getAccessToken(false);
-
-      if (!token) {
-        throw new Error('Not authenticated — please log in.');
+      // Try to get the user's token — but don't throw for guests
+      let token = null;
+      try {
+        token = await api.functions._getAccessToken(false);
+      } catch {
+        // Guest user — no session, will use anon key
       }
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      // Guests use the anon key as Bearer; authenticated users use their JWT
+      const authToken = token || supabaseAnonKey;
 
       const callFunction = async (jwt) => fetch(`${supabaseUrl}/functions/v1/${name}`, {
         method: 'POST',
@@ -411,16 +416,16 @@ export const api = {
         body: JSON.stringify(payload),
       });
 
-      let res = await callFunction(token);
+      let res = await callFunction(authToken);
 
-      // Supabase gateway rejects invalid/expired JWTs before function code runs.
-      // Retry once with a forced refresh to recover OAuth/local-session drift.
-      if (res.status === 401) {
-        token = await api.functions._getAccessToken(true);
-        if (!token) {
-          throw new Error('Session expired — please log in again.');
+      // Retry once with forced refresh only if we had a real token and got 401
+      if (res.status === 401 && token) {
+        try {
+          token = await api.functions._getAccessToken(true);
+          if (token) res = await callFunction(token);
+        } catch {
+          // ignore refresh failure
         }
-        res = await callFunction(token);
       }
 
       let data;
