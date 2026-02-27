@@ -1,0 +1,997 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import Navbar from '@/components/landing/Navbar';
+import {
+  Wifi, Star, ShoppingCart, ChevronLeft, ChevronRight,
+  Phone, Mail, MessageCircle, MapPin, ArrowLeft, Check,
+  Zap, Smartphone, RefreshCw, Shield, Award, Users
+} from 'lucide-react';
+
+/* ─── helpers ─────────────────────────────────────────────────────── */
+function Reveal({ children, delay = 0, className = '' }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 36 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─── data ─────────────────────────────────────────────────────────── */
+const PRODUCTS = [
+  {
+    id: 1,
+    name: 'بطاقة الأعمال الاجتماعية NFC',
+    price: 35,
+    originalPrice: 60,
+    discount: 42,
+    rating: 5,
+    reviews: 29,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
+    badge: 'الأكثر مبيعاً',
+    badgeColor: 'bg-teal-600',
+  },
+  {
+    id: 2,
+    name: 'بطاقة تعارف NFC – خشبي',
+    price: 100,
+    originalPrice: null,
+    discount: null,
+    rating: 5,
+    reviews: 14,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3.png',
+    badge: 'فاخر',
+    badgeColor: 'bg-amber-500',
+  },
+  {
+    id: 3,
+    name: 'بطاقة تعارف ممغنطة NFC – بلاستيك',
+    price: 50,
+    originalPrice: null,
+    discount: null,
+    rating: 5,
+    reviews: 8,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/10/6.png',
+    badge: null,
+    badgeColor: null,
+  },
+  {
+    id: 4,
+    name: 'بطاقة تعارف معدنية NFC',
+    price: 130,
+    originalPrice: null,
+    discount: null,
+    rating: 5,
+    reviews: 21,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad.webp',
+    badge: 'بريميوم',
+    badgeColor: 'bg-slate-700',
+  },
+  {
+    id: 5,
+    name: 'بطاقة قيمنا على جوجل – NFC',
+    price: 35,
+    originalPrice: 60,
+    discount: 42,
+    rating: 5,
+    reviews: 47,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
+    badge: 'خصم 42%',
+    badgeColor: 'bg-red-500',
+  },
+  {
+    id: 6,
+    name: 'تعليقة مفاتيح NFC لزيادة المراجعات',
+    price: 35,
+    originalPrice: null,
+    discount: null,
+    rating: 5,
+    reviews: 69,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
+    badge: null,
+    badgeColor: null,
+  },
+  {
+    id: 7,
+    name: 'ستاند طاولة فخامة – جوجل NFC',
+    price: 149,
+    originalPrice: 190,
+    discount: 22,
+    rating: 5,
+    reviews: 33,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
+    badge: 'للمحلات',
+    badgeColor: 'bg-indigo-600',
+  },
+  {
+    id: 8,
+    name: 'ستاند طاولة للمشاركة السريعة',
+    price: 129,
+    originalPrice: 159,
+    discount: 19,
+    rating: 5,
+    reviews: 18,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp',
+    badge: null,
+    badgeColor: null,
+  },
+];
+
+const PRODUCT_TABS = [
+  { id: 'all', label: 'الكل' },
+  { id: 'card', label: 'سمارت بزنس كارد' },
+  { id: 'stand', label: 'ستاند طاولة' },
+  { id: 'sticker', label: 'ملصق' },
+  { id: 'keychain', label: 'تعليقة مفاتيح' },
+];
+
+const PRODUCT_CATEGORY_MAP = {
+  card: [1, 2, 3, 4],
+  stand: [7, 8],
+  sticker: [],
+  keychain: [6],
+  all: [1, 2, 3, 4, 5, 6, 7, 8],
+};
+
+const FEATURES = [
+  {
+    icon: Zap,
+    title: 'وصول فوري',
+    desc: 'مشاركة ملفك الشخصي بنقرة واحدة بدون تطبيق',
+    color: 'text-teal-500',
+    bg: 'bg-teal-50',
+  },
+  {
+    icon: Smartphone,
+    title: 'متوافق مع كل الأجهزة',
+    desc: 'يعمل مع iPhone وAndroid بدون أي إعداد',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50',
+  },
+  {
+    icon: RefreshCw,
+    title: 'تحديث فوري',
+    desc: 'عدّل معلوماتك في أي وقت دون إعادة الطباعة',
+    color: 'text-purple-500',
+    bg: 'bg-purple-50',
+  },
+  {
+    icon: Shield,
+    title: 'بيانات آمنة',
+    desc: 'تحكم كامل في ما تشاركه ومع من',
+    color: 'text-amber-500',
+    bg: 'bg-amber-50',
+  },
+];
+
+/* ─── ProductCard ───────────────────────────────────────────────────── */
+function ProductCard({ product, index }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Reveal delay={index * 0.07}>
+      <div
+        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer border border-slate-100"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div className="relative overflow-hidden bg-slate-50 aspect-square">
+          <motion.img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            animate={{ scale: hovered ? 1.06 : 1 }}
+            transition={{ duration: 0.4 }}
+            onError={(e) => { e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=صورة'; }}
+          />
+          {product.badge && (
+            <span className={`absolute top-3 right-3 ${product.badgeColor} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow`}>
+              {product.badge}
+            </span>
+          )}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 8 }}
+            transition={{ duration: 0.22 }}
+            className="absolute inset-x-3 bottom-3"
+          >
+            <button className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg">
+              <ShoppingCart className="h-4 w-4" />
+              أضف إلى السلة
+            </button>
+          </motion.div>
+        </div>
+        <div className="p-4">
+          <h3 className="font-bold text-slate-800 text-sm leading-snug mb-2 line-clamp-2 min-h-[2.5rem]">
+            {product.name}
+          </h3>
+          <div className="flex items-center gap-1 mb-3">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            ))}
+            <span className="text-xs text-slate-400 mr-1">({product.reviews})</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-black text-teal-700">
+              {product.price.toLocaleString('ar-SA')} ر.س
+            </span>
+            {product.originalPrice && (
+              <span className="text-sm text-slate-400 line-through">
+                {product.originalPrice} ر.س
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Main Page ─────────────────────────────────────────────────────── */
+export default function TestLanding() {
+  const [activeTab, setActiveTab] = useState('all');
+  const [heroProduct, setHeroProduct] = useState(0);
+
+  /* set RTL + Arabic for this page, restore on leave */
+  useEffect(() => {
+    const prevDir = document.documentElement.getAttribute('dir');
+    const prevLang = document.documentElement.getAttribute('lang');
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'ar');
+    return () => {
+      document.documentElement.setAttribute('dir', prevDir || 'ltr');
+      if (prevLang) document.documentElement.setAttribute('lang', prevLang);
+    };
+  }, []);
+
+  const filteredIds = PRODUCT_CATEGORY_MAP[activeTab] || PRODUCT_CATEGORY_MAP.all;
+  const filteredProducts = PRODUCTS.filter(p => filteredIds.includes(p.id));
+
+  const heroImages = [
+    'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
+    'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-1.webp',
+    'https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp',
+    'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
+  ];
+
+  return (
+    <div className="min-h-screen bg-white" dir="rtl" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
+      `}</style>
+
+      {/* ── Announcement Bar ─────────────────────────────────────── */}
+      <div className="bg-[#0f4c3a] text-white text-center py-2.5 text-sm font-medium tracking-wide">
+        🚚&nbsp; توصيل مجاني لطلبات 250 ريال فأكثر &nbsp;|&nbsp; اطلب الآن واستلم خلال يومين
+      </div>
+
+      {/* ── Navbar (existing) ────────────────────────────────────── */}
+      <Navbar />
+
+      {/* ── Hero Section ─────────────────────────────────────────── */}
+      <section
+        className="relative min-h-[92vh] flex items-center overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #0d1b2a 40%, #0a3d2e 100%)' }}
+      >
+        {/* animated glow orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            className="absolute top-[-120px] right-[-80px] w-[500px] h-[500px] rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #14b8a6, transparent 70%)' }}
+            animate={{ scale: [1, 1.15, 1], opacity: [0.18, 0.28, 0.18] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute bottom-[-100px] left-[-60px] w-[400px] h-[400px] rounded-full opacity-15"
+            style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.12, 0.22, 0.12] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 md:px-10 relative z-10 pt-28 pb-20">
+          <div className="grid lg:grid-cols-2 gap-14 items-center">
+
+            {/* Text */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+              >
+                <span className="inline-flex items-center gap-2 bg-teal-500/15 text-teal-300 text-sm font-semibold px-4 py-1.5 rounded-full border border-teal-500/30 mb-6">
+                  <Wifi className="h-4 w-4" />
+                  تقنية NFC الذكية
+                </span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6"
+                style={{ fontFamily: "'Cairo', sans-serif" }}
+              >
+                كن مستعداً للتعريف{' '}
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">
+                  بنفسك بطريقة عصرية
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.35 }}
+                className="text-slate-300 text-lg md:text-xl mb-8 leading-relaxed"
+              >
+                الجيل الجديد من كروت التعارف في عالم الأعمال
+              </motion.p>
+
+              {/* Product Type Tabs */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
+                className="flex flex-wrap gap-2 mb-10"
+              >
+                {[
+                  { label: 'سمارت بزنس كارد', icon: '💳' },
+                  { label: 'ستاند طاولة', icon: '🪧' },
+                  { label: 'ملصق', icon: '🏷️' },
+                  { label: 'تعليقة مفاتيح', icon: '🔑' },
+                ].map((item, i) => (
+                  <motion.span
+                    key={i}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-teal-500/25 text-white text-sm font-medium px-4 py-2 rounded-xl border border-white/15 cursor-pointer transition-colors"
+                  >
+                    <span>{item.icon}</span>
+                    {item.label}
+                  </motion.span>
+                ))}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.65 }}
+                className="flex flex-wrap gap-4"
+              >
+                <motion.a
+                  href="https://my.rawajcard.com/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base"
+                >
+                  انشئ كرت رقمي مجاني
+                  <ArrowLeft className="h-5 w-5" />
+                </motion.a>
+                <motion.a
+                  href="https://rawajcard.com/shop"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base"
+                >
+                  تسوق الآن
+                </motion.a>
+              </motion.div>
+
+              {/* Stats row */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
+                className="flex gap-8 mt-12"
+              >
+                {[
+                  { value: '+5000', label: 'عميل سعيد' },
+                  { value: '+1000', label: 'تقييم ⭐' },
+                  { value: '2 يوم', label: 'توصيل سريع' },
+                ].map((stat, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-2xl font-black text-teal-400">{stat.value}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{stat.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Hero Image Carousel */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="relative flex justify-center"
+            >
+              <div className="relative w-full max-w-md">
+                {/* Glow ring */}
+                <div className="absolute inset-0 m-8 rounded-3xl bg-teal-400/10 blur-2xl" />
+
+                <div className="relative bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-6 shadow-2xl overflow-hidden">
+                  <motion.img
+                    key={heroProduct}
+                    src={heroImages[heroProduct]}
+                    alt="منتج رواج كارد"
+                    className="w-full aspect-square object-contain rounded-2xl"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                    onError={(e) => { e.target.src = 'https://placehold.co/600x600/1e293b/94a3b8?text=Rawajcard'; }}
+                  />
+
+                  {/* Navigation dots */}
+                  <div className="flex justify-center gap-2 mt-4">
+                    {heroImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setHeroProduct(i)}
+                        className={`h-2 rounded-full transition-all duration-300 ${i === heroProduct ? 'w-6 bg-teal-400' : 'w-2 bg-white/30'}`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Nav arrows */}
+                  <button
+                    onClick={() => setHeroProduct(p => (p - 1 + heroImages.length) % heroImages.length)}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setHeroProduct(p => (p + 1) % heroImages.length)}
+                    className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Floating badge */}
+                <motion.div
+                  className="absolute -bottom-4 -right-4 bg-white rounded-2xl shadow-xl p-3 flex items-center gap-2"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+                    <Wifi className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-800">NFC تقنية</div>
+                    <div className="text-xs text-slate-400">لمسة واحدة تكفي</div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Shapes / Products Section ─────────────────────────────── */}
+      <section className="py-24 bg-[#f8fafb]">
+        <div className="container mx-auto px-4 md:px-10">
+          <Reveal>
+            <div className="text-center mb-14">
+              <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-3">
+                مجموعتنا
+              </span>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">
+                أشكال فاخرة تليق بك
+              </h2>
+              <p className="text-slate-500 text-lg max-w-xl mx-auto">
+                اختر من بين أفضل الأشكال والألوان — كروت بجودة وفخامة عالية
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Tabs */}
+          <Reveal delay={0.1}>
+            <div className="flex flex-wrap justify-center gap-2 mb-12">
+              {PRODUCT_TABS.map(tab => (
+                <motion.button
+                  key={tab.id}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'bg-teal-600 text-white shadow-md shadow-teal-500/30'
+                      : 'bg-white text-slate-600 hover:bg-teal-50 border border-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </motion.button>
+              ))}
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {(filteredProducts.length > 0 ? filteredProducts : PRODUCTS).map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+
+          <Reveal delay={0.2}>
+            <div className="text-center mt-12">
+              <a
+                href="https://rawajcard.com/shop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all text-base"
+              >
+                عرض جميع المنتجات
+                <ArrowLeft className="h-5 w-5" />
+              </a>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── Instant Access Feature ─────────────────────────────────── */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="container mx-auto px-4 md:px-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+
+            {/* Image */}
+            <Reveal className="order-2 lg:order-1">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-slate-50 rounded-3xl" />
+                <div className="relative p-8 md:p-12">
+                  <motion.img
+                    src="https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp"
+                    alt="الوصول بلمح البصر"
+                    className="w-full max-w-sm mx-auto drop-shadow-2xl"
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.4 }}
+                    onError={(e) => { e.target.src = 'https://placehold.co/500x500/f0fdf4/16a34a?text=NFC'; }}
+                  />
+                </div>
+                {/* floating chip */}
+                <motion.div
+                  className="absolute top-6 left-6 bg-teal-600 text-white rounded-2xl px-4 py-2 shadow-xl text-sm font-bold"
+                  animate={{ rotate: [-2, 2, -2] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  🔥 الأكثر طلباً
+                </motion.div>
+              </div>
+            </Reveal>
+
+            {/* Text */}
+            <Reveal delay={0.15} className="order-1 lg:order-2">
+              <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-4">
+                سهل وسريع
+              </span>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-snug">
+                الوصول بلمح{' '}
+                <span className="text-teal-600">البصر</span>
+              </h2>
+              <p className="text-slate-600 text-lg leading-relaxed mb-8">
+                باستخدام هذا الكرت يمكنك الوصول إلى هاتف عميلك بلمح البصر بدون الحاجة إلى فتح الكاميرا أو واجهة حفظ الأرقام
+              </p>
+
+              <div className="space-y-4 mb-10">
+                {[
+                  { title: 'بدون تطبيق', desc: 'يعمل مع أي هاتف حديث بدون تحميل أي تطبيق' },
+                  { title: 'مشاركة لحظية', desc: 'معلوماتك، حساباتك، وموقعك — كلها بنقرة واحدة' },
+                  { title: 'تحديث مباشر', desc: 'غيّر بياناتك متى تشاء، الكرت يُحدَّث فوراً' },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.12 + 0.2 }}
+                    className="flex items-start gap-4 bg-slate-50 rounded-2xl p-4 border border-slate-100"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900">{item.title}</div>
+                      <div className="text-sm text-slate-500 mt-0.5">{item.desc}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <a
+                href="https://rawajcard.com/shop"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl transition-colors"
+              >
+                اختر كرتك الآن
+                <ArrowLeft className="h-5 w-5" />
+              </a>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features Row ─────────────────────────────────────────────── */}
+      <section className="py-20 bg-slate-50">
+        <div className="container mx-auto px-4 md:px-10">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 text-center mb-14">
+              لماذا يختار الجميع رواج كارد؟
+            </h2>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURES.map((f, i) => (
+              <Reveal key={i} delay={i * 0.08}>
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className={`w-12 h-12 ${f.bg} rounded-2xl flex items-center justify-center mb-4`}>
+                    <f.icon className={`h-6 w-6 ${f.color}`} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-lg mb-2">{f.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Section "مع رواج كارد" ──────────────────────────────── */}
+      <section
+        className="py-28 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #0d1b2a 50%, #0a3d2e 100%)' }}
+      >
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-10"
+            style={{ background: 'radial-gradient(ellipse, #14b8a6, transparent 70%)' }}
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 6, repeat: Infinity }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 md:px-10 relative z-10 text-center">
+          <Reveal>
+            <span className="inline-block text-teal-300 text-sm font-bold tracking-widest uppercase mb-4 border border-teal-400/30 rounded-full px-4 py-1.5">
+              مع رواج كارد
+            </span>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+              الوصول أصبح{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">
+                أسرع
+              </span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-slate-300 text-lg max-w-xl mx-auto mb-12 leading-relaxed">
+              أنشئ كرتك الرقمي مجاناً — شارك معلوماتك، وسائل التواصل، وموقعك بنقرة واحدة مع أي شخص
+            </p>
+          </Reveal>
+          <Reveal delay={0.3}>
+            <div className="flex flex-wrap justify-center gap-4">
+              <motion.a
+                href="https://my.rawajcard.com/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg"
+              >
+                انشئ كرتك مجاناً الآن
+                <ArrowLeft className="h-5 w-5" />
+              </motion.a>
+              <motion.a
+                href="https://rawajcard.com/shop"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-10 py-5 rounded-2xl border border-white/20 transition-all text-lg"
+              >
+                خصص كرتك المفضل
+              </motion.a>
+            </div>
+          </Reveal>
+
+          {/* Trust badges */}
+          <Reveal delay={0.45}>
+            <div className="flex flex-wrap justify-center gap-8 mt-16">
+              {[
+                { icon: '🔒', text: 'مدفوعات آمنة 100%' },
+                { icon: '🚚', text: 'توصيل سريع لجميع مناطق السعودية' },
+                { icon: '↩️', text: 'إرجاع مجاني خلال 14 يوم' },
+                { icon: '📞', text: 'دعم على مدار الساعة' },
+              ].map((badge, i) => (
+                <div key={i} className="flex items-center gap-2 text-slate-300 text-sm">
+                  <span className="text-lg">{badge.icon}</span>
+                  {badge.text}
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── Table Stand Promo ────────────────────────────────────────── */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="container mx-auto px-4 md:px-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+
+            {/* Text */}
+            <Reveal>
+              <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-4">
+                للمطاعم والمحلات
+              </span>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-snug">
+                خلّ عملاءك يتفاعلون{' '}
+                <span className="text-teal-600">أسرع</span>
+              </h2>
+              <p className="text-slate-600 text-lg leading-relaxed mb-8">
+                مع ستاند تفاعلي يصل إليك العميل بواسطته بلمح البصر — يصلح لطلبات الطعام، المراجعات على جوجل، مشاركة وسائل التواصل، وأكثر
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mb-10">
+                {[
+                  { label: 'مراجعات جوجل', icon: '⭐' },
+                  { label: 'مشاركة السوشيال', icon: '📱' },
+                  { label: 'منيو إلكتروني', icon: '🍽️' },
+                  { label: 'نموذج تواصل', icon: '📋' },
+                ].map((use, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100"
+                  >
+                    <span className="text-2xl">{use.icon}</span>
+                    <span className="font-semibold text-slate-700 text-sm">{use.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://rawajcard.com/product/%D8%B3%D8%AA%D8%A7%D9%86%D8%AF-%D8%B7%D8%A7%D9%88%D9%84%D8%A9-%D9%84%D9%84%D9%85%D8%B4%D8%A7%D8%B1%D9%83%D8%A9-%D8%A7%D9%84%D8%B3%D8%B1%D9%8A%D8%B9%D8%A9-%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all"
+                >
+                  خل عملاءك يتفاعلون أسرع
+                  <ArrowLeft className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://rawajcard.com/shop"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 border-2 border-slate-200 hover:border-teal-400 text-slate-700 font-semibold px-8 py-4 rounded-2xl transition-all"
+                >
+                  عرض الكل
+                </a>
+              </div>
+            </Reveal>
+
+            {/* Image */}
+            <Reveal delay={0.15}>
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-br from-teal-50 to-slate-100 rounded-3xl -z-10" />
+                <motion.img
+                  src="https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp"
+                  alt="ستاند طاولة NFC"
+                  className="w-full max-w-md mx-auto rounded-2xl drop-shadow-2xl"
+                  whileHover={{ scale: 1.02, rotate: -1 }}
+                  transition={{ duration: 0.4 }}
+                  onError={(e) => { e.target.src = 'https://placehold.co/500x500/f0fdf4/16a34a?text=Stand'; }}
+                />
+                {/* Price badge */}
+                <motion.div
+                  className="absolute bottom-4 left-4 bg-white rounded-2xl shadow-xl px-5 py-3 border border-slate-100"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                >
+                  <div className="text-xs text-slate-400 line-through mb-0.5">190 ر.س</div>
+                  <div className="text-2xl font-black text-teal-700">149 ر.س</div>
+                  <div className="text-xs text-red-500 font-bold">وفّر 41 ر.س</div>
+                </motion.div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ─────────────────────────────────────────────── */}
+      <section className="py-20 bg-slate-50">
+        <div className="container mx-auto px-4 md:px-10">
+          <Reveal>
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
+                ماذا يقول عملاؤنا؟
+              </h2>
+              <p className="text-slate-500">آراء حقيقية من عملاء رواج كارد</p>
+            </div>
+          </Reveal>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'عبدالله الشمري',
+                role: 'مدير مبيعات',
+                text: 'منتج رائع! وفّر عليّ الكثير من الوقت. أعطيته لعملائي وكلهم انبهروا. التوصيل كان سريع جداً.',
+                stars: 5,
+                avatar: 'ع',
+                avatarBg: 'bg-teal-600',
+              },
+              {
+                name: 'سارة الأحمدي',
+                role: 'صاحبة مطعم',
+                text: 'الستاند الخاص بمطعمي ساعدنا كثيراً في زيادة المراجعات على جوجل. أنصح به كل صاحب محل.',
+                stars: 5,
+                avatar: 'س',
+                avatarBg: 'bg-purple-600',
+              },
+              {
+                name: 'محمد العتيبي',
+                role: 'مستقل ومصمم',
+                text: 'جودة البطاقة ممتازة والكرت الرقمي احترافي جداً. الجميع يسألني عنه في الاجتماعات!',
+                stars: 5,
+                avatar: 'م',
+                avatarBg: 'bg-blue-600',
+              },
+            ].map((review, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(review.stars)].map((_, j) => (
+                      <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-slate-600 leading-relaxed mb-5 text-sm">"{review.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full ${review.avatarBg} flex items-center justify-center text-white font-bold text-sm`}>
+                      {review.avatar}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">{review.name}</div>
+                      <div className="text-xs text-slate-400">{review.role}</div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer style={{ background: '#0a0a0a' }} className="text-white">
+        {/* Top CTA strip */}
+        <div className="border-b border-white/10 py-10">
+          <div className="container mx-auto px-4 md:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-xl font-black mb-1">جاهز تبدأ؟</h3>
+              <p className="text-slate-400 text-sm">انشئ كرتك الرقمي مجاناً الآن</p>
+            </div>
+            <a
+              href="https://my.rawajcard.com/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors"
+            >
+              ابدأ مجاناً
+              <ArrowLeft className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+
+        {/* Main footer */}
+        <div className="container mx-auto px-4 md:px-10 py-16">
+          <div className="grid md:grid-cols-4 gap-10">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <img
+                src="https://rawajcard.com/wp-content/uploads/2024/09/rawajcard-logo.webp"
+                alt="Rawajcard"
+                className="h-12 w-auto mb-4 brightness-200"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <div className="hidden text-2xl font-black text-teal-400 mb-4">رواج كارد</div>
+              <p className="text-slate-400 text-sm leading-relaxed mb-5">
+                الجيل الجديد من بطاقات التعارف الذكية في عالم الأعمال
+              </p>
+              <div className="flex gap-3">
+                {[
+                  { href: 'https://www.facebook.com/rawajcard', icon: '𝒻' },
+                  { href: 'https://twitter.com/rawajcard', icon: '𝓍' },
+                  { href: 'https://www.instagram.com/rawajcard', icon: '𝒾𝑔' },
+                ].map((s, i) => (
+                  <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
+                    className="w-9 h-9 bg-white/10 hover:bg-teal-600 rounded-full flex items-center justify-center text-sm transition-colors">
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Links */}
+            {[
+              {
+                title: 'روابط مهمة',
+                links: [
+                  { label: 'المتجر', href: 'https://rawajcard.com/shop/' },
+                  { label: 'حسابي', href: 'https://rawajcard.com/my-account/' },
+                  { label: 'طلبياتي', href: 'https://rawajcard.com/my-orders/' },
+                  { label: 'جميع المنتجات', href: 'https://rawajcard.com/shop/' },
+                ],
+              },
+              {
+                title: 'معلومات مهمة',
+                links: [
+                  { label: 'الشحن والتوصيل', href: 'https://rawajcard.com/shipping' },
+                  { label: 'سياسة التبديل والاسترجاع', href: 'https://rawajcard.com/returns' },
+                  { label: 'سياسة الخصوصية', href: 'https://rawajcard.com/privacy-policy' },
+                  { label: 'وسائل الدفع', href: 'https://rawajcard.com/payments' },
+                ],
+              },
+              {
+                title: 'تواصل معنا',
+                links: [],
+                contact: true,
+              },
+            ].map((col, i) => (
+              <div key={i}>
+                <h4 className="font-black text-white mb-5 text-base">{col.title}</h4>
+                {col.contact ? (
+                  <div className="space-y-4 text-sm text-slate-400">
+                    <a href="mailto:info@rawajcard.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+                      <Mail className="h-4 w-4 flex-shrink-0" />
+                      info@rawajcard.com
+                    </a>
+                    <a href="https://wa.me/966551861022" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+                      <MessageCircle className="h-4 w-4 flex-shrink-0" />
+                      واتساب: 966551861022+
+                    </a>
+                    <a href="tel:966551861022" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+                      <Phone className="h-4 w-4 flex-shrink-0" />
+                      اتصل بنا: 966551861022+
+                    </a>
+                  </div>
+                ) : (
+                  <ul className="space-y-3 text-sm text-slate-400">
+                    {col.links.map((link, j) => (
+                      <li key={j}>
+                        <a href={link.href} target="_blank" rel="noopener noreferrer"
+                          className="hover:text-teal-400 transition-colors">
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 py-6 text-center text-sm text-slate-500">
+          جميع الحقوق محفوظة © {new Date().getFullYear()} رواج كارد — تقنية NFC الذكية
+        </div>
+      </footer>
+    </div>
+  );
+}

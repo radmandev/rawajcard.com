@@ -71,6 +71,7 @@ const TeamManagement  = lazy(() => import('./pages/TeamManagement'));
 const TemplateAnalytics = lazy(() => import('./pages/TemplateAnalytics'));
 const TemplateEditor  = lazy(() => import('./pages/TemplateEditor'));
 const Upgrade         = lazy(() => import('./pages/Upgrade'));
+const TestLanding     = lazy(() => import('./pages/TestLanding'));
 
 
 export const PAGES = {
@@ -95,6 +96,7 @@ export const PAGES = {
     "TemplateAnalytics": TemplateAnalytics,
     "TemplateEditor": TemplateEditor,
     "Upgrade": Upgrade,
+    "TestLanding": TestLanding,
 }
 
 export const pagesConfig = {
