@@ -369,25 +369,38 @@ export default function TestLanding() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6"
-                style={{ fontFamily: "'Cairo', sans-serif" }}
+                className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6"
+                style={{ fontFamily: "'Cairo', sans-serif", color: '#fff' }}
               >
-                استعد للتعريف{' '}
+                <span className="text-white">استعد للتعريف </span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={wordIdx}
+                    initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, y: -18, filter: 'blur(6px)' }}
+                    transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                    style={{
+                      display: 'inline-block',
+                      background: 'linear-gradient(to left, #5eead4, #14b8a6)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {CYCLING_WORDS[wordIdx]}
+                  </motion.span>
+                </AnimatePresence>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500 inline-flex items-baseline gap-2">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={wordIdx}
-                      initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
-                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, y: -18, filter: 'blur(6px)' }}
-                      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                      className="inline-block"
-                    >
-                      {CYCLING_WORDS[wordIdx]}
-                    </motion.span>
-                  </AnimatePresence>
-                  <span>بطريقة عصرية</span>
+                <span
+                  style={{
+                    background: 'linear-gradient(to left, #5eead4, #14b8a6)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  بطريقة عصرية
                 </span>
               </motion.h1>
 
@@ -415,8 +428,6 @@ export default function TestLanding() {
                     onClick={() => {
                       setSelectedProductTypeIdx(i);
                       setHeroProduct(i);
-                      const prod = PRODUCTS.find(p => p.id === item.productId);
-                      if (prod) setPreviewProduct(prod);
                     }}
                     className={`flex items-center gap-1.5 text-white text-sm font-medium px-4 py-2 rounded-xl border cursor-pointer transition-all ${
                       selectedProductTypeIdx === i
@@ -493,10 +504,14 @@ export default function TestLanding() {
                     key={heroProduct}
                     src={heroImages[heroProduct]}
                     alt="منتج رواج كارد"
-                    className="w-full aspect-square object-contain rounded-2xl"
+                    className="w-full aspect-square object-contain rounded-2xl cursor-pointer hover:scale-105 transition-transform duration-300"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4 }}
+                    onClick={() => {
+                      const prod = PRODUCTS.find(p => p.id === HERO_PRODUCT_TYPES[heroProduct]?.productId);
+                      if (prod) setPreviewProduct(prod);
+                    }}
                     onError={(e) => { e.target.src = 'https://placehold.co/600x600/1e293b/94a3b8?text=Rawajcard'; }}
                   />
 
