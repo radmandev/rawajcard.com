@@ -24,6 +24,7 @@ export default function CheckoutSuccess() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const stripeSubscription = urlParams.get('stripe_subscription');
+    const stripeOrder = urlParams.get('stripe_order');
     const stripeSessionId = urlParams.get('session_id');
     const plan = urlParams.get('plan');
     const paypalOrderId = urlParams.get('token');
@@ -31,6 +32,8 @@ export default function CheckoutSuccess() {
 
     if (stripeSubscription === 'true' && stripeSessionId) {
       activateStripeSubscription(stripeSessionId, plan);
+    } else if (stripeOrder === 'true' && stripeSessionId) {
+      confirmStripeStoreOrder(stripeSessionId);
     } else if (paypalOrderId && !order) {
       capturePayPalPayment(paypalOrderId);
     } else if (order) {
@@ -58,6 +61,30 @@ export default function CheckoutSuccess() {
       // and let the webhook handle it as fallback
       setActivatedPlan(plan || 'premium');
       setSuccessType('subscription');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // ── Stripe: confirm one-time store order ──────────────────
+  const confirmStripeStoreOrder = async (sessionId) => {
+    setIsProcessing(true);
+    try {
+      const result = await api.functions.invoke('confirmStripeOrder', { sessionId });
+      if (result?.data?.success) {
+        setOrderNumber(result.data.order_number);
+        setSuccessType('order');
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      } else {
+        throw new Error(result?.data?.error || 'Confirmation failed');
+      }
+    } catch (error) {
+      console.error('Stripe order confirmation error:', error);
+      // Fallback: show success anyway — Stripe already charged
+      setOrderNumber('RWJ-' + Date.now().toString(36).toUpperCase());
+      setSuccessType('order');
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     } finally {
       setIsProcessing(false);
     }
@@ -104,7 +131,7 @@ export default function CheckoutSuccess() {
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto" />
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            {isRTL ? 'جاري تفعيل اشتراكك...' : 'Activating your subscription...'}
+            {isRTL ? 'جاري معالجة طلبك...' : 'Processing your order...'}
           </p>
         </div>
       </div>

@@ -10,29 +10,57 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
+import {
+  ArrowLeft,
+  ArrowRight,
   Truck,
   Loader2,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard,
+  Shield,
+  Check,
+  ChevronRight,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+
+// ── Payment method options ───────────────────────────────────
+const PAYMENT_METHODS = [
+  {
+    id: 'stripe',
+    label: 'Credit / Debit Card',
+    labelAr: 'بطاقة ائتمان / خصم',
+    desc: 'Visa, Mastercard, Mada — secured by Stripe',
+    descAr: 'فيزا، ماستركارد، مدى — مؤمَّن بـ Stripe',
+    badge: 'Recommended',
+    badgeAr: 'موصى به',
+    color: 'border-teal-500 bg-teal-50/60 dark:bg-teal-950/20',
+  },
+  {
+    id: 'paypal',
+    label: 'PayPal',
+    labelAr: 'PayPal',
+    desc: 'Pay securely with your PayPal account',
+    descAr: 'ادفع بأمان عبر حساب PayPal',
+    badge: null,
+    color: 'border-slate-200 dark:border-slate-700',
+  },
+];
 
 export default function Checkout() {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     phone: '',
     address: '',
     city: '',
-    country: 'Saudi Arabia'
+    country: 'Saudi Arabia',
   });
 
   // Fetch cart items
@@ -43,49 +71,70 @@ export default function Checkout() {
 
   const total = cartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
   const totalUSD = (total * 0.27).toFixed(2);
+  const freeShipping = total >= 250;
 
-  // Create PayPal order mutation
+  const formatPrice = (price, currency = 'SAR') =>
+    new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', { style: 'currency', currency }).format(price);
+
+  // ── Stripe: one-time card payment ─────────────────────────
+  const stripeOrderMutation = useMutation({
+    mutationFn: async () => {
+      const result = await api.functions.invoke('createStripeOrderCheckout', {
+        cartItems: cartItems.map((i) => ({
+          product_name: i.product_name,
+          product_price: i.product_price,
+          quantity: i.quantity,
+          product_image: i.product_image,
+        })),
+        shippingInfo,
+      });
+      return result.data;
+    },
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data?.error || (isRTL ? 'خطأ في رابط الدفع' : 'Payment link error'));
+      }
+    },
+    onError: () => toast.error(isRTL ? 'حدث خطأ في الدفع' : 'Payment error'),
+  });
+
+  // ── PayPal order ───────────────────────────────────────────
   const createPayPalOrderMutation = useMutation({
     mutationFn: async () => {
       const response = await api.functions.invoke('createPayPalOrder', {
         amount: total,
-        orderData: { cartItems, shippingInfo }
+        orderData: { cartItems, shippingInfo },
       });
       return response.data;
     },
     onSuccess: (data) => {
-      console.log('PayPal order created:', data);
-      if (data.approvalUrl) {
+      if (data?.approvalUrl) {
+        localStorage.setItem('checkout_cart', JSON.stringify(cartItems));
+        localStorage.setItem('checkout_shipping', JSON.stringify(shippingInfo));
+        localStorage.setItem('checkout_total', total.toString());
         window.location.href = data.approvalUrl;
       } else {
         toast.error(isRTL ? 'خطأ في رابط الدفع' : 'Payment link error');
       }
     },
-    onError: (error) => {
-      console.error('PayPal error:', error);
-      toast.error(isRTL ? 'حدث خطأ في الدفع' : 'Payment error');
-    }
+    onError: () => toast.error(isRTL ? 'حدث خطأ في الدفع' : 'Payment error'),
   });
 
-  const formatPrice = (price, currency = 'SAR') => {
-    return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(price);
-  };
+  const isPending = stripeOrderMutation.isPending || createPayPalOrderMutation.isPending;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city) {
-      toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
+      toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
-    
-    // Store checkout data in localStorage for PayPal callback
-    localStorage.setItem('checkout_cart', JSON.stringify(cartItems));
-    localStorage.setItem('checkout_shipping', JSON.stringify(shippingInfo));
-    localStorage.setItem('checkout_total', total.toString());
-    createPayPalOrderMutation.mutate();
+    if (paymentMethod === 'stripe') {
+      stripeOrderMutation.mutate();
+    } else {
+      createPayPalOrderMutation.mutate();
+    }
   };
 
   if (isLoading) {
@@ -184,6 +233,105 @@ export default function Checkout() {
               </CardContent>
             </Card>
 
+            {/* Payment Method */}
+            <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-teal-600" />
+                  {isRTL ? 'طريقة الدفع' : 'Payment Method'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {PAYMENT_METHODS.map((method) => (
+                  <motion.div
+                    key={method.id}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={cn(
+                      'relative flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                      paymentMethod === method.id
+                        ? method.color
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    )}
+                  >
+                    {/* Radio indicator */}
+                    <div
+                      className={cn(
+                        'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                        paymentMethod === method.id
+                          ? 'border-teal-600 bg-teal-600'
+                          : 'border-slate-300 dark:border-slate-600'
+                      )}
+                    >
+                      {paymentMethod === method.id && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+
+                    {/* Text info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-900 dark:text-white text-sm">
+                          {isRTL ? method.labelAr : method.label}
+                        </span>
+                        {method.badge && (
+                          <Badge className="bg-teal-600 text-white text-[10px] px-1.5 py-0 h-4">
+                            {isRTL ? method.badgeAr : method.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {isRTL ? method.descAr : method.desc}
+                      </p>
+                    </div>
+
+                    {/* Logo */}
+                    {method.id === 'stripe' ? (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="h-6 px-2 bg-[#1a1f71] rounded flex items-center">
+                          <span className="text-white text-[10px] font-black italic">VISA</span>
+                        </div>
+                        <div className="h-6 w-9 bg-white border border-slate-200 rounded flex items-center justify-center overflow-hidden">
+                          <div className="relative w-5 h-4">
+                            <div className="absolute left-0 top-0 w-3 h-4 rounded-full bg-red-500 opacity-90" />
+                            <div className="absolute right-0 top-0 w-3 h-4 rounded-full bg-yellow-400 opacity-90" />
+                          </div>
+                        </div>
+                        <div className="h-6 px-1.5 bg-[#00a76f] rounded flex items-center">
+                          <span className="text-white text-[10px] font-bold">mada</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-6 px-2 bg-[#003087] rounded flex items-center flex-shrink-0">
+                        <span className="text-white text-[10px] font-black">Pay</span>
+                        <span className="text-[#009cde] text-[10px] font-black">Pal</span>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+
+                {/* Stripe security note */}
+                <AnimatePresence>
+                  {paymentMethod === 'stripe' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex items-start gap-2 mt-1 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <Shield className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          {isRTL
+                            ? 'يتم معالجة مدفوعاتك بأمان عبر Stripe. لا نخزن أي بيانات بطاقتك مطلقاً.'
+                            : 'Payments are processed securely via Stripe. We never store your card details.'}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
 
           </div>
 
@@ -223,41 +371,57 @@ export default function Checkout() {
                 <Separator />
 
                 {/* Totals */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
                     <span className="text-slate-500">{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                    <span>{formatPrice(total, 'SAR')}</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span className="text-slate-500">{isRTL ? 'الشحن' : 'Shipping'}</span>
-                    <span className="text-green-600">{isRTL ? 'مجاني' : 'Free'}</span>
+                    {freeShipping ? (
+                      <span className="text-green-600 font-medium">{isRTL ? 'مجاني' : 'Free'}</span>
+                    ) : (
+                      <span className="text-slate-500">{isRTL ? 'سيتم تحديده' : 'Calculated at next step'}</span>
+                    )}
                   </div>
+                  {!freeShipping && (
+                    <p className="text-xs text-teal-600">
+                      {isRTL
+                        ? `أضف ${formatPrice(250 - total)} للحصول على شحن مجاني`
+                        : `Add ${formatPrice(250 - total)} for free shipping`}
+                    </p>
+                  )}
                 </div>
 
                 <Separator />
 
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm text-slate-500">
-                    <span>{t('total')} (SAR)</span>
-                    <span>{formatPrice(total, 'SAR')}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>{t('total')} (USD)</span>
-                    <span className="text-teal-600">{formatPrice(totalUSD, 'USD')}</span>
-                  </div>
+                <div className="flex justify-between text-base font-bold">
+                  <span>{t('total')}</span>
+                  <span className="text-teal-600 dark:text-teal-400">{formatPrice(total)}</span>
                 </div>
 
                 {/* Submit */}
-                <Button 
-                  type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                <Button
+                  type="submit"
+                  className={cn(
+                    'w-full font-bold text-white',
+                    paymentMethod === 'stripe'
+                      ? 'bg-teal-600 hover:bg-teal-700'
+                      : 'bg-[#003087] hover:bg-[#002070]'
+                  )}
                   size="lg"
-                  disabled={createPayPalOrderMutation.isPending}
+                  disabled={isPending}
                 >
-                  {createPayPalOrderMutation.isPending ? (
+                  {isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {isRTL ? 'جاري المعالجة...' : 'Processing...'}
+                      {isRTL ? 'جاري التوجيه للدفع...' : 'Redirecting to payment...'}
+                    </>
+                  ) : paymentMethod === 'stripe' ? (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      {isRTL ? 'الدفع بالبطاقة' : 'Pay with Card'}
+                      <ChevronRight className="h-4 w-4 ml-auto" />
                     </>
                   ) : (
                     <>
@@ -266,6 +430,18 @@ export default function Checkout() {
                     </>
                   )}
                 </Button>
+
+                {/* Trust badges */}
+                <div className="flex items-center justify-center gap-4 pt-1">
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <Shield className="h-3.5 w-3.5" />
+                    {isRTL ? 'دفع آمن' : 'Secure checkout'}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <Check className="h-3.5 w-3.5" />
+                    {isRTL ? 'مشفر SSL' : 'SSL Encrypted'}
+                  </div>
+                </div>
 
                 <Link to={createPageUrl('Store')} className="block text-center">
                   <Button variant="ghost" size="sm">
