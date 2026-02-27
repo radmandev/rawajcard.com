@@ -3,7 +3,7 @@ import { useLanguage } from '@/components/shared/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { api } from '@/api/supabaseAPI';
+import { api, probeTableColumns, safePayload } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, 
@@ -111,38 +111,31 @@ export default function ClientDetails() {
 
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data) => {
-      const isSchemaError = (e) =>
-        e.message?.includes('schema cache') ||
-        e.message?.includes('column') ||
-        e.message?.includes('Could not find');
+      const DESIRED = ['plan', 'status', 'metadata', 'created_by', 'created_by_user_id', 'card_limit'];
+      const validCols = await probeTableColumns('subscriptions', DESIRED);
+
+      if (!validCols.includes('plan')) {
+        throw new Error(
+          isRTL
+            ? 'جدول الاشتراكات لا يحتوي على عمود plan — يرجى تشغيل migrations من Supabase'
+            : "'plan' column missing — run SQL migrations in Supabase dashboard"
+        );
+      }
+
+      const full = {
+        plan: data.plan,
+        status: data.status,
+        metadata: { user_email: user?.email, user_id: user?.id },
+        created_by: user?.email,
+        created_by_user_id: user?.id,
+        card_limit: data.card_limit,
+      };
+      const payload = safePayload(full, validCols);
 
       if (subscription) {
-        const attempts = [
-          data,
-          (({ card_limit, ...r }) => r)(data),
-          { plan: data.plan, status: data.status },
-        ];
-        let lastErr;
-        for (const payload of attempts) {
-          try { return await api.entities.Subscription.update(subscription.id, payload); }
-          catch (e) { lastErr = e; if (!isSchemaError(e)) throw e; }
-        }
-        throw lastErr;
+        return await api.entities.Subscription.update(subscription.id, payload);
       } else {
-        const base = { plan: data.plan, status: data.status, metadata: { user_email: user?.email, user_id: user?.id } };
-        const attempts = [
-          { ...base, created_by_user_id: user?.id, created_by: user?.email, card_limit: data.card_limit },
-          { ...base, created_by_user_id: user?.id, card_limit: data.card_limit },
-          { ...base, card_limit: data.card_limit },
-          base,
-          { plan: data.plan, status: data.status },
-        ];
-        let lastErr;
-        for (const payload of attempts) {
-          try { return await api.entities.Subscription.create(payload); }
-          catch (e) { lastErr = e; if (!isSchemaError(e)) throw e; }
-        }
-        throw lastErr;
+        return await api.entities.Subscription.create(payload);
       }
     },
     onSuccess: () => {

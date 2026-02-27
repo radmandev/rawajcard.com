@@ -158,6 +158,45 @@ const createEntityApi = (entityName) => {
 };
 
 /**
+ * Probe which columns actually exist in a table by doing SELECT LIMIT 0
+ * and parsing "Could not find the 'X' column" errors.
+ * Result is cached per tableName for the lifetime of the page.
+ */
+const _colCache = {};
+export const probeTableColumns = async (tableName, desiredColumns) => {
+  if (_colCache[tableName]) return _colCache[tableName];
+
+  const valid = [...desiredColumns];
+  while (valid.length > 0) {
+    const { error } = await supabase
+      .from(tableName)
+      .select(valid.join(', '))
+      .limit(0);
+
+    if (!error) break; // all remaining columns exist
+
+    const match = error.message?.match(/Could not find the '(.+?)' column/);
+    if (match) {
+      const bad = match[1];
+      const idx = valid.indexOf(bad);
+      if (idx !== -1) { valid.splice(idx, 1); continue; }
+    }
+    break; // different error — stop probing
+  }
+
+  _colCache[tableName] = valid;
+  return valid;
+};
+
+/**
+ * Build a payload that only includes columns known to exist.
+ */
+export const safePayload = (desired, validCols) => {
+  const set = new Set(validCols);
+  return Object.fromEntries(Object.entries(desired).filter(([k]) => set.has(k)));
+};
+
+/**
  * Main API client
  */
 export const api = {

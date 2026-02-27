@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import SubscriptionDialog from '@/components/subscription/SubscriptionDialog';
-import { api } from '@/api/supabaseAPI';
+import { api, probeTableColumns, safePayload } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search, Mail, CreditCard, Calendar, Ban, CheckCircle,
@@ -137,53 +137,33 @@ export default function AdminClients() {
         return;
       }
 
-      // Always store user identity in metadata (guaranteed to exist)
+      // Discover which columns actually exist in the live DB (cached after first call)
+      const DESIRED = ['plan', 'status', 'metadata', 'created_by', 'created_by_user_id', 'card_limit'];
+      const validCols = await probeTableColumns('subscriptions', DESIRED);
+
+      if (!validCols.includes('plan')) {
+        throw new Error(
+          isRTL
+            ? 'جدول الاشتراكات لا يحتوي على عمود plan — يرجى تشغيل الـ migrations من لوحة Supabase'
+            : "'plan' column missing from subscriptions table — please run the SQL migrations in your Supabase dashboard"
+        );
+      }
+
       const metadata = { user_email: userEmail, user_id: userUuid };
-
-      // Progressive payloads — strip columns that don't exist until one succeeds
-      const isSchemaError = (e) =>
-        e.message?.includes('schema cache') ||
-        e.message?.includes('column') ||
-        e.message?.includes('Could not find');
-
-      const tryWithFallbacks = async (saveFn) => {
-        const attempts = [
-          { plan, status: 'active', metadata, created_by: userEmail, created_by_user_id: userUuid, card_limit: LIMITS[plan] ?? 2 },
-          { plan, status: 'active', metadata, created_by_user_id: userUuid, card_limit: LIMITS[plan] ?? 2 },
-          { plan, status: 'active', metadata, created_by: userEmail, card_limit: LIMITS[plan] ?? 2 },
-          { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
-          { plan, status: 'active', metadata },
-          { plan, status: 'active' },
-        ];
-        let lastError;
-        for (const payload of attempts) {
-          try { return await saveFn(payload); } catch (e) {
-            lastError = e;
-            if (!isSchemaError(e)) throw e; // non-schema error — stop retrying
-          }
-        }
-        throw lastError;
+      const full = {
+        plan,
+        status: 'active',
+        metadata,
+        created_by: userEmail,
+        created_by_user_id: userUuid,
+        card_limit: LIMITS[plan] ?? 2,
       };
+      const payload = safePayload(full, validCols);
 
       if (existingSub) {
-        // For updates, don't re-send created_by* columns
-        const updateAttempts = [
-          { plan, status: 'active', metadata, card_limit: LIMITS[plan] ?? 2 },
-          { plan, status: 'active', metadata },
-          { plan, status: 'active' },
-        ];
-        let lastError;
-        for (const payload of updateAttempts) {
-          try { return await api.entities.Subscription.update(existingSub.id, payload); } catch (e) {
-            lastError = e;
-            if (!isSchemaError(e)) throw e;
-          }
-        }
-        throw lastError;
+        return await api.entities.Subscription.update(existingSub.id, payload);
       } else {
-        return await tryWithFallbacks((payload) =>
-          api.entities.Subscription.create(payload)
-        );
+        return await api.entities.Subscription.create(payload);
       }
     },
     onSuccess: () => {
