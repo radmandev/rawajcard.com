@@ -82,7 +82,6 @@ export default function FloatingActions({ card, isRTL, cardUrl, embedded = false
       <>
         <motion.div
           className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3"
-          style={{ background: primary }}
           variants={stagger} initial="hidden" animate="show"
         >
           {/* Left: icon buttons — QR + Share */}
@@ -129,7 +128,6 @@ export default function FloatingActions({ card, isRTL, cardUrl, embedded = false
     <>
       <motion.div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 pointer-events-auto"
-        style={{ background: primary, boxShadow: `0 -4px 32px ${primary}66` }}
         variants={stagger} initial="hidden" animate="show"
       >
         <div className={`flex gap-2 ${isRTL ? 'order-2' : 'order-1'}`}>
