@@ -711,7 +711,7 @@ export default function CardBuilder() {
                   </>
                 )}
                 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-w-md mx-auto">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-w-md mx-auto relative">
                   {currentStep === 0 ? (
                     <CardPreview 
                       card={{ 
@@ -740,18 +740,15 @@ export default function CardBuilder() {
                           setCard({ ...card, [field]: value });
                         }}
                       />
+                      <FloatingActions
+                        card={card}
+                        isRTL={isRTL}
+                        cardUrl={card.slug ? `${window.location.origin}/c/${card.slug}` : window.location.href}
+                        embedded={true}
+                      />
                     </>
                   )}
                 </div>
-
-                {/* Floating Actions Preview */}
-                {currentStep > 0 && (
-                  <FloatingActions 
-                    card={card} 
-                    isRTL={isRTL}
-                    cardUrl={card.slug ? `${window.location.origin}/c/${card.slug}` : window.location.href}
-                  />
-                )}
 
                 {/* Contact Form Preview Note */}
                 {currentStep > 0 && card.contact_form?.enabled && (
