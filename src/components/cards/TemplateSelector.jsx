@@ -61,6 +61,15 @@ const templates = [
     colors: ['#3730A3', '#F97316', '#F8FAFC'],
     preview: 'bg-gradient-to-br from-indigo-700 to-purple-800'
   },
+  {
+    id: 'aurora_glass',
+    name: 'Aurora Glass',
+    nameAr: 'أورورا زجاجي',
+    description: 'Animated aurora with glassmorphism cards',
+    descriptionAr: 'خلفية أورورا متحركة مع تصميم زجاجي عصري',
+    colors: ['#7c3aed', '#38bdf8', '#f472b6'],
+    preview: 'bg-gradient-to-br from-[#0f0c29] via-[#1a0533] to-[#0d1b6e]'
+  },
 ];
 
 export default function TemplateSelector({ selectedTemplate, onSelect }) {
