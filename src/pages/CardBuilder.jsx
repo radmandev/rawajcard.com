@@ -25,16 +25,20 @@ import {
   Sparkles,
   Palette,
   Link2,
-  PartyPopper
+  PartyPopper,
+  Paintbrush,
+  Crown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 const STEPS = [
-  { key: 'template', icon: Palette, labelEn: 'Choose Template', labelAr: 'اختر القالب' },
-  { key: 'customize', icon: Sparkles, labelEn: 'Customize', labelAr: 'تخصيص' },
-  { key: 'link', icon: Link2, labelEn: 'Custom Link', labelAr: 'الرابط المخصص' },
-  { key: 'publish', icon: PartyPopper, labelEn: 'Publish', labelAr: 'نشر' },
+  { key: 'template',  icon: Palette,      labelEn: 'Template',     labelAr: 'القالب' },
+  { key: 'customize', icon: Sparkles,     labelEn: 'Content',      labelAr: 'المحتوى' },
+  { key: 'design',    icon: Paintbrush,   labelEn: 'Design',       labelAr: 'التصميم' },
+  { key: 'premium',   icon: Crown,        labelEn: 'Pro Features', labelAr: 'المميزات' },
+  { key: 'link',      icon: Link2,        labelEn: 'Your Link',    labelAr: 'رابطك' },
+  { key: 'publish',   icon: PartyPopper,  labelEn: 'Publish',      labelAr: 'نشر' },
 ];
 
 export default function CardBuilder() {
@@ -214,7 +218,7 @@ export default function CardBuilder() {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      // Auto-save on Customize → Link transition so data is persisted early
+      // Auto-save on Customize → Design transition so data is persisted early
       try {
         const { id, created_at, updated_at, created_by_user_id, user_id: _uid, ...cleanData } = card;
         if (currentUser?.email) cleanData.created_by = currentUser.email;
@@ -236,7 +240,7 @@ export default function CardBuilder() {
       }
     }
 
-    if (currentStep === 2) {
+    if (currentStep === 4) {
       setSaveError(null);
       // Save slug before publishing step
       try {
@@ -299,14 +303,12 @@ export default function CardBuilder() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0:
-        return !!card.template;
-      case 1:
-        return !!card.name;
-      case 2:
-        return !!card.slug && slugValid;
-      default:
-        return true;
+      case 0: return !!card.template;
+      case 1: return !!card.name;
+      case 2: return true;
+      case 3: return true;
+      case 4: return !!card.slug && slugValid;
+      default: return true;
     }
   };
 
@@ -404,14 +406,58 @@ export default function CardBuilder() {
                     <CardTitle>{t('customize')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndOpenPricing} />
+                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndOpenPricing} sectionsToShow={['personal','company','social','floatingActions']} />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Step 2b: Design */}
+            {currentStep === 2 && (
+              <motion.div
+                key="design"
+                initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isRTL ? -20 : 20 }}
+              >
+                <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Paintbrush className="h-5 w-5 text-teal-600" />
+                      {isRTL ? 'التصميم والألوان' : 'Design & Colors'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndOpenPricing} sectionsToShow={['design']} />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Step 2c: Premium Features */}
+            {currentStep === 3 && (
+              <motion.div
+                key="premium"
+                initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isRTL ? -20 : 20 }}
+              >
+                <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-amber-500" />
+                      {isRTL ? 'المميزات المتقدمة' : 'Pro Features'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SimpleForm card={card} onChange={setCard} onSaveDraft={handleSaveDraftAndOpenPricing} sectionsToShow={['appointments','customForm','contactForm','crm']} />
                   </CardContent>
                 </Card>
               </motion.div>
             )}
 
             {/* Step 3: Custom Link */}
-            {currentStep === 2 && (
+            {currentStep === 4 && (
               <motion.div
                 key="link"
                 initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
@@ -438,7 +484,7 @@ export default function CardBuilder() {
             )}
 
             {/* Step 4: Publish */}
-            {currentStep === 3 && (
+            {currentStep === 5 && (
               <motion.div
                 key="publish"
                 initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
@@ -479,6 +525,7 @@ export default function CardBuilder() {
 
                         <QRCodeCustomizer
                           qrSettings={card.qr_settings || {}}
+                          cardDesign={card.design || {}}
                           onChange={(qr_settings) => {
                             setCard({ ...card, qr_settings });
                             saveMutation.mutate({ qr_settings });
@@ -565,7 +612,7 @@ export default function CardBuilder() {
           </AnimatePresence>
 
           {/* Navigation Buttons */}
-          {currentStep < 3 && (
+          {currentStep < STEPS.length - 1 && (
             <>
               <div className="flex justify-between mt-6">
                 <Button
@@ -601,7 +648,7 @@ export default function CardBuilder() {
                 </Button>
               </div>
               {/* Persistent error display for step 2 save failure */}
-              {currentStep === 2 && saveError && (
+              {currentStep === 4 && saveError && (
                 <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">
                   ⚠️ {saveError}
                 </div>
@@ -636,12 +683,12 @@ export default function CardBuilder() {
             </CardHeader>
             <CardContent>
               <div className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 rounded-2xl p-6 relative overflow-hidden">
-                {/* Template Switch Arrows for Customize Step */}
-                {currentStep === 1 && (
+                {/* Template Switch Arrows for Customize/Design/Premium Steps */}
+                {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
                   <>
                     <button
                       onClick={() => {
-                        const templates = ['navy_gold', 'dark_minimal', 'purple_coral', 'earthy_minimal', 'pink_modern', 'orange_pro', 'noqtatain1', 'noqtatain2', 'noqtatain3', 'noqtatain4', 'noqtatain6', 'modern_gradient', 'luxury_gold', 'tech_blue', 'sunset_warm', 'forest_green'];
+                        const templates = ['navy_gold', 'dark_minimal', 'purple_coral', 'earthy_minimal', 'pink_modern', 'orange_pro', 'noqtatain1', 'noqtatain2', 'noqtatain3', 'noqtatain4', 'noqtatain6', 'modern_gradient', 'luxury_gold', 'tech_blue', 'sunset_warm', 'forest_green', 'aurora_glass'];
                         const currentIndex = templates.indexOf(card.template);
                         const prevIndex = currentIndex > 0 ? currentIndex - 1 : templates.length - 1;
                         setCard({ ...card, template: templates[prevIndex] });
@@ -652,7 +699,7 @@ export default function CardBuilder() {
                     </button>
                     <button
                       onClick={() => {
-                        const templates = ['navy_gold', 'dark_minimal', 'purple_coral', 'earthy_minimal', 'pink_modern', 'orange_pro', 'noqtatain1', 'noqtatain2', 'noqtatain3', 'noqtatain4', 'noqtatain6', 'modern_gradient', 'luxury_gold', 'tech_blue', 'sunset_warm', 'forest_green'];
+                        const templates = ['navy_gold', 'dark_minimal', 'purple_coral', 'earthy_minimal', 'pink_modern', 'orange_pro', 'noqtatain1', 'noqtatain2', 'noqtatain3', 'noqtatain4', 'noqtatain6', 'modern_gradient', 'luxury_gold', 'tech_blue', 'sunset_warm', 'forest_green', 'aurora_glass'];
                         const currentIndex = templates.indexOf(card.template);
                         const nextIndex = currentIndex < templates.length - 1 ? currentIndex + 1 : 0;
                         setCard({ ...card, template: templates[nextIndex] });

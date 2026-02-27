@@ -29,7 +29,11 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
+const FormContext = React.createContext(null);
+
 const Section = ({ id, icon: Icon, title, children, isExpanded, onToggle }) => {
+  const { sectionsToShow } = React.useContext(FormContext) || {};
+  if (sectionsToShow && !sectionsToShow.includes(id)) return null;
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
       <button
@@ -56,7 +60,7 @@ const Section = ({ id, icon: Icon, title, children, isExpanded, onToggle }) => {
   );
 };
 
-export default function SimpleForm({ card, onChange, onSaveDraft }) {
+export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow }) {
   const { t, isRTL } = useLanguage();
   const [expandedSections, setExpandedSections] = useState(['personal']);
   const [subscription, setSubscription] = React.useState(null);
@@ -1549,5 +1553,6 @@ export default function SimpleForm({ card, onChange, onSaveDraft }) {
         </div>
       </Section>
     </div>
+    </FormContext.Provider>
   );
 }

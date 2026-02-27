@@ -6,14 +6,33 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Palette } from 'lucide-react';
+import { Upload, Palette, QrCode, Check } from 'lucide-react';
 import { api } from '@/api/supabaseAPI';
 import QRCode from 'qrcode';
 
-export default function QRCodeCustomizer({ qrSettings, onChange, slug }) {
+const buildPresets = (design = {}) => [
+  { nameEn: 'Classic',    nameAr: 'كلاسيك',    dot: '#000000',                              bg: '#FFFFFF' },
+  { nameEn: 'Brand',      nameAr: 'براند',        dot: design.primary_color   || '#0D7377',    bg: '#FFFFFF' },
+  { nameEn: 'Inverted',   nameAr: 'معكوس',      dot: '#FFFFFF',                              bg: design.primary_color   || '#0D7377' },
+  { nameEn: 'Accent',     nameAr: 'أكسنت',       dot: design.accent_color    || '#00B4D8',    bg: '#FFFFFF' },
+  { nameEn: 'Dark Brand', nameAr: 'داكن',         dot: design.accent_color    || '#00B4D8',    bg: design.secondary_color || '#14274E' },
+  { nameEn: 'Subtle',     nameAr: 'هادئ',         dot: design.secondary_color || '#14274E',   bg: '#F8F9FA' },
+  { nameEn: 'Dark',       nameAr: 'أسود',          dot: '#FFFFFF',                              bg: '#1a1a2e' },
+  { nameEn: 'Gold',       nameAr: 'ذهبي',          dot: '#F4B400',                              bg: '#14274E' },
+];
+
+export default function QRCodeCustomizer({ qrSettings, onChange, slug, cardDesign = {} }) {
   const { t, isRTL } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [qrPreview, setQrPreview] = useState(null);
+
+  const presets = buildPresets(cardDesign);
+  const [selectedPreset, setSelectedPreset] = useState(() => {
+    const idx = buildPresets(cardDesign).findIndex(
+      p => p.dot === (qrSettings?.dot_color || '#000000') && p.bg === (qrSettings?.background_color || '#FFFFFF')
+    );
+    return idx >= 0 ? idx : 0;
+  });
 
   // Generate QR preview whenever settings change
   useEffect(() => {
@@ -67,6 +86,58 @@ export default function QRCodeCustomizer({ qrSettings, onChange, slug }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* ── Preset Style Slider ── */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">{isRTL ? 'أنماط جاهزة' : 'Preset Styles'}</Label>
+            <span className="text-xs text-slate-400">{isRTL ? 'اختر نمطاً أو خصص يدوياً' : 'Pick a preset or customize below'}</span>
+          </div>
+          {/* Visual preset row */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {presets.map((preset, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setSelectedPreset(idx);
+                  onChange({ ...qrSettings, dot_color: preset.dot, background_color: preset.bg });
+                }}
+                className={cn(
+                  'flex-shrink-0 w-[72px] rounded-xl border-2 p-1.5 transition-all',
+                  selectedPreset === idx
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-300'
+                )}
+              >
+                <div
+                  className="w-full aspect-square rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: preset.bg }}
+                >
+                  {selectedPreset === idx
+                    ? <Check className="h-6 w-6" style={{ color: preset.dot }} />
+                    : <QrCode className="h-6 w-6" style={{ color: preset.dot }} />
+                  }
+                </div>
+                <p className="text-[10px] text-center mt-1 font-medium truncate text-slate-600 dark:text-slate-300">
+                  {isRTL ? preset.nameAr : preset.nameEn}
+                </p>
+              </button>
+            ))}
+          </div>
+          {/* Range slider for quick navigation */}
+          <input
+            type="range" min={0} max={presets.length - 1} value={selectedPreset}
+            onChange={(e) => {
+              const idx = Number(e.target.value);
+              setSelectedPreset(idx);
+              onChange({ ...qrSettings, dot_color: presets[idx].dot, background_color: presets[idx].bg });
+            }}
+            className="w-full accent-teal-600"
+          />
+        </div>
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-1">
+          <p className="text-xs text-slate-400 mb-3">{isRTL ? 'تخصيص يدوي إضافي:' : 'Extra customization:'}</p>
+        </div>
         {/* QR Preview */}
         {qrPreview && (
           <div className="flex justify-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
