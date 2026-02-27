@@ -14,6 +14,7 @@ import { ThemeProvider } from '@/components/shared/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
+import TestLanding from '@/pages/TestLanding';
 
 class AppErrorBoundary extends React.Component {
   constructor(props) {
@@ -61,7 +62,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/Store'
+    '/', '/login', '/Pricing', '/Products', '/Store', '/TestLanding'
   ].includes(location.pathname) || location.pathname.startsWith('/c/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
@@ -109,7 +110,11 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/c/:slug" element={<PublicCard />} />
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={
+          <LayoutWrapper currentPageName="TestLanding">
+            <TestLanding />
+          </LayoutWrapper>
+        } />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}

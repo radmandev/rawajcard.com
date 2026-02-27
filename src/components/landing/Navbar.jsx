@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Menu, X, Moon, Sun, Zap } from 'lucide-react';
-import { api } from '@/api/supabaseAPI';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { ChevronDown, Menu, X, Moon, Sun, ShoppingCart, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-
+import { useAuth } from '@/lib/AuthContext';
+import { useLanguage } from '@/components/shared/LanguageContext';
+import { useTheme } from '@/components/shared/ThemeContext';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/supabaseAPI';
 import { productsData, productCategories } from '@/components/shared/productsData';
 
 const productItems = {
@@ -74,10 +76,25 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [showFreeTools, setShowFreeTools] = useState(false);
-  const [language, setLanguage] = useState('en');
-  const [theme, setTheme] = useState('light');
   const [closeTimeout, setCloseTimeout] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // ── Shared app contexts ────────────────────────────────────
+  const { isAuthenticated, logout } = useAuth();
+  const { lang, setLang, isRTL } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  // Use lang from shared context (maps 'en'/'ar' to component labels)
+  const language = lang;
+
+  // Cart count (only when authenticated)
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => api.entities.CartItem.list(),
+    enabled: isAuthenticated,
+  });
+  const cartCount = cartItems.length;
 
   // Use local products data
   const displayedProducts = selectedCategory
@@ -90,17 +107,10 @@ export default function Navbar() {
         .slice(0, 6);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.setAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
-  }, [theme, language]);
 
   return (
     <nav
@@ -113,14 +123,13 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <Link to={createPageUrl('TestLanding')} className="flex items-center gap-3">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/9f16258e0_Rawajcard.png" 
               alt="Rawajcard" 
               className="h-10 w-auto"
             />
-
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
@@ -267,20 +276,30 @@ export default function Navbar() {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Cart icon with badge */}
+            <Link to={createPageUrl('Store')} className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center shadow">
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+              )}
+            </Link>
+
             {/* Theme Toggle */}
             <button
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              ) : (
+              {isDark ? (
                 <Sun className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              ) : (
+                <Moon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               )}
             </button>
 
-            {/* Free Tools Button */}
+            {/* Free Tools Button (desktop only) */}
             <div 
               className="relative hidden lg:block"
               onMouseEnter={() => setShowFreeTools(true)}
@@ -323,10 +342,10 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Language selector */}
-            <div className="hidden md:flex items-center gap-2">
+            {/* Language selector (desktop) */}
+            <div className="hidden md:flex items-center gap-1">
               <button
-                onClick={() => setLanguage('en')}
+                onClick={() => setLang('en')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   language === 'en' 
                     ? 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300' 
@@ -336,7 +355,7 @@ export default function Navbar() {
                 EN
               </button>
               <button
-                onClick={() => setLanguage('ar')}
+                onClick={() => setLang('ar')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   language === 'ar' 
                     ? 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300' 
@@ -346,15 +365,39 @@ export default function Navbar() {
                 عربي
               </button>
             </div>
-            
-            <Button 
-              className="bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
-              onClick={() => api.auth.redirectToLogin(createPageUrl('Dashboard'))}
-            >
-              {translations[language].createCard}
-            </Button>
 
-            {/* Mobile menu button */}
+            {/* Auth CTA */}
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(createPageUrl('Dashboard'))}
+                  className="text-slate-700 dark:text-slate-200"
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                  {language === 'ar' ? 'لوحتي' : 'Dashboard'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => logout()}
+                  className="text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  {language === 'ar' ? 'خروج' : 'Logout'}
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                className="hidden md:inline-flex bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
+                onClick={() => navigate(createPageUrl('Login'))}
+              >
+                {translations[language].createCard}
+              </Button>
+            )}
+
+            {/* Mobile menu toggle */}
             <button
               className="lg:hidden p-2 text-slate-600 dark:text-slate-300"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -368,16 +411,67 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-          <div className="container mx-auto px-4 py-6">
+          <div className="container mx-auto px-4 py-4 space-y-1">
             {navItems.map((item, index) => (
               <a
                 key={index}
                 href="#"
-                className="block py-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 border-b border-slate-100 dark:border-slate-800 last:border-0"
+                className="block py-3 px-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 {language === 'ar' ? item.labelAr : item.label}
               </a>
             ))}
+
+            {/* Language toggle row */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setLang('en')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  language === 'en'
+                    ? 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >EN</button>
+              <button
+                onClick={() => setLang('ar')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  language === 'ar'
+                    ? 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >عربي</button>
+            </div>
+
+            {/* Auth CTA */}
+            <div className="pt-2">
+              {isAuthenticated ? (
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
+                    onClick={() => { navigate(createPageUrl('Dashboard')); setMobileMenuOpen(false); }}
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                    {language === 'ar' ? 'لوحتي' : 'Dashboard'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-red-500 border-red-200"
+                    onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  >
+                    <LogOut className="w-4 h-4 mr-1.5" />
+                    {language === 'ar' ? 'خروج' : 'Logout'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full bg-gradient-to-r from-teal-600 to-blue-500 text-white rounded-full"
+                  onClick={() => { navigate(createPageUrl('Login')); setMobileMenuOpen(false); }}
+                >
+                  {translations[language].createCard}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}

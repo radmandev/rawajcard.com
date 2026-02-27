@@ -4,6 +4,7 @@ import { LanguageProvider, useLanguage } from '@/components/shared/LanguageConte
 import Header from '@/components/shared/Header';
 import Sidebar from '@/components/shared/Sidebar';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
+import PublicMobileBar from '@/components/shared/PublicMobileBar';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 
@@ -29,6 +30,7 @@ function LayoutContent({ children, currentPageName }) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950" style={{ overscrollBehavior: 'none' }}>
         {children}
+        <PublicMobileBar />
       </div>
     );
   }

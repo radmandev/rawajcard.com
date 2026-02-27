@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/landing/Navbar';
@@ -262,7 +264,7 @@ export default function TestLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-white" dir="rtl" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
+    <div className="min-h-screen bg-white pb-16 md:pb-0" dir="rtl" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
       {/* Google Fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
@@ -367,27 +369,25 @@ export default function TestLanding() {
                 transition={{ duration: 0.7, delay: 0.65 }}
                 className="flex flex-wrap gap-4"
               >
-                <motion.a
-                  href="https://my.rawajcard.com/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base"
-                >
-                  انشئ كرت رقمي مجاني
-                  <ArrowLeft className="h-5 w-5" />
-                </motion.a>
-                <motion.a
-                  href="https://rawajcard.com/shop"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base"
-                >
-                  تسوق الآن
-                </motion.a>
+                <Link to={createPageUrl('Login')}>
+                  <motion.span
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base cursor-pointer"
+                  >
+                    انشئ كرت رقمي مجاني
+                    <ArrowLeft className="h-5 w-5" />
+                  </motion.span>
+                </Link>
+                <Link to={createPageUrl('Store')}>
+                  <motion.span
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base cursor-pointer"
+                  >
+                    تسوق الآن
+                  </motion.span>
+                </Link>
               </motion.div>
 
               {/* Stats row */}
@@ -524,15 +524,13 @@ export default function TestLanding() {
 
           <Reveal delay={0.2}>
             <div className="text-center mt-12">
-              <a
-                href="https://rawajcard.com/shop"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to={createPageUrl('Store')}
                 className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all text-base"
               >
                 عرض جميع المنتجات
                 <ArrowLeft className="h-5 w-5" />
-              </a>
+              </Link>
             </div>
           </Reveal>
         </div>
@@ -606,15 +604,13 @@ export default function TestLanding() {
                 ))}
               </div>
 
-              <a
-                href="https://rawajcard.com/shop"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to={createPageUrl('Store')}
                 className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl transition-colors"
               >
                 اختر كرتك الآن
                 <ArrowLeft className="h-5 w-5" />
-              </a>
+              </Link>
             </Reveal>
           </div>
         </div>
@@ -682,27 +678,25 @@ export default function TestLanding() {
           </Reveal>
           <Reveal delay={0.3}>
             <div className="flex flex-wrap justify-center gap-4">
-              <motion.a
-                href="https://my.rawajcard.com/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg"
-              >
-                انشئ كرتك مجاناً الآن
-                <ArrowLeft className="h-5 w-5" />
-              </motion.a>
-              <motion.a
-                href="https://rawajcard.com/shop"
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-10 py-5 rounded-2xl border border-white/20 transition-all text-lg"
-              >
-                خصص كرتك المفضل
-              </motion.a>
+              <Link to={createPageUrl('Login')}>
+                <motion.span
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg cursor-pointer"
+                >
+                  انشئ كرتك مجاناً الآن
+                  <ArrowLeft className="h-5 w-5" />
+                </motion.span>
+              </Link>
+              <Link to={createPageUrl('Store')}>
+                <motion.span
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-10 py-5 rounded-2xl border border-white/20 transition-all text-lg cursor-pointer"
+                >
+                  خصص كرتك المفضل
+                </motion.span>
+              </Link>
             </div>
           </Reveal>
 
@@ -765,23 +759,19 @@ export default function TestLanding() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <a
-                  href="https://rawajcard.com/product/%D8%B3%D8%AA%D8%A7%D9%86%D8%AF-%D8%B7%D8%A7%D9%88%D9%84%D8%A9-%D9%84%D9%84%D9%85%D8%B4%D8%A7%D8%B1%D9%83%D8%A9-%D8%A7%D9%84%D8%B3%D8%B1%D9%8A%D8%B9%D8%A9-%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to={createPageUrl('Store')}
                   className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all"
                 >
                   خل عملاءك يتفاعلون أسرع
                   <ArrowLeft className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://rawajcard.com/shop"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </Link>
+                <Link
+                  to={createPageUrl('Store')}
                   className="inline-flex items-center gap-2 border-2 border-slate-200 hover:border-teal-400 text-slate-700 font-semibold px-8 py-4 rounded-2xl transition-all"
                 >
                   عرض الكل
-                </a>
+                </Link>
               </div>
             </Reveal>
 
@@ -884,15 +874,13 @@ export default function TestLanding() {
               <h3 className="text-xl font-black mb-1">جاهز تبدأ؟</h3>
               <p className="text-slate-400 text-sm">انشئ كرتك الرقمي مجاناً الآن</p>
             </div>
-            <a
-              href="https://my.rawajcard.com/login"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to={createPageUrl('Login')}
               className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors"
             >
               ابدأ مجاناً
               <ArrowLeft className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
         </div>
 
