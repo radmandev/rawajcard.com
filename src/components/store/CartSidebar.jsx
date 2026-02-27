@@ -68,7 +68,7 @@ export default function CartSidebar({ isOpen, onClose, items, onUpdateQuantity, 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-slate-900 dark:text-white truncate">
-                        {item.product_name}
+                        {isRTL ? (item.product_name_ar || item.product_name) : item.product_name}
                       </h4>
                       <p className="text-teal-600 dark:text-teal-400 font-semibold">
                         {formatPrice(item.product_price)}

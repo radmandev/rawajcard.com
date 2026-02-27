@@ -9,11 +9,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Package, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { useCart } from '@/contexts/CartContext';
 
 export default function CheckoutSuccess() {
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState(null);
   const [successType, setSuccessType] = useState(null); // 'order' | 'subscription'
@@ -33,8 +35,10 @@ export default function CheckoutSuccess() {
     if (stripeSubscription === 'true' && stripeSessionId) {
       activateStripeSubscription(stripeSessionId, plan);
     } else if (stripeOrder === 'true' && stripeSessionId) {
+      clearCart();
       confirmStripeStoreOrder(stripeSessionId);
     } else if (paypalOrderId && !order) {
+      clearCart();
       capturePayPalPayment(paypalOrderId);
     } else if (order) {
       setOrderNumber(order);

@@ -6,10 +6,14 @@ import React, { useState, useEffect } from 'react';
   import { Button } from '@/components/ui/button';
   import { ShoppingCart, Star } from 'lucide-react';
   import { productsData, productCategories } from '@/components/shared/productsData';
+  import { useCart } from '@/contexts/CartContext';
+  import ProductPreviewModal from '@/components/store/ProductPreviewModal';
 
 export default function Products() {
   const [language, setLanguage] = useState('en');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const { addItem } = useCart();
 
   useEffect(() => {
     const dir = document.documentElement.getAttribute('dir');
@@ -139,7 +143,8 @@ export default function Products() {
               {filteredProducts.map(product => (
                 <div
                   key={product.id}
-                  className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 dark:border-slate-700"
+                  className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 dark:border-slate-700 cursor-pointer"
+                  onClick={() => setPreviewProduct(product)}
                 >
                   {/* Product Image */}
                   <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-900">
@@ -187,6 +192,7 @@ export default function Products() {
                     {/* Add to Cart Button */}
                     <Button
                       className="w-full bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full"
+                      onClick={(e) => { e.stopPropagation(); addItem(product); }}
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       {t.addToCart}
@@ -198,6 +204,11 @@ export default function Products() {
           )}
         </div>
       </section>
+
+      <ProductPreviewModal
+        product={previewProduct}
+        onClose={() => setPreviewProduct(null)}
+      />
 
       <Footer />
     </div>

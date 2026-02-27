@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { UpgradeProvider } from '@/lib/UpgradeContext';
 import { LanguageProvider } from '@/components/shared/LanguageContext';
 import { ThemeProvider } from '@/components/shared/ThemeContext';
+import { CartProvider } from '@/contexts/CartContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
@@ -142,10 +143,12 @@ function App() {
           <AuthProvider>
             <QueryClientProvider client={queryClientInstance}>
               <Router>
-                <UpgradeProvider>
-                  <NavigationTracker />
-                  <AuthenticatedApp />
-                </UpgradeProvider>
+                <CartProvider>
+                  <UpgradeProvider>
+                    <NavigationTracker />
+                    <AuthenticatedApp />
+                  </UpgradeProvider>
+                </CartProvider>
               </Router>
               <Toaster />
               <SonnerToaster position="top-center" richColors />

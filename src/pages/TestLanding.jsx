@@ -4,6 +4,8 @@ import { createPageUrl } from '@/utils';
 import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/landing/Navbar';
+import ProductPreviewModal from '@/components/store/ProductPreviewModal';
+import { useCart } from '@/contexts/CartContext';
 import {
   Wifi, Star, ShoppingCart, ChevronLeft, ChevronRight,
   Phone, Mail, MessageCircle, MapPin, ArrowLeft, Check,
@@ -240,6 +242,7 @@ function ProductCard({ product, index }) {
 export default function TestLanding() {
   const [activeTab, setActiveTab] = useState('all');
   const [heroProduct, setHeroProduct] = useState(0);
+  const [previewProduct, setPreviewProduct] = useState(null);
 
   /* set RTL + Arabic for this page, restore on leave */
   useEffect(() => {
@@ -980,6 +983,12 @@ export default function TestLanding() {
           جميع الحقوق محفوظة © {new Date().getFullYear()} رواج كارد — تقنية NFC الذكية
         </div>
       </footer>
+      {/* Product Preview Modal */}
+      <ProductPreviewModal
+        product={previewProduct}
+        onClose={() => setPreviewProduct(null)}
+      />
+
     </div>
   );
 }

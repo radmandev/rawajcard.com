@@ -4,8 +4,7 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { useAuth } from '@/lib/AuthContext';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/api/supabaseAPI';
+import { useCart } from '@/contexts/CartContext';
 import { Store, ShoppingCart, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,13 +19,8 @@ export default function PublicMobileBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Cart count (authenticated only)
-  const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => api.entities.CartItem.list(),
-    enabled: isAuthenticated,
-  });
-  const cartCount = cartItems.length;
+  // Cart from global context (works for guests too)
+  const { totalCount: cartCount, setIsCartOpen } = useCart();
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(path);
@@ -55,13 +49,11 @@ export default function PublicMobileBar() {
           </Link>
 
           {/* ── Cart ──────────────────────────────────── */}
-          <Link
-            to={createPageUrl('Store')}
+          <button
+            onClick={() => setIsCartOpen(true)}
             className={cn(
               'relative flex flex-col items-center justify-center gap-1 flex-1 transition-colors',
-              isActive(createPageUrl('Checkout'))
-                ? 'text-teal-600 dark:text-teal-400'
-                : 'text-slate-500 dark:text-slate-400'
+              'text-slate-500 dark:text-slate-400 hover:text-teal-600'
             )}
           >
             <div className="relative">
@@ -80,7 +72,7 @@ export default function PublicMobileBar() {
               </AnimatePresence>
             </div>
             <span className="text-[10px] font-semibold">{isRTL ? 'السلة' : 'Cart'}</span>
-          </Link>
+          </button>
 
           {/* ── Auth ──────────────────────────────────── */}
           {isAuthenticated ? (

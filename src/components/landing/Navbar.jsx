@@ -6,8 +6,7 @@ import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { useTheme } from '@/components/shared/ThemeContext';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/api/supabaseAPI';
+import { useCart } from '@/contexts/CartContext';
 import { productsData, productCategories } from '@/components/shared/productsData';
 
 const productItems = {
@@ -88,13 +87,8 @@ export default function Navbar() {
   // Use lang from shared context (maps 'en'/'ar' to component labels)
   const language = lang;
 
-  // Cart count (only when authenticated)
-  const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => api.entities.CartItem.list(),
-    enabled: isAuthenticated,
-  });
-  const cartCount = cartItems.length;
+  // Cart from global context (works for guests & authenticated users)
+  const { totalCount: cartCount, setIsCartOpen } = useCart();
 
   // Use local products data
   const displayedProducts = selectedCategory
@@ -278,14 +272,14 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="flex items-center gap-2 md:gap-3">
             {/* Cart icon with badge */}
-            <Link to={createPageUrl('Store')} className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button onClick={() => setIsCartOpen(true)} className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               {cartCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center shadow">
                   {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* Theme Toggle */}
             <button

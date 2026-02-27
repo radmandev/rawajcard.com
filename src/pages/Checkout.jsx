@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useCart } from '@/contexts/CartContext';
 
 // ── Payment method options ───────────────────────────────────
 const PAYMENT_METHODS = [
@@ -52,7 +53,6 @@ const PAYMENT_METHODS = [
 export default function Checkout() {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [shippingInfo, setShippingInfo] = useState({
@@ -63,11 +63,9 @@ export default function Checkout() {
     country: 'Saudi Arabia',
   });
 
-  // Fetch cart items
-  const { data: cartItems = [], isLoading } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => api.entities.CartItem.list()
-  });
+  // Cart from global context (localStorage)
+  const { items: cartItems, clearCart } = useCart();
+  const isLoading = false;
 
   const total = cartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
   const totalUSD = (total * 0.27).toFixed(2);

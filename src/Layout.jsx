@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageProvider, useLanguage } from '@/components/shared/LanguageContext';
 import Header from '@/components/shared/Header';
 import Sidebar from '@/components/shared/Sidebar';
 import MobileBottomNav from '@/components/shared/MobileBottomNav';
 import PublicMobileBar from '@/components/shared/PublicMobileBar';
-import { api } from '@/api/supabaseAPI';
-import { useQuery } from '@tanstack/react-query';
+import CartSidebar from '@/components/store/CartSidebar';
+import CartMiniPopup from '@/components/store/CartMiniPopup';
+import { useCart } from '@/contexts/CartContext';
 
 function LayoutContent({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,18 +20,22 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  // Get cart count
-  const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => api.entities.CartItem.list(),
-    enabled: !isPublicPage
-  });
+  // Cart state from global context (localStorage – works for auth & guest)
+  const { items: cartItems, removeItem, updateQuantity, isCartOpen, setIsCartOpen, totalCount } = useCart();
 
   if (isPublicPage) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950" style={{ overscrollBehavior: 'none' }}>
         {children}
         <PublicMobileBar />
+        <CartSidebar
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={updateQuantity}
+          onRemove={removeItem}
+        />
+        <CartMiniPopup />
       </div>
     );
   }
@@ -92,7 +97,7 @@ function LayoutContent({ children, currentPageName }) {
       <Header 
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         isMenuOpen={sidebarOpen}
-        cartCount={cartItems.length}
+        cartCount={totalCount}
       />
       
       <Sidebar 
@@ -114,6 +119,14 @@ function LayoutContent({ children, currentPageName }) {
       </main>
 
       <MobileBottomNav />
+      <CartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeItem}
+      />
+      <CartMiniPopup />
     </div>
   );
 }
