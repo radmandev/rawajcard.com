@@ -387,6 +387,8 @@ export default function CardBuilder() {
                        }
                      }}
                      onFocusChange={(template) => setFocusedTemplate(template)}
+                     userPlan={subscription?.plan || 'free'}
+                     onUpgrade={openUpgradeDialog}
                     />
                   </CardContent>
                 </Card>

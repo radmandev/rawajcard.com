@@ -20,7 +20,8 @@ const entityTableMap = {
   CustomizationRequest: 'customization_requests',
   Team: 'teams',
   TeamMember: 'team_members',
-  ActivityLog: 'activity_logs'
+  ActivityLog: 'activity_logs',
+  AppSetting: 'app_settings'
 };
 
 const getTableName = (entityName) => {
@@ -544,6 +545,24 @@ export const api = {
         throw new Error('InvokeLLM is not configured yet.');
       }
     }
+  },
+
+  // App-wide key-value settings (admin write, public read)
+  appSettings: {
+    get: async (key) => {
+      const { data, error } = await supabase.from('app_settings').select('value').eq('key', key).single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.value ?? null;
+    },
+    set: async (key, value) => {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+        .select('value')
+        .single();
+      if (error) throw error;
+      return data?.value ?? null;
+    },
   },
 
   // App logging

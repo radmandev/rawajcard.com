@@ -6,16 +6,40 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { api } from '@/api/supabaseAPI';
-import { useQuery } from '@tanstack/react-query';
-import { Users, Sparkles, Crown, TrendingUp, CreditCard } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Users, Sparkles, Crown, TrendingUp, CreditCard, Layers } from 'lucide-react';
+import { ALL_TEMPLATES, DEFAULT_TIERS } from '@/lib/templateConfig';
 
 export default function AdminSettings() {
   const { isRTL } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { data: users = [] } = useQuery({ queryKey: ['admin-users'], queryFn: () => api.entities.User.list() });
   const { data: subscriptions = [] } = useQuery({ queryKey: ['admin-subscriptions'], queryFn: () => api.entities.Subscription.list() });
+
+  const { data: savedTiers = {} } = useQuery({
+    queryKey: ['template-tiers'],
+    queryFn: () => api.appSettings.get('template_tiers'),
+  });
+  const effectiveTiers = { ...DEFAULT_TIERS, ...savedTiers };
+
+  const saveTiersMutation = useMutation({
+    mutationFn: (newTiers) => api.appSettings.set('template_tiers', newTiers),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['template-tiers'] });
+      toast.success(isRTL ? 'تم حفظ إعدادات القوالب' : 'Template tiers saved');
+    },
+    onError: () => toast.error(isRTL ? 'فشل الحفظ' : 'Save failed'),
+  });
+
+  const toggleTemplateTier = (templateId) => {
+    const current = effectiveTiers[templateId] || 'free';
+    const updated = { ...effectiveTiers, [templateId]: current === 'premium' ? 'free' : 'premium' };
+    saveTiersMutation.mutate(updated);
+  };
 
   const subMap = React.useMemo(() => {
     const m = {}; subscriptions.forEach(s => { if (s.created_by) m[s.created_by] = s; }); return m;
@@ -200,6 +224,72 @@ export default function AdminSettings() {
               onCheckedChange={(checked) => handleChange('maintenanceMode', checked)}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Template Tiers Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-teal-600" />
+            {isRTL ? 'إعدادات مستويات القوالب' : 'Template Tier Settings'}
+          </CardTitle>
+          <CardDescription>
+            {isRTL ? 'حدد القوالب المجانية والمميزة (PRO)' : 'Set which templates are free and which require a Pro plan'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {ALL_TEMPLATES.map(template => {
+              const isPremium = effectiveTiers[template.id] === 'premium';
+              return (
+                <div
+                  key={template.id}
+                  className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all ${
+                    isPremium
+                      ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/20'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                  }`}
+                  onClick={() => toggleTemplateTier(template.id)}
+                >
+                  <div
+                    className="h-8 w-full rounded mb-2"
+                    style={{
+                      background: template.colors?.length > 1
+                        ? `linear-gradient(135deg, ${template.colors[0]}, ${template.colors[1]})`
+                        : template.colors?.[0] || '#ccc'
+                    }}
+                  />
+                  <p className="text-xs font-medium truncate text-slate-800 dark:text-white">
+                    {isRTL ? template.nameAr : template.name}
+                  </p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    {isPremium ? (
+                      <Badge className="bg-amber-500 text-white text-[9px] px-1.5 py-0 h-4 gap-0.5">
+                        <Crown className="h-2.5 w-2.5" /> PRO
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                        FREE
+                      </Badge>
+                    )}
+                    <Switch
+                      checked={isPremium}
+                      onCheckedChange={() => toggleTemplateTier(template.id)}
+                      onClick={e => e.stopPropagation()}
+                      className="scale-75 origin-right"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-400 mt-4">
+            {isRTL
+              ? `${ALL_TEMPLATES.filter(t => effectiveTiers[t.id] === 'premium').length} قالب مميز · ${ALL_TEMPLATES.filter(t => effectiveTiers[t.id] !== 'premium').length} قالب مجاني`
+              : `${ALL_TEMPLATES.filter(t => effectiveTiers[t.id] === 'premium').length} Pro templates · ${ALL_TEMPLATES.filter(t => effectiveTiers[t.id] !== 'premium').length} Free templates`
+            }
+          </p>
         </CardContent>
       </Card>
 
