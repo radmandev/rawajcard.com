@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import Navbar from '@/components/landing/Navbar';
 import {
   ArrowLeft,
   ArrowRight,
@@ -145,25 +146,30 @@ export default function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <ShoppingBag className="h-16 w-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-          {t('emptyCart')}
-        </h2>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">
-          {isRTL ? 'أضف بعض المنتجات للمتابعة' : 'Add some products to continue'}
-        </p>
-        <Link to={createPageUrl('Store')}>
-          <Button>
-            {t('continueShopping')}
-          </Button>
-        </Link>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <Navbar />
+        <div className="max-w-md mx-auto text-center py-32 px-4">
+          <ShoppingBag className="h-16 w-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+            {t('emptyCart')}
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">
+            {isRTL ? 'أضف بعض المنتجات للمتابعة' : 'Add some products to continue'}
+          </p>
+          <Link to={createPageUrl('Store')}>
+            <Button>
+              {t('continueShopping')}
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <Navbar />
+      <div className="max-w-5xl mx-auto pt-28 pb-16 px-4">
       <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-8">
         {t('checkout')}
       </h1>
@@ -451,6 +457,7 @@ export default function Checkout() {
           </div>
         </div>
       </form>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProductCard from '@/components/store/ProductCard';
 import ProductPreviewModal from '@/components/store/ProductPreviewModal';
+import Navbar from '@/components/landing/Navbar';
 import { 
   ShoppingCart, 
   CreditCard as NFCIcon, 
@@ -55,7 +56,9 @@ export default function Store() {
   const hasDiscount = (product) => product.originalPrice && product.originalPrice > product.price;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <Navbar />
+      <div className="max-w-7xl mx-auto pt-28 pb-16 px-4 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -119,6 +122,7 @@ export default function Store() {
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+      </div>
     </div>
   );
 }

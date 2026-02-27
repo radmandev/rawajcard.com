@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/landing/Navbar';
 import ProductPreviewModal from '@/components/store/ProductPreviewModal';
@@ -176,6 +176,37 @@ const FEATURES = [
   },
 ];
 
+/* ─── Hero animated words ──────────────────────────────────────────── */
+const CYCLING_WORDS = ['بنفسك', 'بشركتك', 'بفكرتك'];
+
+/* ─── Product type → hero image + product mapping ──────────────────── */
+const HERO_PRODUCT_TYPES = [
+  {
+    label: 'سمارت بزنس كارد',
+    icon: '💳',
+    productId: 1,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
+  },
+  {
+    label: 'ستاند طاولة',
+    icon: '🪧',
+    productId: 7,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
+  },
+  {
+    label: 'ملصق',
+    icon: '🏷️',
+    productId: 5,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
+  },
+  {
+    label: 'تعليقة مفاتيح',
+    icon: '🔑',
+    productId: 6,
+    image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
+  },
+];
+
 /* ─── ProductCard ───────────────────────────────────────────────────── */
 function ProductCard({ product, index, onAddToCart, onView, onBuyNow }) {
   const [hovered, setHovered] = useState(false);
@@ -254,8 +285,16 @@ export default function TestLanding() {
   const [activeTab, setActiveTab] = useState('all');
   const [heroProduct, setHeroProduct] = useState(0);
   const [previewProduct, setPreviewProduct] = useState(null);
+  const [wordIdx, setWordIdx] = useState(0);
+  const [selectedProductTypeIdx, setSelectedProductTypeIdx] = useState(0);
   const { addItem } = useCart();
   const navigate = useNavigate();
+
+  // Cycle words every 2.5s
+  useEffect(() => {
+    const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLING_WORDS.length), 2500);
+    return () => clearInterval(t);
+  }, []);
 
   /* set RTL + Arabic for this page, restore on leave */
   useEffect(() => {
@@ -272,12 +311,7 @@ export default function TestLanding() {
   const filteredIds = PRODUCT_CATEGORY_MAP[activeTab] || PRODUCT_CATEGORY_MAP.all;
   const filteredProducts = PRODUCTS.filter(p => filteredIds.includes(p.id));
 
-  const heroImages = [
-    'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
-    'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-1.webp',
-    'https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp',
-    'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
-  ];
+  const heroImages = HERO_PRODUCT_TYPES.map(p => p.image);
 
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0" dir="rtl" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
@@ -338,10 +372,22 @@ export default function TestLanding() {
                 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6"
                 style={{ fontFamily: "'Cairo', sans-serif" }}
               >
-                كن مستعداً للتعريف{' '}
+                استعد للتعريف{' '}
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">
-                  بنفسك بطريقة عصرية
+                <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500 inline-flex items-baseline gap-2">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={wordIdx}
+                      initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, y: -18, filter: 'blur(6px)' }}
+                      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                      className="inline-block"
+                    >
+                      {CYCLING_WORDS[wordIdx]}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span>بطريقة عصرية</span>
                 </span>
               </motion.h1>
 
@@ -361,17 +407,22 @@ export default function TestLanding() {
                 transition={{ duration: 0.7, delay: 0.5 }}
                 className="flex flex-wrap gap-2 mb-10"
               >
-                {[
-                  { label: 'سمارت بزنس كارد', icon: '💳' },
-                  { label: 'ستاند طاولة', icon: '🪧' },
-                  { label: 'ملصق', icon: '🏷️' },
-                  { label: 'تعليقة مفاتيح', icon: '🔑' },
-                ].map((item, i) => (
+                {HERO_PRODUCT_TYPES.map((item, i) => (
                   <motion.span
                     key={i}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 bg-white/10 hover:bg-teal-500/25 text-white text-sm font-medium px-4 py-2 rounded-xl border border-white/15 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setSelectedProductTypeIdx(i);
+                      setHeroProduct(i);
+                      const prod = PRODUCTS.find(p => p.id === item.productId);
+                      if (prod) setPreviewProduct(prod);
+                    }}
+                    className={`flex items-center gap-1.5 text-white text-sm font-medium px-4 py-2 rounded-xl border cursor-pointer transition-all ${
+                      selectedProductTypeIdx === i
+                        ? 'bg-teal-500/40 border-teal-400/60 ring-1 ring-teal-400/40'
+                        : 'bg-white/10 hover:bg-teal-500/25 border-white/15'
+                    }`}
                   >
                     <span>{item.icon}</span>
                     {item.label}
