@@ -21,7 +21,8 @@ const entityTableMap = {
   Team: 'teams',
   TeamMember: 'team_members',
   ActivityLog: 'activity_logs',
-  AppSetting: 'app_settings'
+  AppSetting: 'app_settings',
+  Product: 'products',
 };
 
 const getTableName = (entityName) => {
