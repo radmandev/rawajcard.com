@@ -158,16 +158,35 @@ const createEntityApi = (entityName) => {
 };
 
 /**
- * Probe which columns actually exist in a table by doing SELECT LIMIT 0
- * and parsing "Could not find the 'X' column" errors.
- * Cached per (tableName + sorted column list) so adding new desired columns
- * always triggers a fresh probe.
+ * Probe which columns actually exist in a table.
+ * First tries information_schema.columns (gets all real columns at once).
+ * Falls back to trial SELECT if information_schema is not accessible.
+ * Cached per (tableName + sorted desired list).
  */
 const _colCache = {};
 export const probeTableColumns = async (tableName, desiredColumns) => {
   const cacheKey = tableName + ':' + [...desiredColumns].sort().join(',');
   if (_colCache[cacheKey]) return _colCache[cacheKey];
 
+  // Attempt 1: query information_schema to get ALL real columns at once
+  try {
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', tableName);
+
+    if (!error && data?.length) {
+      const realCols = new Set(data.map(r => r.column_name));
+      const valid = desiredColumns.filter(c => realCols.has(c));
+      _colCache[cacheKey] = valid;
+      return valid;
+    }
+  } catch (_) {
+    // information_schema not accessible — fall through to trial probe
+  }
+
+  // Attempt 2: trial SELECT stripping one bad column at a time
   const valid = [...desiredColumns];
   while (valid.length > 0) {
     const { error } = await supabase
@@ -175,7 +194,7 @@ export const probeTableColumns = async (tableName, desiredColumns) => {
       .select(valid.join(', '))
       .limit(0);
 
-    if (!error) break; // all remaining columns exist
+    if (!error) break;
 
     const match = error.message?.match(/Could not find the '(.+?)' column/);
     if (match) {
@@ -183,7 +202,7 @@ export const probeTableColumns = async (tableName, desiredColumns) => {
       const idx = valid.indexOf(bad);
       if (idx !== -1) { valid.splice(idx, 1); continue; }
     }
-    break; // different error — stop probing
+    break;
   }
 
   _colCache[cacheKey] = valid;
