@@ -138,7 +138,7 @@ export default function AdminClients() {
       }
 
       // Discover which columns actually exist in the live DB (cached after first call)
-      const DESIRED = ['plan', 'status', 'metadata', 'created_by', 'created_by_user_id', 'card_limit'];
+      const DESIRED = ['plan', 'status', 'metadata', 'user_id', 'user_email', 'created_by', 'created_by_user_id', 'card_limit'];
       const validCols = await probeTableColumns('subscriptions', DESIRED);
 
       if (!validCols.includes('plan')) {
@@ -154,6 +154,8 @@ export default function AdminClients() {
         plan,
         status: 'active',
         metadata,
+        user_id: userUuid,
+        user_email: userEmail,
         created_by: userEmail,
         created_by_user_id: userUuid,
         card_limit: LIMITS[plan] ?? 2,

@@ -111,7 +111,7 @@ export default function ClientDetails() {
 
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data) => {
-      const DESIRED = ['plan', 'status', 'metadata', 'created_by', 'created_by_user_id', 'card_limit'];
+      const DESIRED = ['plan', 'status', 'metadata', 'user_id', 'user_email', 'created_by', 'created_by_user_id', 'card_limit'];
       const validCols = await probeTableColumns('subscriptions', DESIRED);
 
       if (!validCols.includes('plan')) {
@@ -126,6 +126,8 @@ export default function ClientDetails() {
         plan: data.plan,
         status: data.status,
         metadata: { user_email: user?.email, user_id: user?.id },
+        user_id: user?.id,
+        user_email: user?.email,
         created_by: user?.email,
         created_by_user_id: user?.id,
         card_limit: data.card_limit,

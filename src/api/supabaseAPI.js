@@ -160,11 +160,13 @@ const createEntityApi = (entityName) => {
 /**
  * Probe which columns actually exist in a table by doing SELECT LIMIT 0
  * and parsing "Could not find the 'X' column" errors.
- * Result is cached per tableName for the lifetime of the page.
+ * Cached per (tableName + sorted column list) so adding new desired columns
+ * always triggers a fresh probe.
  */
 const _colCache = {};
 export const probeTableColumns = async (tableName, desiredColumns) => {
-  if (_colCache[tableName]) return _colCache[tableName];
+  const cacheKey = tableName + ':' + [...desiredColumns].sort().join(',');
+  if (_colCache[cacheKey]) return _colCache[cacheKey];
 
   const valid = [...desiredColumns];
   while (valid.length > 0) {
@@ -184,7 +186,7 @@ export const probeTableColumns = async (tableName, desiredColumns) => {
     break; // different error — stop probing
   }
 
-  _colCache[tableName] = valid;
+  _colCache[cacheKey] = valid;
   return valid;
 };
 
