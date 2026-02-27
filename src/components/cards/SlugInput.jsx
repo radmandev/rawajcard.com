@@ -12,7 +12,7 @@ export default function SlugInput({ value, onChange, currentCardId, onValidation
   const [isAvailable, setIsAvailable] = useState(null);
   const [error, setError] = useState('');
 
-  const baseUrl = 'my.rawajcard.com/c/';
+  const baseUrl = 'rawajcard.com/c/';
 
   useEffect(() => {
     if (!value) {

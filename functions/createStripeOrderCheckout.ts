@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
 
     if (!cartItems.length) return ok({ error: 'Cart is empty.' });
 
-    const origin = req.headers.get('origin') || 'https://my.rawajcard.com';
+    const origin = req.headers.get('origin') || 'https://rawajcard.com';
 
     // Build Stripe Checkout session as x-www-form-urlencoded
     const params = new URLSearchParams();

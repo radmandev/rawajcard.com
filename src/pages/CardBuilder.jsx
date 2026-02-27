@@ -578,7 +578,7 @@ export default function CardBuilder() {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-500">{t('customLink')}:</span>
-                              <span className="font-mono text-teal-600">my.rawajcard.com/c/{card.slug}</span>
+                              <span className="font-mono text-teal-600">rawajcard.com/c/{card.slug}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-500">{isRTL ? 'القالب' : 'Template'}:</span>

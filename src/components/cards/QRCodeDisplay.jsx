@@ -13,10 +13,10 @@ export default function QRCodeDisplay({ slug, qrSettings, size = 200, showAction
 
   // Use tracking URL for QR codes, direct URL for links
   const cardUrl = trackable 
-    ? `https://my.rawajcard.com/trackQRScan?slug=${slug}`
-    : `https://my.rawajcard.com/c/${slug}`;
+    ? `https://rawajcard.com/trackQRScan?slug=${slug}`
+    : `https://rawajcard.com/c/${slug}`;
   
-  const displayUrl = `https://my.rawajcard.com/c/${slug}`;
+  const displayUrl = `https://rawajcard.com/c/${slug}`;
 
   // Generate QR code with customization
   useEffect(() => {

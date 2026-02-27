@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
 
     if (!priceId) return ok({ error: `Invalid plan "${plan}". Must be "premium" or "enterprise".` });
 
-    const origin = req.headers.get('origin') || 'https://my.rawajcard.com';
+    const origin = req.headers.get('origin') || 'https://rawajcard.com';
 
     const params = new URLSearchParams();
     params.set('mode', 'subscription');

@@ -173,7 +173,7 @@ export default function PublicCard() {
         {/* Powered by Footer */}
         <div className="mt-4 text-center">
           <a
-            href="https://my.rawajcard.com"
+            href="https://rawajcard.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg text-sm text-slate-500 hover:text-teal-600 transition-colors"

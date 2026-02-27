@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     }
 
     // Redirect to the actual card page
-    const cardUrl = `https://rawajcard.com/PublicCard?slug=${slug}`;
+    const cardUrl = `https://rawajcard.com/c/${slug}`;
     return Response.redirect(cardUrl, 302);
 
   } catch (error) {
