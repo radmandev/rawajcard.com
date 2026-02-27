@@ -159,6 +159,15 @@ const templates = [
     descriptionAr: 'أخضر طبيعي هادئ مع عناصر عضوية',
     category: 'minimal',
     hidden: false
+  },
+  {
+    id: 'aurora_glass',
+    name: 'Aurora Glass',
+    nameAr: 'أورورا زجاجي',
+    description: 'Animated aurora with glassmorphism cards',
+    descriptionAr: 'خلفية أورورا متحركة مع تصميم زجاجي عصري',
+    category: 'creative',
+    hidden: false
   }
 ];
 

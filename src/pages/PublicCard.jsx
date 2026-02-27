@@ -25,6 +25,7 @@ const templateComponents = {
   tech_blue:        lazy(() => import('@/components/cards/templates/TemplateTechBlue')),
   sunset_warm:      lazy(() => import('@/components/cards/templates/TemplateSunsetWarm')),
   forest_green:     lazy(() => import('@/components/cards/templates/TemplateForestGreen')),
+  aurora_glass:     lazy(() => import('@/components/cards/templates/TemplateAuroraGlass')),
   // legacy aliases
   modern:   lazy(() => import('@/components/cards/templates/TemplateNavyGold')),
   classic:  lazy(() => import('@/components/cards/templates/TemplateDarkMinimal')),
