@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
-import { useTheme } from '@/components/shared/ThemeContext';
-import { Sun, Moon, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
 
-export default function Login() {
+export default function LoginModal({ open, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,27 +13,28 @@ export default function Login() {
   const [successMsg, setSuccessMsg] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
-  const { theme, toggleTheme, isDark } = useTheme();
 
+  // Reset state when modal opens
   useEffect(() => {
-    let isMounted = true;
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session && isMounted) redirectToDashboard();
-    };
-    checkSession();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) redirectToDashboard();
-    });
-    return () => {
-      isMounted = false;
-      listener?.subscription?.unsubscribe();
-    };
-  }, []);
+    if (open) {
+      setEmail('');
+      setPassword('');
+      setError(null);
+      setSuccessMsg(null);
+      setForgotMode(false);
+      setMode('signin');
+    }
+  }, [open]);
 
-  const redirectToDashboard = () => {
-    window.location.href = createPageUrl('Dashboard');
-  };
+  // Redirect if already signed in
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        window.location.href = createPageUrl('Dashboard');
+      }
+    });
+    return () => listener?.subscription?.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +64,7 @@ export default function Login() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setIsSubmitting(false);
     if (signInError) { setError(signInError.message); return; }
-    redirectToDashboard();
+    window.location.href = createPageUrl('Dashboard');
   };
 
   const handleGoogleSignIn = async () => {
@@ -85,31 +85,21 @@ export default function Login() {
     'focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 px-4 transition-colors duration-300">
-
-      {/* Back to Home */}
-      <Link
-        to="/"
-        className="fixed top-4 left-4 flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm transition-all"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Home
-      </Link>
-
-      {/* Theme toggle */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 p-2.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm transition-all"
-        aria-label="Toggle theme"
-      >
-        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </button>
-
-      <div className="w-full max-w-sm">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl dark:shadow-slate-950/50 border border-slate-200/60 dark:border-slate-800 p-8 space-y-6">
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-sm p-0 overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl [&>button]:hidden">
+        <div className="p-8 space-y-6">
+          {/* Close button */}
+          <div className="flex justify-end -mt-2 -mr-2">
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
           {/* Logo + Title */}
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-3 -mt-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg mx-auto">
               <span className="text-white text-2xl font-bold">R</span>
             </div>
@@ -131,7 +121,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Google button (not in forgot mode) */}
+          {/* Google button */}
           {!forgotMode && (
             <button
               type="button"
@@ -258,7 +248,7 @@ export default function Login() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

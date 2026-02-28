@@ -5,7 +5,9 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/landing/Navbar';
 import ProductPreviewModal from '@/components/store/ProductPreviewModal';
+import LoginModal from '@/components/auth/LoginModal';
 import { useCart } from '@/contexts/CartContext';
+import { useLanguage } from '@/components/shared/LanguageContext';
 import {
   Wifi, Star, ShoppingCart, ChevronLeft, ChevronRight,
   Phone, Mail, MessageCircle, MapPin, ArrowLeft, Check,
@@ -130,11 +132,11 @@ const PRODUCTS = [
 ];
 
 const PRODUCT_TABS = [
-  { id: 'all', label: 'الكل' },
-  { id: 'card', label: 'سمارت بزنس كارد' },
-  { id: 'stand', label: 'ستاند طاولة' },
-  { id: 'sticker', label: 'ملصق' },
-  { id: 'keychain', label: 'تعليقة مفاتيح' },
+  { id: 'all', labelAr: 'الكل', labelEn: 'All' },
+  { id: 'card', labelAr: 'سمارت بزنس كارد', labelEn: 'Business Card' },
+  { id: 'stand', labelAr: 'ستاند طاولة', labelEn: 'Table Stand' },
+  { id: 'sticker', labelAr: 'ملصق', labelEn: 'Sticker' },
+  { id: 'keychain', labelAr: 'تعليقة مفاتيح', labelEn: 'Keychain' },
 ];
 
 const PRODUCT_CATEGORY_MAP = {
@@ -148,59 +150,64 @@ const PRODUCT_CATEGORY_MAP = {
 const FEATURES = [
   {
     icon: Zap,
-    title: 'وصول فوري',
-    desc: 'مشاركة ملفك الشخصي بنقرة واحدة بدون تطبيق',
-    color: 'text-teal-500',
-    bg: 'bg-teal-50',
+    titleAr: 'وصول فوري', titleEn: 'Instant Access',
+    descAr: 'مشاركة ملفك الشخصي بنقرة واحدة بدون تطبيق',
+    descEn: 'Share your profile with one tap — no app needed',
+    color: 'text-teal-500', bg: 'bg-teal-50',
   },
   {
     icon: Smartphone,
-    title: 'متوافق مع كل الأجهزة',
-    desc: 'يعمل مع iPhone وAndroid بدون أي إعداد',
-    color: 'text-blue-500',
-    bg: 'bg-blue-50',
+    titleAr: 'متوافق مع كل الأجهزة', titleEn: 'Works on All Devices',
+    descAr: 'يعمل مع iPhone وAndroid بدون أي إعداد',
+    descEn: 'Compatible with iPhone and Android without any setup',
+    color: 'text-blue-500', bg: 'bg-blue-50',
   },
   {
     icon: RefreshCw,
-    title: 'تحديث فوري',
-    desc: 'عدّل معلوماتك في أي وقت دون إعادة الطباعة',
-    color: 'text-purple-500',
-    bg: 'bg-purple-50',
+    titleAr: 'تحديث فوري', titleEn: 'Instant Updates',
+    descAr: 'عدّل معلوماتك في أي وقت دون إعادة الطباعة',
+    descEn: 'Update your info anytime without reprinting',
+    color: 'text-purple-500', bg: 'bg-purple-50',
   },
   {
     icon: Shield,
-    title: 'بيانات آمنة',
-    desc: 'تحكم كامل في ما تشاركه ومع من',
-    color: 'text-amber-500',
-    bg: 'bg-amber-50',
+    titleAr: 'بيانات آمنة', titleEn: 'Secure Data',
+    descAr: 'تحكم كامل في ما تشاركه ومع من',
+    descEn: 'Full control over what you share and with whom',
+    color: 'text-amber-500', bg: 'bg-amber-50',
   },
 ];
 
 /* ─── Hero animated words ──────────────────────────────────────────── */
-const CYCLING_WORDS = ['بنفسك', 'بشركتك', 'بفكرتك'];
+const CYCLING_WORDS_AR = ['بنفسك', 'بشركتك', 'بفكرتك'];
+const CYCLING_WORDS_EN = ['yourself', 'your business', 'your idea'];
 
 /* ─── Product type → hero image + product mapping ──────────────────── */
 const HERO_PRODUCT_TYPES = [
   {
-    label: 'سمارت بزنس كارد',
+    labelAr: 'سمارت بزنس كارد',
+    labelEn: 'Smart Business Card',
     icon: '💳',
     productId: 1,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
   },
   {
-    label: 'ستاند طاولة',
+    labelAr: 'ستاند طاولة',
+    labelEn: 'Table Stand',
     icon: '🪧',
     productId: 7,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
   },
   {
-    label: 'ملصق',
+    labelAr: 'ملصق',
+    labelEn: 'NFC Sticker',
     icon: '🏷️',
     productId: 5,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
   },
   {
-    label: 'تعليقة مفاتيح',
+    labelAr: 'تعليقة مفاتيح',
+    labelEn: 'NFC Keychain',
     icon: '🔑',
     productId: 6,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
@@ -208,7 +215,7 @@ const HERO_PRODUCT_TYPES = [
 ];
 
 /* ─── ProductCard ───────────────────────────────────────────────────── */
-function ProductCard({ product, index, onAddToCart, onView, onBuyNow }) {
+function ProductCard({ product, index, onAddToCart, onView, onBuyNow, isRTL }) {
   const [hovered, setHovered] = useState(false);
   return (
     <Reveal delay={index * 0.07}>
@@ -243,14 +250,14 @@ function ProductCard({ product, index, onAddToCart, onView, onBuyNow }) {
               className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
             >
               <ShoppingCart className="h-4 w-4" />
-              أضف إلى السلة
+              {isRTL ? 'أضف إلى السلة' : 'Add to Cart'}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onBuyNow?.(); }}
               className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg"
             >
               <Zap className="h-4 w-4" />
-              اشتر الآن
+              {isRTL ? 'اشتر الآن' : 'Buy Now'}
             </button>
           </motion.div>
         </div>
@@ -266,11 +273,11 @@ function ProductCard({ product, index, onAddToCart, onView, onBuyNow }) {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-black text-teal-700">
-              {product.price.toLocaleString('ar-SA')} ر.س
+              {product.price.toLocaleString(isRTL ? 'ar-SA' : 'en-US')} {isRTL ? 'ر.س' : 'SAR'}
             </span>
             {product.originalPrice && (
               <span className="text-sm text-slate-400 line-through">
-                {product.originalPrice} ر.س
+                {product.originalPrice} {isRTL ? 'ر.س' : 'SAR'}
               </span>
             )}
           </div>
@@ -287,26 +294,18 @@ export default function TestLanding() {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [wordIdx, setWordIdx] = useState(0);
   const [selectedProductTypeIdx, setSelectedProductTypeIdx] = useState(0);
+  const [loginOpen, setLoginOpen] = useState(false);
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const { lang, isRTL } = useLanguage();
+
+  const CYCLING_WORDS = isRTL ? CYCLING_WORDS_AR : CYCLING_WORDS_EN;
 
   // Cycle words every 2.5s
   useEffect(() => {
     const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLING_WORDS.length), 2500);
     return () => clearInterval(t);
-  }, []);
-
-  /* set RTL + Arabic for this page, restore on leave */
-  useEffect(() => {
-    const prevDir = document.documentElement.getAttribute('dir');
-    const prevLang = document.documentElement.getAttribute('lang');
-    document.documentElement.setAttribute('dir', 'rtl');
-    document.documentElement.setAttribute('lang', 'ar');
-    return () => {
-      document.documentElement.setAttribute('dir', prevDir || 'ltr');
-      if (prevLang) document.documentElement.setAttribute('lang', prevLang);
-    };
-  }, []);
+  }, [CYCLING_WORDS.length]);
 
   const filteredIds = PRODUCT_CATEGORY_MAP[activeTab] || PRODUCT_CATEGORY_MAP.all;
   const filteredProducts = PRODUCTS.filter(p => filteredIds.includes(p.id));
@@ -314,7 +313,7 @@ export default function TestLanding() {
   const heroImages = HERO_PRODUCT_TYPES.map(p => p.image);
 
   return (
-    <div className="min-h-screen bg-white pb-16 md:pb-0" dir="rtl" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
+    <div className="min-h-screen bg-white pb-16 md:pb-0" dir={isRTL ? 'rtl' : 'ltr'} style={{ fontFamily: isRTL ? "'Tajawal', 'Cairo', sans-serif" : "'Inter', 'Segoe UI', sans-serif" }}>
       {/* Google Fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@400;600;700;800&display=swap');
@@ -326,7 +325,7 @@ export default function TestLanding() {
       </div>
 
       {/* ── Navbar (existing) ────────────────────────────────────── */}
-      <Navbar />
+      <Navbar onLoginClick={() => setLoginOpen(true)} />
 
       {/* ── Hero Section ─────────────────────────────────────────── */}
       <section
@@ -361,7 +360,7 @@ export default function TestLanding() {
               >
                 <span className="inline-flex items-center gap-2 bg-teal-500/15 text-teal-300 text-sm font-semibold px-4 py-1.5 rounded-full border border-teal-500/30 mb-6">
                   <Wifi className="h-4 w-4" />
-                  تقنية NFC الذكية
+                  {isRTL ? 'تقنية NFC الذكية' : 'Smart NFC Technology'}
                 </span>
               </motion.div>
 
@@ -369,10 +368,10 @@ export default function TestLanding() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6"
-                style={{ fontFamily: "'Cairo', sans-serif", color: '#fff' }}
+                className="text-4xl md:text-5xl lg:text-6xl font-black mb-6"
+                style={{ fontFamily: isRTL ? "'Cairo', sans-serif" : "'Inter', sans-serif", color: '#fff', lineHeight: '1.55' }}
               >
-                <span className="text-white">استعد للتعريف </span>
+                <span className="text-white">{isRTL ? 'استعد للتعريف ' : 'Ready to introduce '}</span>
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={wordIdx}
@@ -400,7 +399,7 @@ export default function TestLanding() {
                     backgroundClip: 'text',
                   }}
                 >
-                  بطريقة عصرية
+                  {isRTL ? 'بطريقة عصرية' : 'the modern way'}
                 </span>
               </motion.h1>
 
@@ -410,7 +409,7 @@ export default function TestLanding() {
                 transition={{ duration: 0.8, delay: 0.35 }}
                 className="text-slate-300 text-lg md:text-xl mb-8 leading-relaxed"
               >
-                الجيل الجديد من كروت التعارف في عالم الأعمال
+                {isRTL ? 'الجيل الجديد من كروت التعارف في عالم الأعمال' : 'The next generation of business networking cards'}
               </motion.p>
 
               {/* Product Type Tabs */}
@@ -436,7 +435,7 @@ export default function TestLanding() {
                     }`}
                   >
                     <span>{item.icon}</span>
-                    {item.label}
+                    {isRTL ? item.labelAr : item.labelEn}
                   </motion.span>
                 ))}
               </motion.div>
@@ -447,23 +446,23 @@ export default function TestLanding() {
                 transition={{ duration: 0.7, delay: 0.65 }}
                 className="flex flex-wrap gap-4"
               >
-                <Link to={createPageUrl('Login')}>
+                <button onClick={() => setLoginOpen(true)}>
                   <motion.span
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base cursor-pointer"
                   >
-                    انشئ كرت رقمي مجاني
+                    {isRTL ? 'انشئ كرت رقمي مجاني' : 'Create Your Free Digital Card'}
                     <ArrowLeft className="h-5 w-5" />
                   </motion.span>
-                </Link>
+                </button>
                 <Link to={createPageUrl('Store')}>
                   <motion.span
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base cursor-pointer"
                   >
-                    تسوق الآن
+                    {isRTL ? 'تسوق الآن' : 'Shop Now'}
                   </motion.span>
                 </Link>
               </motion.div>
@@ -476,13 +475,13 @@ export default function TestLanding() {
                 className="flex gap-8 mt-12"
               >
                 {[
-                  { value: '+5000', label: 'عميل سعيد' },
-                  { value: '+1000', label: 'تقييم ⭐' },
-                  { value: '2 يوم', label: 'توصيل سريع' },
+                  { value: '+5000', labelAr: 'عميل سعيد', labelEn: 'Happy Clients' },
+                  { value: '+1000', labelAr: 'تقييم ⭐', labelEn: '5-Star Reviews' },
+                  { value: '2 يوم', labelAr: 'توصيل سريع', labelEn: 'Fast Delivery' },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
                     <div className="text-2xl font-black text-teal-400">{stat.value}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">{stat.label}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{isRTL ? stat.labelAr : stat.labelEn}</div>
                   </div>
                 ))}
               </motion.div>
@@ -551,8 +550,8 @@ export default function TestLanding() {
                     <Wifi className="h-5 w-5 text-teal-600" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-800">NFC تقنية</div>
-                    <div className="text-xs text-slate-400">لمسة واحدة تكفي</div>
+                    <div className="text-xs font-bold text-slate-800">{isRTL ? 'NFC تقنية' : 'NFC Tech'}</div>
+                    <div className="text-xs text-slate-400">{isRTL ? 'لمسة واحدة تكفي' : 'One tap is enough'}</div>
                   </div>
                 </motion.div>
               </div>
@@ -567,13 +566,13 @@ export default function TestLanding() {
           <Reveal>
             <div className="text-center mb-14">
               <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-3">
-                مجموعتنا
+                {isRTL ? 'مجموعتنا' : 'Our Collection'}
               </span>
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">
-                أشكال فاخرة تليق بك
+                {isRTL ? 'أشكال فاخرة تليق بك' : 'Premium Designs Just for You'}
               </h2>
               <p className="text-slate-500 text-lg max-w-xl mx-auto">
-                اختر من بين أفضل الأشكال والألوان — كروت بجودة وفخامة عالية
+                {isRTL ? 'اختر من بين أفضل الأشكال والألوان — كروت بجودة وفخامة عالية' : 'Choose from the finest shapes and colors — premium quality cards'}
               </p>
             </div>
           </Reveal>
@@ -592,7 +591,7 @@ export default function TestLanding() {
                       : 'bg-white text-slate-600 hover:bg-teal-50 border border-slate-200'
                   }`}
                 >
-                  {tab.label}
+                  {isRTL ? tab.labelAr : tab.labelEn}
                 </motion.button>
               ))}
             </div>
@@ -604,6 +603,7 @@ export default function TestLanding() {
                 key={product.id}
                 product={product}
                 index={i}
+                isRTL={isRTL}
                 onAddToCart={() => addItem(product)}
                 onView={() => setPreviewProduct(product)}
                 onBuyNow={() => { addItem(product); navigate(createPageUrl('Checkout')); }}
@@ -617,7 +617,7 @@ export default function TestLanding() {
                 to={createPageUrl('Store')}
                 className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-10 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all text-base"
               >
-                عرض جميع المنتجات
+                {isRTL ? 'عرض جميع المنتجات' : 'View All Products'}
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </div>
@@ -650,7 +650,7 @@ export default function TestLanding() {
                   animate={{ rotate: [-2, 2, -2] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  🔥 الأكثر طلباً
+                  🔥 {isRTL ? 'الأكثر طلباً' : 'Best Seller'}
                 </motion.div>
               </div>
             </Reveal>
@@ -710,7 +710,7 @@ export default function TestLanding() {
         <div className="container mx-auto px-4 md:px-10">
           <Reveal>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 text-center mb-14">
-              لماذا يختار الجميع رواج كارد؟
+              {isRTL ? 'لماذا يختار الجميع رواج كارد؟' : 'Why Everyone Chooses Rawajcard'}
             </h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -723,8 +723,8 @@ export default function TestLanding() {
                   <div className={`w-12 h-12 ${f.bg} rounded-2xl flex items-center justify-center mb-4`}>
                     <f.icon className={`h-6 w-6 ${f.color}`} />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg mb-2">{f.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                  <h3 className="font-bold text-slate-900 text-lg mb-2">{isRTL ? f.titleAr : f.titleEn}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{isRTL ? f.descAr : f.descEn}</p>
                 </motion.div>
               </Reveal>
             ))}
@@ -749,20 +749,23 @@ export default function TestLanding() {
         <div className="container mx-auto px-4 md:px-10 relative z-10 text-center">
           <Reveal>
             <span className="inline-block text-teal-300 text-sm font-bold tracking-widest uppercase mb-4 border border-teal-400/30 rounded-full px-4 py-1.5">
-              مع رواج كارد
+              {isRTL ? 'مع رواج كارد' : 'With Rawajcard'}
             </span>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
-              الوصول أصبح{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">
-                أسرع
-              </span>
+              {isRTL ? (
+                <>الوصول أصبح{' '}<span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">أسرع</span></>
+              ) : (
+                <>Access is now{' '}<span className="text-transparent bg-clip-text bg-gradient-to-l from-teal-300 to-teal-500">Faster</span></>
+              )}
             </h2>
           </Reveal>
           <Reveal delay={0.2}>
             <p className="text-slate-300 text-lg max-w-xl mx-auto mb-12 leading-relaxed">
-              أنشئ كرتك الرقمي مجاناً — شارك معلوماتك، وسائل التواصل، وموقعك بنقرة واحدة مع أي شخص
+              {isRTL
+                ? 'أنشئ كرتك الرقمي مجاناً — شارك معلوماتك، وسائل التواصل، وموقعك بنقرة واحدة مع أي شخص'
+                : 'Create your digital card for free — share your info, socials, and location with one tap'}
             </p>
           </Reveal>
           <Reveal delay={0.3}>
@@ -772,8 +775,9 @@ export default function TestLanding() {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg cursor-pointer"
+                  onClick={(e) => { e.preventDefault(); setLoginOpen(true); }}
                 >
-                  انشئ كرتك مجاناً الآن
+                  {isRTL ? 'انشئ كرتك مجاناً الآن' : 'Create Your Free Card Now'}
                   <ArrowLeft className="h-5 w-5" />
                 </motion.span>
               </Link>
@@ -783,7 +787,7 @@ export default function TestLanding() {
                   whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-10 py-5 rounded-2xl border border-white/20 transition-all text-lg cursor-pointer"
                 >
-                  خصص كرتك المفضل
+                  {isRTL ? 'خصص كرتك المفضل' : 'Customize Your Favorite Card'}
                 </motion.span>
               </Link>
             </div>
@@ -793,14 +797,14 @@ export default function TestLanding() {
           <Reveal delay={0.45}>
             <div className="flex flex-wrap justify-center gap-8 mt-16">
               {[
-                { icon: '🔒', text: 'مدفوعات آمنة 100%' },
-                { icon: '🚚', text: 'توصيل سريع لجميع مناطق السعودية' },
-                { icon: '↩️', text: 'إرجاع مجاني خلال 14 يوم' },
-                { icon: '📞', text: 'دعم على مدار الساعة' },
+                { icon: '🔒', textAr: 'مدفوعات آمنة 100%', textEn: '100% Secure Payments' },
+                { icon: '🚚', textAr: 'توصيل سريع لجميع مناطق السعودية', textEn: 'Fast delivery across Saudi Arabia' },
+                { icon: '↩️', textAr: 'إرجاع مجاني خلال 14 يوم', textEn: 'Free returns within 14 days' },
+                { icon: '📞', textAr: 'دعم على مدار الساعة', textEn: '24/7 customer support' },
               ].map((badge, i) => (
                 <div key={i} className="flex items-center gap-2 text-slate-300 text-sm">
                   <span className="text-lg">{badge.icon}</span>
-                  {badge.text}
+                  {isRTL ? badge.textAr : badge.textEn}
                 </div>
               ))}
             </div>
@@ -882,9 +886,9 @@ export default function TestLanding() {
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
                 >
-                  <div className="text-xs text-slate-400 line-through mb-0.5">190 ر.س</div>
-                  <div className="text-2xl font-black text-teal-700">149 ر.س</div>
-                  <div className="text-xs text-red-500 font-bold">وفّر 41 ر.س</div>
+                  <div className="text-xs text-slate-400 line-through mb-0.5">{isRTL ? '190 ر.س' : '190 SAR'}</div>
+                  <div className="text-2xl font-black text-teal-700">{isRTL ? '149 ر.س' : '149 SAR'}</div>
+                  <div className="text-xs text-red-500 font-bold">{isRTL ? 'وفّر 41 ر.س' : 'Save 41 SAR'}</div>
                 </motion.div>
               </div>
             </Reveal>
@@ -898,36 +902,33 @@ export default function TestLanding() {
           <Reveal>
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-                ماذا يقول عملاؤنا؟
+                {isRTL ? 'ماذا يقول عملاؤنا؟' : 'What Our Customers Say'}
               </h2>
-              <p className="text-slate-500">آراء حقيقية من عملاء رواج كارد</p>
+              <p className="text-slate-500">{isRTL ? 'آراء حقيقية من عملاء رواج كارد' : 'Real reviews from Rawajcard customers'}</p>
             </div>
           </Reveal>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                name: 'عبدالله الشمري',
-                role: 'مدير مبيعات',
-                text: 'منتج رائع! وفّر عليّ الكثير من الوقت. أعطيته لعملائي وكلهم انبهروا. التوصيل كان سريع جداً.',
-                stars: 5,
-                avatar: 'ع',
-                avatarBg: 'bg-teal-600',
+                nameAr: 'عبدالله الشمري', nameEn: 'Abdullah Al-Shamri',
+                roleAr: 'مدير مبيعات', roleEn: 'Sales Manager',
+                textAr: 'منتج رائع! وفّر عليّ الكثير من الوقت. أعطيته لعملائي وكلهم انبهروا. التوصيل كان سريع جداً.',
+                textEn: 'Amazing product! Saved me so much time. Shared it with my clients and they were all impressed. Delivery was super fast.',
+                stars: 5, avatar: 'ع', avatarBg: 'bg-teal-600',
               },
               {
-                name: 'سارة الأحمدي',
-                role: 'صاحبة مطعم',
-                text: 'الستاند الخاص بمطعمي ساعدنا كثيراً في زيادة المراجعات على جوجل. أنصح به كل صاحب محل.',
-                stars: 5,
-                avatar: 'س',
-                avatarBg: 'bg-purple-600',
+                nameAr: 'سارة الأحمدي', nameEn: 'Sara Al-Ahmadi',
+                roleAr: 'صاحبة مطعم', roleEn: 'Restaurant Owner',
+                textAr: 'الستاند الخاص بمطعمي ساعدنا كثيراً في زيادة المراجعات على جوجل. أنصح به كل صاحب محل.',
+                textEn: 'The stand at my restaurant helped us get a lot more Google reviews. I recommend it to every business owner.',
+                stars: 5, avatar: 'س', avatarBg: 'bg-purple-600',
               },
               {
-                name: 'محمد العتيبي',
-                role: 'مستقل ومصمم',
-                text: 'جودة البطاقة ممتازة والكرت الرقمي احترافي جداً. الجميع يسألني عنه في الاجتماعات!',
-                stars: 5,
-                avatar: 'م',
-                avatarBg: 'bg-blue-600',
+                nameAr: 'محمد العتيبي', nameEn: 'Mohammed Al-Otaibi',
+                roleAr: 'مستقل ومصمم', roleEn: 'Freelance Designer',
+                textAr: 'جودة البطاقة ممتازة والكرت الرقمي احترافي جداً. الجميع يسألني عنه في الاجتماعات!',
+                textEn: 'Excellent card quality and the digital card is very professional. Everyone asks me about it in meetings!',
+                stars: 5, avatar: 'م', avatarBg: 'bg-blue-600',
               },
             ].map((review, i) => (
               <Reveal key={i} delay={i * 0.1}>
@@ -937,14 +938,14 @@ export default function TestLanding() {
                       <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="text-slate-600 leading-relaxed mb-5 text-sm">"{review.text}"</p>
+                  <p className="text-slate-600 leading-relaxed mb-5 text-sm">"{isRTL ? review.textAr : review.textEn}"</p>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full ${review.avatarBg} flex items-center justify-center text-white font-bold text-sm`}>
                       {review.avatar}
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900 text-sm">{review.name}</div>
-                      <div className="text-xs text-slate-400">{review.role}</div>
+                      <div className="font-bold text-slate-900 text-sm">{isRTL ? review.nameAr : review.nameEn}</div>
+                      <div className="text-xs text-slate-400">{isRTL ? review.roleAr : review.roleEn}</div>
                     </div>
                   </div>
                 </div>
@@ -960,16 +961,16 @@ export default function TestLanding() {
         <div className="border-b border-white/10 py-10">
           <div className="container mx-auto px-4 md:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="text-xl font-black mb-1">جاهز تبدأ؟</h3>
-              <p className="text-slate-400 text-sm">انشئ كرتك الرقمي مجاناً الآن</p>
+              <h3 className="text-xl font-black mb-1">{isRTL ? 'جاهز تبدأ؟' : 'Ready to start?'}</h3>
+              <p className="text-slate-400 text-sm">{isRTL ? 'انشئ كرتك الرقمي مجاناً الآن' : 'Create your digital card for free today'}</p>
             </div>
-            <Link
-              to={createPageUrl('Login')}
+            <button
+              onClick={() => setLoginOpen(true)}
               className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors"
             >
-              ابدأ مجاناً
+              {isRTL ? 'ابدأ مجاناً' : 'Start for Free'}
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -989,7 +990,7 @@ export default function TestLanding() {
               />
               <div className="hidden text-2xl font-black text-teal-400 mb-4">رواج كارد</div>
               <p className="text-slate-400 text-sm leading-relaxed mb-5">
-                الجيل الجديد من بطاقات التعارف الذكية في عالم الأعمال
+                {isRTL ? 'الجيل الجديد من بطاقات التعارف الذكية في عالم الأعمال' : 'The next generation of smart business cards'}
               </p>
               <div className="flex gap-3">
                 {[
@@ -1008,31 +1009,31 @@ export default function TestLanding() {
             {/* Links */}
             {[
               {
-                title: 'روابط مهمة',
+                titleAr: 'روابط مهمة', titleEn: 'Quick Links',
                 links: [
-                  { label: 'المتجر', href: 'https://rawajcard.com/shop/' },
-                  { label: 'حسابي', href: 'https://rawajcard.com/my-account/' },
-                  { label: 'طلبياتي', href: 'https://rawajcard.com/my-orders/' },
-                  { label: 'جميع المنتجات', href: 'https://rawajcard.com/shop/' },
+                  { labelAr: 'المتجر', labelEn: 'Shop', href: 'https://rawajcard.com/shop/' },
+                  { labelAr: 'حسابي', labelEn: 'My Account', href: 'https://rawajcard.com/my-account/' },
+                  { labelAr: 'طلبياتي', labelEn: 'My Orders', href: 'https://rawajcard.com/my-orders/' },
+                  { labelAr: 'جميع المنتجات', labelEn: 'All Products', href: 'https://rawajcard.com/shop/' },
                 ],
               },
               {
-                title: 'معلومات مهمة',
+                titleAr: 'معلومات مهمة', titleEn: 'Info',
                 links: [
-                  { label: 'الشحن والتوصيل', href: 'https://rawajcard.com/shipping' },
-                  { label: 'سياسة التبديل والاسترجاع', href: 'https://rawajcard.com/returns' },
-                  { label: 'سياسة الخصوصية', href: 'https://rawajcard.com/privacy-policy' },
-                  { label: 'وسائل الدفع', href: 'https://rawajcard.com/payments' },
+                  { labelAr: 'الشحن والتوصيل', labelEn: 'Shipping & Delivery', href: 'https://rawajcard.com/shipping' },
+                  { labelAr: 'سياسة التبديل والاسترجاع', labelEn: 'Returns Policy', href: 'https://rawajcard.com/returns' },
+                  { labelAr: 'سياسة الخصوصية', labelEn: 'Privacy Policy', href: 'https://rawajcard.com/privacy-policy' },
+                  { labelAr: 'وسائل الدفع', labelEn: 'Payment Methods', href: 'https://rawajcard.com/payments' },
                 ],
               },
               {
-                title: 'تواصل معنا',
+                titleAr: 'تواصل معنا', titleEn: 'Contact Us',
                 links: [],
                 contact: true,
               },
             ].map((col, i) => (
               <div key={i}>
-                <h4 className="font-black text-white mb-5 text-base">{col.title}</h4>
+                <h4 className="font-black text-white mb-5 text-base">{isRTL ? col.titleAr : col.titleEn}</h4>
                 {col.contact ? (
                   <div className="space-y-4 text-sm text-slate-400">
                     <a href="mailto:info@rawajcard.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
@@ -1041,11 +1042,11 @@ export default function TestLanding() {
                     </a>
                     <a href="https://wa.me/966551861022" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
                       <MessageCircle className="h-4 w-4 flex-shrink-0" />
-                      واتساب: 966551861022+
+                      {isRTL ? 'واتساب: 966551861022+' : 'WhatsApp: +966551861022'}
                     </a>
                     <a href="tel:966551861022" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
                       <Phone className="h-4 w-4 flex-shrink-0" />
-                      اتصل بنا: 966551861022+
+                      {isRTL ? 'اتصل بنا: 966551861022+' : 'Call: +966551861022'}
                     </a>
                   </div>
                 ) : (
@@ -1054,7 +1055,7 @@ export default function TestLanding() {
                       <li key={j}>
                         <a href={link.href} target="_blank" rel="noopener noreferrer"
                           className="hover:text-teal-400 transition-colors">
-                          {link.label}
+                          {isRTL ? link.labelAr : link.labelEn}
                         </a>
                       </li>
                     ))}
@@ -1066,7 +1067,9 @@ export default function TestLanding() {
         </div>
 
         <div className="border-t border-white/10 py-6 text-center text-sm text-slate-500">
-          جميع الحقوق محفوظة © {new Date().getFullYear()} رواج كارد — تقنية NFC الذكية
+          {isRTL
+            ? `جميع الحقوق محفوظة © ${new Date().getFullYear()} رواج كارد — تقنية NFC الذكية`
+            : `All rights reserved © ${new Date().getFullYear()} Rawajcard — Smart NFC Technology`}
         </div>
       </footer>
       {/* Product Preview Modal */}
@@ -1074,6 +1077,9 @@ export default function TestLanding() {
         product={previewProduct}
         onClose={() => setPreviewProduct(null)}
       />
+
+      {/* Login Modal */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
 
     </div>
   );

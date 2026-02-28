@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     
     if (shouldRedirect) {
       supabase.auth.signOut().finally(() => {
-        window.location.href = '/login';
+        window.location.href = '/';
       });
     } else {
       supabase.auth.signOut();

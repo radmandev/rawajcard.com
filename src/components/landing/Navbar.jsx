@@ -51,6 +51,12 @@ const navItems = [
     hasDropdown: true,
     type: "product"
   },
+  {
+    label: "Free Tools",
+    labelAr: "أدوات مجانية",
+    hasDropdown: true,
+    type: "freetools"
+  },
   { label: "NFC Cards", labelAr: "بطاقات NFC", hasDropdown: false },
   { label: "Pricing", labelAr: "الأسعار", hasDropdown: false }
 ];
@@ -70,7 +76,7 @@ const translations = {
   }
 };
 
-export default function Navbar() {
+export default function Navbar({ onLoginClick } = {}) {
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -122,7 +128,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to={createPageUrl('TestLanding')} className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/9f16258e0_Rawajcard.png" 
               alt="Rawajcard" 
@@ -254,8 +260,41 @@ export default function Navbar() {
                   </div>
                 )}
 
+                {/* Free Tools Dropdown */}
+                {item.hasDropdown && activeDropdown === index && item.type === 'freetools' && (
+                  <div className="absolute top-full ltr:left-0 rtl:right-0 mt-0 pt-2 w-[700px]">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6">
+                      <div className="grid grid-cols-3 gap-4">
+                        {productItems.freeTools.map((tool, idx) => (
+                          <a
+                            key={idx}
+                            href="#"
+                            className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"
+                          >
+                            <div className="aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                              <img
+                                src={tool.image}
+                                alt={language === 'ar' ? tool.labelAr : tool.label}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                            <div className="p-3">
+                              <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-1">
+                                {language === 'ar' ? tool.labelAr : tool.label}
+                              </h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {language === 'ar' ? tool.descriptionAr : tool.description}
+                              </p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Regular Dropdown */}
-                {item.hasDropdown && activeDropdown === index && item.type !== 'product' && (
+                {item.hasDropdown && activeDropdown === index && item.type !== 'product' && item.type !== 'freetools' && (
                   <div className="absolute top-full ltr:left-0 rtl:right-0 mt-0 pt-2 w-48">
                     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl shadow-slate-900/10 border border-slate-100 dark:border-slate-700 overflow-hidden">
                       {(language === 'ar' ? item.itemsAr : item.items).map((subItem, subIndex) => (
@@ -297,49 +336,6 @@ export default function Navbar() {
                 <Moon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               )}
             </button>
-
-            {/* Free Tools Button (desktop only) */}
-            <div 
-              className="relative hidden lg:block"
-              onMouseEnter={() => setShowFreeTools(true)}
-              onMouseLeave={() => setShowFreeTools(false)}
-            >
-              <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
-                {language === 'ar' ? 'أدوات مجانية' : 'Free Tools'}
-              </button>
-
-              {showFreeTools && (
-                <div className="absolute top-full ltr:left-0 rtl:right-0 mt-0 pt-2 w-[700px] -ltr:left-auto ltr:-right-60">
-                  <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6">
-                    <div className="grid grid-cols-3 gap-4">
-                      {productItems.freeTools.map((tool, idx) => (
-                        <a
-                          key={idx}
-                          href="#"
-                          className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"
-                        >
-                          <div className="aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-                            <img 
-                              src={tool.image} 
-                              alt={language === 'ar' ? tool.labelAr : tool.label}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-1">
-                              {language === 'ar' ? tool.labelAr : tool.label}
-                            </h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {language === 'ar' ? tool.descriptionAr : tool.description}
-                            </p>
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Language selector (desktop) */}
             <div className="hidden md:flex items-center gap-1">
@@ -390,7 +386,7 @@ export default function Navbar() {
             ) : (
               <Button 
                 className="hidden md:inline-flex bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
-                onClick={() => navigate(createPageUrl('Login'))}
+                onClick={() => onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))}
               >
                 {translations[language].createCard}
               </Button>
@@ -465,7 +461,7 @@ export default function Navbar() {
               ) : (
                 <Button
                   className="w-full bg-gradient-to-r from-teal-600 to-blue-500 text-white rounded-full"
-                  onClick={() => { navigate(createPageUrl('Login')); setMobileMenuOpen(false); }}
+                  onClick={() => { onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')); setMobileMenuOpen(false); }}
                 >
                   {translations[language].createCard}
                 </Button>
