@@ -63,6 +63,7 @@ const Login           = lazy(() => import('./pages/Login'));
 const MyCards         = lazy(() => import('./pages/MyCards'));
 const MyContacts      = lazy(() => import('./pages/MyContacts'));
 const Pricing         = lazy(() => import('./pages/Pricing'));
+const ProductDetail   = lazy(() => import('./pages/ProductDetail'));
 const Products        = lazy(() => import('./pages/Products'));
 const PublicCard      = lazy(() => import('./pages/PublicCard'));
 const Settings        = lazy(() => import('./pages/Settings'));
@@ -88,6 +89,7 @@ export const PAGES = {
     "MyCards": MyCards,
     "MyContacts": MyContacts,
     "Pricing": Pricing,
+    "ProductDetail": ProductDetail,
     "Products": Products,
     "PublicCard": PublicCard,
     "Settings": Settings,

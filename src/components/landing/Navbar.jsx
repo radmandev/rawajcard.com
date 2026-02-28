@@ -169,7 +169,7 @@ export default function Navbar({ onLoginClick } = {}) {
                         {/* Left Sidebar */}
                         <div className="w-48 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4">
                         <button
-                          onClick={() => setSelectedCategory(null)}
+                          onClick={() => { navigate('/Products'); setActiveDropdown(null); }}
                           onMouseEnter={() => setSelectedCategory(null)}
                           className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-bold hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors mb-4 ${
                             selectedCategory === null 
@@ -183,7 +183,7 @@ export default function Navbar({ onLoginClick } = {}) {
                         {productItems.categories.map((category, idx) => (
                           <button
                             key={idx}
-                            onClick={() => window.location.href = createPageUrl(`Products?category=${category.value}`)}
+                            onClick={() => { navigate(`/Products?category=${category.value}`); setActiveDropdown(null); }}
                             onMouseEnter={() => setSelectedCategory(category.value)}
                             className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-medium hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors mb-2 ${
                               selectedCategory === category.value 
@@ -215,7 +215,8 @@ export default function Navbar({ onLoginClick } = {}) {
                             {displayedProducts.map((product, idx) => (
                               <Link
                                 key={idx}
-                                to={createPageUrl(`Products?category=${selectedCategory || 'all'}`)}
+                                to={`/ProductDetail?id=${product.id}`}
+                                onClick={() => setActiveDropdown(null)}
                                 className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-slate-100 dark:border-slate-700"
                               >
                                 <div className="aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
@@ -408,14 +409,38 @@ export default function Navbar({ onLoginClick } = {}) {
         <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <div className="container mx-auto px-4 py-4 space-y-1">
             {navItems.map((item, index) => (
-              <a
-                key={index}
-                href="#"
-                className="block py-3 px-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {language === 'ar' ? item.labelAr : item.label}
-              </a>
+              item.type === 'product' ? (
+                <div key={index}>
+                  <button
+                    className="w-full text-left py-3 px-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center justify-between"
+                    onClick={() => { navigate('/Products'); setMobileMenuOpen(false); }}
+                  >
+                    {language === 'ar' ? item.labelAr : item.label}
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <div className="ml-4 mt-1 space-y-1">
+                    {productItems.categories.map((cat, ci) => (
+                      <button
+                        key={ci}
+                        className="w-full text-left py-2 px-3 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-lg flex items-center gap-2"
+                        onClick={() => { navigate(`/Products?category=${cat.value}`); setMobileMenuOpen(false); }}
+                      >
+                        <span>{cat.icon}</span>
+                        {language === 'ar' ? cat.labelAr : cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <a
+                  key={index}
+                  href="#"
+                  className="block py-3 px-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {language === 'ar' ? item.labelAr : item.label}
+                </a>
+              )
             ))}
 
             {/* Language toggle row */}
