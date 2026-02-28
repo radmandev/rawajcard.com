@@ -13,7 +13,7 @@ import {
   ShoppingBag, Search, Eye, RefreshCw, Loader2, Package,
   CheckCircle, Clock, TrendingUp, DollarSign,
   ChevronLeft, ChevronRight, User, MapPin, Phone, Calendar,
-  Truck, XCircle,
+  Truck, XCircle, Building2, ImageIcon, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -453,6 +453,56 @@ function OrderDetailDialog({ order, onClose, onUpdateStatus, isUpdating, isRTL }
           </div>
 
           <Separator />
+
+          {/* Bank transfer receipt */}
+          {meta.payment_method === 'bank_transfer' && (
+            <>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-green-600" />
+                  {isRTL ? 'إيصال التحويل البنكي' : 'Bank Transfer Receipt'}
+                </h3>
+                {meta.receipt_url ? (
+                  <div className="rounded-xl overflow-hidden border border-green-200 dark:border-green-800">
+                    {meta.receipt_url.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp)$/i.test(meta.receipt_url) ? (
+                      <img
+                        src={meta.receipt_url}
+                        alt="Transfer Receipt"
+                        className="w-full max-h-64 object-contain bg-slate-100 dark:bg-slate-800"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800">
+                        <ImageIcon className="h-8 w-8 text-teal-600 flex-shrink-0" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate flex-1">
+                          {isRTL ? 'ملف الإيصال' : 'Receipt file'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="px-3 py-2 bg-green-50 dark:bg-green-900/20 flex items-center justify-between">
+                      <span className="text-xs text-green-700 dark:text-green-400 font-medium">
+                        {isRTL ? 'تم رفع الإيصال من العميل' : 'Receipt uploaded by customer'}
+                      </span>
+                      <a
+                        href={meta.receipt_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-medium"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {isRTL ? 'فتح' : 'Open'}
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm">
+                    <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                    {isRTL ? 'لم يرفع العميل إيصالاً بعد' : 'Customer has not uploaded a receipt yet'}
+                  </div>
+                )}
+              </div>
+              <Separator />
+            </>
+          )}
 
           {/* Status update */}
           <div>

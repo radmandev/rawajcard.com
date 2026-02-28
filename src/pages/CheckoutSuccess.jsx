@@ -20,6 +20,7 @@ export default function CheckoutSuccess() {
   const [orderNumber, setOrderNumber] = useState(null);
   const [successType, setSuccessType] = useState(null); // 'order' | 'subscription'
   const [activatedPlan, setActivatedPlan] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
 
   useEffect(() => {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -31,6 +32,9 @@ export default function CheckoutSuccess() {
     const plan = urlParams.get('plan');
     const paypalOrderId = urlParams.get('token');
     const order = urlParams.get('order');
+    const method = urlParams.get('method');
+
+    if (method) setPaymentMethod(method);
 
     if (stripeSubscription === 'true' && stripeSessionId) {
       activateStripeSubscription(stripeSessionId, plan);
@@ -253,12 +257,25 @@ export default function CheckoutSuccess() {
             )}
 
             {/* Info Box */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-900 dark:text-blue-300">
-              {isRTL
-                ? 'سنرسل لك تفاصيل الطلب عبر البريد الإلكتروني. تحقق من صندوق الوارد الخاص بك.'
-                : "We'll send you order details via email. Check your inbox."
-              }
-            </div>
+            {paymentMethod === 'bank_transfer' ? (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-900 dark:text-amber-300 text-start">
+                <p className="font-semibold mb-1">
+                  {isRTL ? '⏳ طلبك قيد المراجعة' : '⏳ Your order is under review'}
+                </p>
+                <p>
+                  {isRTL
+                    ? 'تم استلام طلبك وإيصال التحويل. سيتم مراجعة الطلب وتأكيده خلال 1-2 يوم عمل.'
+                    : 'Your order and transfer receipt have been received. We\'ll review and confirm within 1-2 business days.'}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-900 dark:text-blue-300">
+                {isRTL
+                  ? 'سنرسل لك تفاصيل الطلب عبر البريد الإلكتروني. تحقق من صندوق الوارد الخاص بك.'
+                  : "We'll send you order details via email. Check your inbox."
+                }
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
