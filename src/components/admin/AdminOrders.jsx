@@ -68,17 +68,22 @@ export default function AdminOrders() {
   const PAGE_SIZE = 20;
 
   // ── Fetch all orders ────────────────────────────────────────────────────────
-  const { data: orders = [], isLoading, refetch } = useQuery({
+  const { data: orders = [], isLoading, isError, error: queryError, refetch } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error('AdminOrders query error:', error);
+        throw error;
+      }
       return data || [];
     },
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // ── Update status ────────────────────────────────────────────────────────────
@@ -188,6 +193,15 @@ export default function AdminOrders() {
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+            </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-20 text-red-400 gap-3">
+              <Package className="h-14 w-14 opacity-20" />
+              <p className="text-lg font-medium">{isRTL ? 'خطأ في تحميل الطلبات' : 'Failed to load orders'}</p>
+              <p className="text-sm text-red-400/70">{queryError?.message}</p>
+              <button onClick={() => refetch()} className="text-sm text-teal-600 hover:underline">
+                {isRTL ? 'إعادة المحاولة' : 'Retry'}
+              </button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
