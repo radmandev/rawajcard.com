@@ -57,8 +57,7 @@ const navItems = [
     hasDropdown: true,
     type: "freetools"
   },
-  { label: "NFC Cards", labelAr: "بطاقات NFC", hasDropdown: false },
-  { label: "Pricing", labelAr: "الأسعار", hasDropdown: false }
+  { label: "NFC Cards", labelAr: "بطاقات NFC", hasDropdown: false, path: '/Products' },
 ];
 
 const translations = {
@@ -154,7 +153,10 @@ export default function Navbar({ onLoginClick } = {}) {
                   }
                 }}
               >
-                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
+                <button
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={() => { if (!item.hasDropdown && item.path) navigate(item.path); }}
+                >
                   {language === 'ar' ? item.labelAr : item.label}
                   {item.hasDropdown && (
                     <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === index ? 'rotate-180' : ''}`} />
@@ -436,7 +438,7 @@ export default function Navbar({ onLoginClick } = {}) {
                   key={index}
                   href="#"
                   className="block py-3 px-3 text-slate-700 dark:text-slate-200 font-medium hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => { e.preventDefault(); if (item.path) navigate(item.path); setMobileMenuOpen(false); }}
                 >
                   {language === 'ar' ? item.labelAr : item.label}
                 </a>

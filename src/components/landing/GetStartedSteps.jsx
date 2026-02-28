@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { CreditCard, Settings, Share2 } from 'lucide-react';
+import { CreditCard, Settings, Share2, BarChart3 } from 'lucide-react';
 
 const translations = {
   en: {
     subtitle: "Get Started",
-    title: "3 Simple Steps to Share Your Info Instantly",
+    title: "4 Simple Steps to Share Your Info Instantly",
     steps: [
       {
         step: 1,
@@ -30,12 +30,20 @@ const translations = {
         icon: Share2,
         cta: "Learn More",
         image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2Ffca7157bef72e4e06f8503640abe6bde1f713c935168095202867d635f7725a5.png&w=3840&q=75"
+      },
+      {
+        step: 4,
+        title: "Track What Works",
+        description: "Analytics on who viewed, clicked, and converted.",
+        icon: BarChart3,
+        cta: "View Analytics",
+        image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F6cbc680ac33fdcf5b7ccaa1ab66135c99aefb7b8c2b34b6a17fd4df58ffa11a3.png&w=3840&q=75"
       }
     ]
   },
   ar: {
     subtitle: "ابدأ",
-    title: "3 خطوات بسيطة لمشاركة معلوماتك فوراً",
+    title: "4 خطوات بسيطة لمشاركة معلوماتك فوراً",
     steps: [
       {
         step: 1,
@@ -60,6 +68,14 @@ const translations = {
         icon: Share2,
         cta: "تعلم المزيد",
         image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2Ffca7157bef72e4e06f8503640abe6bde1f713c935168095202867d635f7725a5.png&w=3840&q=75"
+      },
+      {
+        step: 4,
+        title: "تتبّع ما يُجدي",
+        description: "تحليلات حول من شاهد البطاقة، ونقر عليها، وتحوّل إلى عميل.",
+        icon: BarChart3,
+        cta: "عرض التحليلات",
+        image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F6cbc680ac33fdcf5b7ccaa1ab66135c99aefb7b8c2b34b6a17fd4df58ffa11a3.png&w=3840&q=75"
       }
     ]
   }
@@ -99,7 +115,7 @@ export default function GetStartedSteps() {
           {t.title}
         </h2>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((item, index) => (
             <div key={index} className="relative">
               {/* Connector line */}

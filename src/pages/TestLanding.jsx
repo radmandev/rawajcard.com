@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/landing/Navbar';
+import GetStartedSteps from '@/components/landing/GetStartedSteps';
 import ProductPreviewModal from '@/components/store/ProductPreviewModal';
 import LoginModal from '@/components/auth/LoginModal';
 import { useCart } from '@/contexts/CartContext';
@@ -744,6 +745,9 @@ export default function TestLanding() {
           </div>
         </div>
       </section>
+
+      {/* ── How It Works Steps ───────────────────────────────────────── */}
+      <GetStartedSteps />
 
       {/* ── CTA Section "مع رواج كارد" ──────────────────────────────── */}
       <section

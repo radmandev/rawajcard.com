@@ -58,7 +58,6 @@ const Checkout        = lazy(() => import('./pages/Checkout'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 const ClientDetails   = lazy(() => import('./pages/ClientDetails'));
 const Dashboard       = lazy(() => import('./pages/Dashboard'));
-const Home            = lazy(() => import('./pages/Home'));
 const Login           = lazy(() => import('./pages/Login'));
 const MyCards         = lazy(() => import('./pages/MyCards'));
 const MyContacts      = lazy(() => import('./pages/MyContacts'));
@@ -84,7 +83,6 @@ export const PAGES = {
     "CheckoutSuccess": CheckoutSuccess,
     "ClientDetails": ClientDetails,
     "Dashboard": Dashboard,
-    "Home": Home,
     "Login": Login,
     "MyCards": MyCards,
     "MyContacts": MyContacts,
@@ -102,7 +100,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Home",
+    mainPage: "TestLanding",
     Pages: PAGES,
     Layout: __Layout,
 };
