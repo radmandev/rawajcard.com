@@ -15,7 +15,7 @@ function LayoutContent({ children, currentPageName }) {
   const { isRTL } = useLanguage();
 
   // Public pages that don't need sidebar
-  const publicPages = ['PublicCard', 'CheckoutSuccess', 'Home', 'Products', 'Pricing', 'TestLanding', 'Store', 'Checkout'];
+  const publicPages = ['PublicCard', 'CheckoutSuccess', 'Home', 'Products', 'ProductDetail', 'Pricing', 'TestLanding', 'Store', 'Checkout'];
   const isPublicPage = publicPages.includes(currentPageName);
 
 
