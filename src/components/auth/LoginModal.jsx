@@ -69,9 +69,13 @@ export default function LoginModal({ open, onClose }) {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    const base = import.meta.env.VITE_APP_URL || window.location.origin;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + createPageUrl('Dashboard') },
+      options: {
+        redirectTo: `${base}/Dashboard`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
     });
     if (oauthError) setError(oauthError.message);
   };
