@@ -204,10 +204,6 @@ export default function Products() {
     </div>
   );
 }
-
-
-export default function Products() {
-  const [language, setLanguage] = useState('en');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [previewProduct, setPreviewProduct] = useState(null);
   const { addItem } = useCart();
