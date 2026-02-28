@@ -4,6 +4,8 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { LayoutDashboard, CreditCard, Store, Users, LogOut } from 'lucide-react';
 
 export default function MobileBottomNav() {
@@ -12,6 +14,24 @@ export default function MobileBottomNav() {
 
   const handleLogout = () => {
     api.auth.logout(createPageUrl('Home'));
+  };
+
+  const { data: cards = [] } = useQuery({
+    queryKey: ['cards'],
+    queryFn: async () => {
+      const me = await api.auth.me();
+      return api.entities.BusinessCard.filter({ created_by: me.email });
+    }
+  });
+
+  const hasNoCards = cards.length === 0;
+
+  const handleLockedClick = () => {
+    toast.error(
+      isRTL
+        ? 'أنشئ بطاقة واحدة على الأقل لعرض الميزات الأخرى'
+        : 'Create at least one card to view other features'
+    );
   };
 
   const navItems = [
@@ -52,22 +72,36 @@ export default function MobileBottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around">
-        {navItems.map(({ key, icon: Icon, label, path }) => (
-          <Link
-            key={key}
-            to={path}
-            className={cn(
-              "flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors",
-              "user-select-none -webkit-user-select-none",
-              isActive(path)
-                ? "text-teal-600 dark:text-teal-400"
-                : "text-slate-500 dark:text-slate-400"
-            )}
-          >
-            <Icon className="h-5 w-5" />
-            <span className="text-xs font-medium">{label}</span>
-          </Link>
-        ))}
+        {navItems.map(({ key, icon: Icon, label, path }) => {
+          if (hasNoCards) {
+            return (
+              <button
+                key={key}
+                onClick={handleLockedClick}
+                className="flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors text-slate-400 dark:text-slate-500 opacity-40 cursor-not-allowed"
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-xs font-medium">{label}</span>
+              </button>
+            );
+          }
+          return (
+            <Link
+              key={key}
+              to={path}
+              className={cn(
+                "flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors",
+                "user-select-none -webkit-user-select-none",
+                isActive(path)
+                  ? "text-teal-600 dark:text-teal-400"
+                  : "text-slate-500 dark:text-slate-400"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{label}</span>
+            </Link>
+          );
+        })}
         <button
           onClick={handleLogout}
           className="flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors text-red-500 dark:text-red-400"

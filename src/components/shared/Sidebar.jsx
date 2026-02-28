@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -18,7 +19,8 @@ import {
   Users,
   Database,
   UsersRound,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -64,6 +66,24 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const isAdmin = user?.role === 'admin';
   const isPremium = subscription?.plan === 'premium';
 
+  const { data: cards = [] } = useQuery({
+    queryKey: ['cards'],
+    queryFn: async () => {
+      const me = await api.auth.me();
+      return api.entities.BusinessCard.filter({ created_by: me.email });
+    }
+  });
+
+  const hasNoCards = cards.length === 0;
+
+  const handleLockedClick = () => {
+    toast.error(
+      isRTL
+        ? 'أنشئ بطاقة واحدة على الأقل لعرض الميزات الأخرى'
+        : 'Create at least one card to view other features'
+    );
+  };
+
   const isActive = (page) => {
     return location.pathname.includes(page);
   };
@@ -93,30 +113,59 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
       )}>
         {/* Nav Items — scrollable so logout is always visible */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              to={createPageUrl(item.page)}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                "hover:bg-slate-100 dark:hover:bg-slate-800",
-                isActive(item.page) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
-                collapsed && "justify-center px-2"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive(item.page) && "text-teal-600 dark:text-teal-400")} />
-              {!collapsed && <span>{t(item.label)}</span>}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isLocked = hasNoCards && item.page !== 'CardBuilder';
+            const itemClass = cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+              isLocked
+                ? "opacity-40 cursor-not-allowed"
+                : "hover:bg-slate-100 dark:hover:bg-slate-800",
+              !isLocked && isActive(item.page) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
+              collapsed && "justify-center px-2"
+            );
+            const itemContent = (
+              <>
+                <item.icon className={cn("h-5 w-5 flex-shrink-0", !isLocked && isActive(item.page) && "text-teal-600 dark:text-teal-400")} />
+                {!collapsed && <span>{t(item.label)}</span>}
+                {isLocked && !collapsed && <Lock className="h-3 w-3 ml-auto opacity-60" />}
+              </>
+            );
+            if (isLocked) {
+              return (
+                <button key={item.key} onClick={handleLockedClick} className={itemClass}>
+                  {itemContent}
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={item.key}
+                to={createPageUrl(item.page)}
+                onClick={onClose}
+                className={itemClass}
+              >
+                {itemContent}
+              </Link>
+            );
+          })}
 
           {/* Advanced Section */}
           {!collapsed && (
-            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-              <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 rounded-xl w-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200">
+            <Collapsible open={hasNoCards ? false : advancedOpen} onOpenChange={hasNoCards ? undefined : setAdvancedOpen}>
+              <CollapsibleTrigger
+                onClick={hasNoCards ? handleLockedClick : undefined}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl w-full transition-all duration-200",
+                  hasNoCards
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
+              >
                 <Sparkles className="h-5 w-5 flex-shrink-0" />
                 <span className="flex-1 text-left">{isRTL ? 'متقدم' : 'Advanced'}</span>
-                <ChevronRight className={cn("h-4 w-4 transition-transform", advancedOpen && "rotate-90")} />
+                {hasNoCards
+                  ? <Lock className="h-3 w-3 opacity-60" />
+                  : <ChevronRight className={cn("h-4 w-4 transition-transform", advancedOpen && "rotate-90")} />}
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 mt-1">
                 {advancedItems.map((item) => (
@@ -142,38 +191,70 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             </Collapsible>
           )}
 
-          {collapsed && advancedItems.map((item) => (
-            <Link
-              key={item.key}
-              to={createPageUrl(item.page)}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                "hover:bg-slate-100 dark:hover:bg-slate-800",
-                isActive(item.page) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
-                "justify-center px-2"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive(item.page) && "text-teal-600 dark:text-teal-400")} />
-            </Link>
-          ))}
+          {collapsed && advancedItems.map((item) => {
+            if (hasNoCards) {
+              return (
+                <button
+                  key={item.key}
+                  onClick={handleLockedClick}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                    "opacity-40 cursor-not-allowed justify-center px-2"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={item.key}
+                to={createPageUrl(item.page)}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "hover:bg-slate-100 dark:hover:bg-slate-800",
+                  isActive(item.page) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
+                  "justify-center px-2"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive(item.page) && "text-teal-600 dark:text-teal-400")} />
+              </Link>
+            );
+          })}
 
           {/* Admin Link */}
           {isAdmin && (
-            <Link
-              to={createPageUrl('Admin')}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                "hover:bg-slate-100 dark:hover:bg-slate-800",
-                "border border-teal-200 dark:border-teal-800",
-                isActive('Admin') && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
-                collapsed && "justify-center px-2"
-              )}
-            >
-              <Shield className={cn("h-5 w-5 flex-shrink-0", isActive('Admin') && "text-teal-600 dark:text-teal-400")} />
-              {!collapsed && <span>{isRTL ? 'المسؤول' : 'Admin'}</span>}
-            </Link>
+            hasNoCards ? (
+              <button
+                onClick={handleLockedClick}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "border border-teal-200 dark:border-teal-800",
+                  "opacity-40 cursor-not-allowed w-full",
+                  collapsed && "justify-center px-2"
+                )}
+              >
+                <Shield className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && <span>{isRTL ? 'المسؤول' : 'Admin'}</span>}
+                {!collapsed && <Lock className="h-3 w-3 ml-auto opacity-60" />}
+              </button>
+            ) : (
+              <Link
+                to={createPageUrl('Admin')}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "hover:bg-slate-100 dark:hover:bg-slate-800",
+                  "border border-teal-200 dark:border-teal-800",
+                  isActive('Admin') && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
+                  collapsed && "justify-center px-2"
+                )}
+              >
+                <Shield className={cn("h-5 w-5 flex-shrink-0", isActive('Admin') && "text-teal-600 dark:text-teal-400")} />
+                {!collapsed && <span>{isRTL ? 'المسؤول' : 'Admin'}</span>}
+              </Link>
+            )
           )}
         </nav>
 
