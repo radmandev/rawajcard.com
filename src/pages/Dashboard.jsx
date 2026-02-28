@@ -85,10 +85,10 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (!cardsLoading && cards.length === 0) {
+    if (!cardsLoading && cards.filter(c => c.status === 'published').length === 0) {
       navigate(createPageUrl('CardBuilder'));
     }
-  }, [cards.length, cardsLoading]);
+  }, [cards, cardsLoading]);
 
   const { data: views = [] } = useQuery({
     queryKey: ['views'],

@@ -24,7 +24,7 @@ export default function MobileBottomNav() {
     }
   });
 
-  const hasNoCards = cards.length === 0;
+  const hasNoCards = cards.filter(c => c.status === 'published').length === 0;
 
   const handleLockedClick = () => {
     toast.error(
