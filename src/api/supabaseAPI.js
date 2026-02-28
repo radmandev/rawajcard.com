@@ -518,30 +518,37 @@ export const api = {
         try {
           uploadFile = await api.integrations.Core._compressImage(file);
         } catch {
-          // If compression fails for any reason, fall back to original
           uploadFile = file;
         }
 
-        const bucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'public';
-        // Always use a safe UUID-based path to avoid filename issues
+        const bucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'avatars';
         const ext = uploadFile.type === 'image/jpeg' ? 'jpg'
           : uploadFile.type === 'image/png' ? 'png'
           : uploadFile.type === 'image/webp' ? 'webp'
           : 'jpg';
         const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-        const { data, error } = await supabase.storage.from(bucket).upload(path, uploadFile, {
-          upsert: true,
-          contentType: uploadFile.type || 'image/jpeg',
-        });
+        try {
+          const { error } = await supabase.storage.from(bucket).upload(path, uploadFile, {
+            upsert: true,
+            contentType: uploadFile.type || 'image/jpeg',
+          });
 
-        if (error) {
-          console.error('Supabase storage upload error:', error);
-          throw new Error(error.message || 'Upload failed');
+          if (error) throw error;
+
+          const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+          if (urlData?.publicUrl) return { file_url: urlData.publicUrl };
+          throw new Error('No public URL returned');
+        } catch (storageErr) {
+          // ── Fallback: convert to base64 data-URL stored directly in the DB ──
+          console.warn('Supabase storage upload failed, using data-URL fallback:', storageErr?.message);
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve({ file_url: reader.result });
+            reader.onerror = () => reject(new Error('Failed to read file as data URL'));
+            reader.readAsDataURL(uploadFile);
+          });
         }
-
-        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-        return { file_url: urlData?.publicUrl || null };
       },
 
       /**
