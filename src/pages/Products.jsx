@@ -204,9 +204,6 @@ export default function Products() {
     </div>
   );
 }
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [previewProduct, setPreviewProduct] = useState(null);
-  const { addItem } = useCart();
 
   useEffect(() => {
     const dir = document.documentElement.getAttribute('dir');
