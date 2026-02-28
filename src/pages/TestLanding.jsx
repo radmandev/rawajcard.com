@@ -35,98 +35,106 @@ function Reveal({ children, delay = 0, className = '' }) {
 const PRODUCTS = [
   {
     id: 1,
-    name: 'بطاقة الأعمال الاجتماعية NFC',
+    nameAr: 'بطاقة الأعمال الاجتماعية NFC',
+    nameEn: 'NFC Social Business Card',
     price: 35,
     originalPrice: 60,
     discount: 42,
     rating: 5,
     reviews: 29,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
-    badge: 'الأكثر مبيعاً',
+    badgeAr: 'الأكثر مبيعاً', badgeEn: 'Best Seller',
     badgeColor: 'bg-teal-600',
   },
   {
     id: 2,
-    name: 'بطاقة تعارف NFC – خشبي',
+    nameAr: 'بطاقة تعارف NFC – خشبي',
+    nameEn: 'NFC Business Card – Wood',
     price: 100,
     originalPrice: null,
     discount: null,
     rating: 5,
     reviews: 14,
     image: 'https://rawajcard.com/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3.png',
-    badge: 'فاخر',
+    badgeAr: 'فاخر', badgeEn: 'Luxury',
     badgeColor: 'bg-amber-500',
   },
   {
     id: 3,
-    name: 'بطاقة تعارف ممغنطة NFC – بلاستيك',
+    nameAr: 'بطاقة تعارف ممغنطة NFC – بلاستيك',
+    nameEn: 'Magnetic NFC Card – Plastic',
     price: 50,
     originalPrice: null,
     discount: null,
     rating: 5,
     reviews: 8,
     image: 'https://rawajcard.com/wp-content/uploads/2024/10/6.png',
-    badge: null,
+    badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
   {
     id: 4,
-    name: 'بطاقة تعارف معدنية NFC',
+    nameAr: 'بطاقة تعارف معدنية NFC',
+    nameEn: 'Metal NFC Business Card',
     price: 130,
     originalPrice: null,
     discount: null,
     rating: 5,
     reviews: 21,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad.webp',
-    badge: 'بريميوم',
+    badgeAr: 'بريميوم', badgeEn: 'Premium',
     badgeColor: 'bg-slate-700',
   },
   {
     id: 5,
-    name: 'بطاقة قيمنا على جوجل – NFC',
+    nameAr: 'بطاقة قيمنا على جوجل – NFC',
+    nameEn: 'Google Review NFC Card',
     price: 35,
     originalPrice: 60,
     discount: 42,
     rating: 5,
     reviews: 47,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
-    badge: 'خصم 42%',
+    badgeAr: 'خصم 42%', badgeEn: '42% Off',
     badgeColor: 'bg-red-500',
   },
   {
     id: 6,
-    name: 'تعليقة مفاتيح NFC لزيادة المراجعات',
+    nameAr: 'تعليقة مفاتيح NFC لزيادة المراجعات',
+    nameEn: 'NFC Keychain – Boost Reviews',
     price: 35,
     originalPrice: null,
     discount: null,
     rating: 5,
     reviews: 69,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
-    badge: null,
+    badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
   {
     id: 7,
-    name: 'ستاند طاولة فخامة – جوجل NFC',
+    nameAr: 'ستاند طاولة فخامة – جوجل NFC',
+    nameEn: 'Premium Table Stand – Google NFC',
     price: 149,
     originalPrice: 190,
     discount: 22,
     rating: 5,
     reviews: 33,
     image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
-    badge: 'للمحلات',
+    badgeAr: 'للمحلات', badgeEn: 'For Shops',
     badgeColor: 'bg-indigo-600',
   },
   {
     id: 8,
-    name: 'ستاند طاولة للمشاركة السريعة',
+    nameAr: 'ستاند طاولة للمشاركة السريعة',
+    nameEn: 'Quick-Share Table Stand',
     price: 129,
     originalPrice: 159,
     discount: 19,
     rating: 5,
     reviews: 18,
     image: 'https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp',
-    badge: null,
+    badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
 ];
@@ -228,15 +236,15 @@ function ProductCard({ product, index, onAddToCart, onView, onBuyNow, isRTL }) {
         <div className="relative overflow-hidden bg-slate-50 aspect-square">
           <motion.img
             src={product.image}
-            alt={product.name}
+            alt={isRTL ? product.nameAr : product.nameEn}
             className="w-full h-full object-cover"
             animate={{ scale: hovered ? 1.06 : 1 }}
             transition={{ duration: 0.4 }}
-            onError={(e) => { e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=صورة'; }}
+            onError={(e) => { e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=Product'; }}
           />
-          {product.badge && (
+          {(isRTL ? product.badgeAr : product.badgeEn) && (
             <span className={`absolute top-3 right-3 ${product.badgeColor} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow`}>
-              {product.badge}
+              {isRTL ? product.badgeAr : product.badgeEn}
             </span>
           )}
           <motion.div
@@ -263,7 +271,7 @@ function ProductCard({ product, index, onAddToCart, onView, onBuyNow, isRTL }) {
         </div>
         <div className="p-4">
           <h3 className="font-bold text-slate-800 text-sm leading-snug mb-2 line-clamp-2 min-h-[2.5rem]">
-            {product.name}
+            {isRTL ? product.nameAr : product.nameEn}
           </h3>
           <div className="flex items-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
@@ -658,21 +666,26 @@ export default function TestLanding() {
             {/* Text */}
             <Reveal delay={0.15} className="order-1 lg:order-2">
               <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-4">
-                سهل وسريع
+                {isRTL ? 'سهل وسريع' : 'Easy & Fast'}
               </span>
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-snug">
-                الوصول بلمح{' '}
-                <span className="text-teal-600">البصر</span>
+                {isRTL ? (
+                  <>الوصول بلمح{' '}<span className="text-teal-600">البصر</span></>
+                ) : (
+                  <>Access at the{' '}<span className="text-teal-600">Speed of Light</span></>
+                )}
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                باستخدام هذا الكرت يمكنك الوصول إلى هاتف عميلك بلمح البصر بدون الحاجة إلى فتح الكاميرا أو واجهة حفظ الأرقام
+                {isRTL
+                  ? 'باستخدام هذا الكرت يمكنك الوصول إلى هاتف عميلك بلمح البصر بدون الحاجة إلى فتح الكاميرا أو واجهة حفظ الأرقام'
+                  : 'With this card, you can reach your client instantly — no camera or contact-saving screen needed'}
               </p>
 
               <div className="space-y-4 mb-10">
                 {[
-                  { title: 'بدون تطبيق', desc: 'يعمل مع أي هاتف حديث بدون تحميل أي تطبيق' },
-                  { title: 'مشاركة لحظية', desc: 'معلوماتك، حساباتك، وموقعك — كلها بنقرة واحدة' },
-                  { title: 'تحديث مباشر', desc: 'غيّر بياناتك متى تشاء، الكرت يُحدَّث فوراً' },
+                  { titleAr: 'بدون تطبيق', titleEn: 'No App Required', descAr: 'يعمل مع أي هاتف حديث بدون تحميل أي تطبيق', descEn: 'Works with any modern phone without installing an app' },
+                  { titleAr: 'مشاركة لحظية', titleEn: 'Instant Sharing', descAr: 'معلوماتك، حساباتك، وموقعك — كلها بنقرة واحدة', descEn: 'Your info, socials, and location — all with one tap' },
+                  { titleAr: 'تحديث مباشر', titleEn: 'Live Updates', descAr: 'غيّر بياناتك متى تشاء، الكرت يُحدَّث فوراً', descEn: 'Change your details anytime, the card updates instantly' },
                 ].map((item, i) => (
                   <motion.div
                     key={i}
@@ -686,8 +699,8 @@ export default function TestLanding() {
                       <Check className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900">{item.title}</div>
-                      <div className="text-sm text-slate-500 mt-0.5">{item.desc}</div>
+                      <div className="font-bold text-slate-900">{isRTL ? item.titleAr : item.titleEn}</div>
+                      <div className="text-sm text-slate-500 mt-0.5">{isRTL ? item.descAr : item.descEn}</div>
                     </div>
                   </motion.div>
                 ))}
@@ -697,7 +710,7 @@ export default function TestLanding() {
                 to={createPageUrl('Store')}
                 className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl transition-colors"
               >
-                اختر كرتك الآن
+                {isRTL ? 'اختر كرتك الآن' : 'Choose Your Card'}
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Reveal>
@@ -820,22 +833,27 @@ export default function TestLanding() {
             {/* Text */}
             <Reveal>
               <span className="inline-block text-teal-600 text-sm font-bold tracking-widest uppercase mb-4">
-                للمطاعم والمحلات
+                {isRTL ? 'للمطاعم والمحلات' : 'For Restaurants & Shops'}
               </span>
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-snug">
-                خلّ عملاءك يتفاعلون{' '}
-                <span className="text-teal-600">أسرع</span>
+                {isRTL ? (
+                  <>خلّ عملاءك يتفاعلون{' '}<span className="text-teal-600">أسرع</span></>
+                ) : (
+                  <>Let customers engage{' '}<span className="text-teal-600">faster</span></>
+                )}
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                مع ستاند تفاعلي يصل إليك العميل بواسطته بلمح البصر — يصلح لطلبات الطعام، المراجعات على جوجل، مشاركة وسائل التواصل، وأكثر
+                {isRTL
+                  ? 'مع ستاند تفاعلي يصل إليك العميل بواسطته بلمح البصر — يصلح لطلبات الطعام، المراجعات على جوجل، مشاركة وسائل التواصل، وأكثر'
+                  : 'With an interactive stand, customers reach you instantly — perfect for food orders, Google reviews, social sharing, and more'}
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-10">
                 {[
-                  { label: 'مراجعات جوجل', icon: '⭐' },
-                  { label: 'مشاركة السوشيال', icon: '📱' },
-                  { label: 'منيو إلكتروني', icon: '🍽️' },
-                  { label: 'نموذج تواصل', icon: '📋' },
+                  { labelAr: 'مراجعات جوجل', labelEn: 'Google Reviews', icon: '⭐' },
+                  { labelAr: 'مشاركة السوشيال', labelEn: 'Social Sharing', icon: '📱' },
+                  { labelAr: 'منيو إلكتروني', labelEn: 'Digital Menu', icon: '🍽️' },
+                  { labelAr: 'نموذج تواصل', labelEn: 'Contact Form', icon: '📋' },
                 ].map((use, i) => (
                   <motion.div
                     key={i}
@@ -846,7 +864,7 @@ export default function TestLanding() {
                     className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100"
                   >
                     <span className="text-2xl">{use.icon}</span>
-                    <span className="font-semibold text-slate-700 text-sm">{use.label}</span>
+                    <span className="font-semibold text-slate-700 text-sm">{isRTL ? use.labelAr : use.labelEn}</span>
                   </motion.div>
                 ))}
               </div>
@@ -856,14 +874,14 @@ export default function TestLanding() {
                   to={createPageUrl('Store')}
                   className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-500/25 transition-all"
                 >
-                  خل عملاءك يتفاعلون أسرع
+                  {isRTL ? 'خل عملاءك يتفاعلون أسرع' : 'Boost Customer Engagement'}
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
                 <Link
                   to={createPageUrl('Store')}
                   className="inline-flex items-center gap-2 border-2 border-slate-200 hover:border-teal-400 text-slate-700 font-semibold px-8 py-4 rounded-2xl transition-all"
                 >
-                  عرض الكل
+                  {isRTL ? 'عرض الكل' : 'View All'}
                 </Link>
               </div>
             </Reveal>
@@ -988,7 +1006,7 @@ export default function TestLanding() {
                   e.target.nextSibling.style.display = 'block';
                 }}
               />
-              <div className="hidden text-2xl font-black text-teal-400 mb-4">رواج كارد</div>
+              <div className="hidden text-2xl font-black text-teal-400 mb-4">Rawajcard</div>
               <p className="text-slate-400 text-sm leading-relaxed mb-5">
                 {isRTL ? 'الجيل الجديد من بطاقات التعارف الذكية في عالم الأعمال' : 'The next generation of smart business cards'}
               </p>
