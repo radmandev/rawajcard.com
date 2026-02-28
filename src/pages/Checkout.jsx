@@ -33,6 +33,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/lib/AuthContext';
 
 // ── Bank details — edit these to match your account ─────────
 const BANK_DETAILS = {
@@ -101,6 +102,7 @@ export default function Checkout() {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const receiptRef = useRef(null);
+  const { user } = useAuth();
 
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [shippingInfo, setShippingInfo] = useState({
@@ -199,6 +201,8 @@ export default function Checkout() {
         amount: total,
         currency: 'SAR',
         status: 'pending',
+        created_by: user?.email || null,
+        created_by_user_id: user?.id || null,
         metadata: {
           order_number: orderNumber,
           payment_method: 'bank_transfer',
@@ -221,8 +225,13 @@ export default function Checkout() {
     },
     onError: (err) => {
       setReceiptUploading(false);
-      toast.error(isRTL ? 'حدث خطأ أثناء تقديم الطلب' : 'Failed to place order. Please try again.');
-      console.error(err);
+      const detail = err?.message || err?.details || '';
+      toast.error(
+        isRTL
+          ? `فشل تقديم الطلب${detail ? ': ' + detail : ''}`
+          : `Failed to place order${detail ? ': ' + detail : '. Please try again.'}`
+      );
+      console.error('Bank transfer order error:', err);
     },
   });
 
