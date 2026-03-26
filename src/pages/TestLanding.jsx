@@ -816,7 +816,6 @@ export default function TestLanding() {
               {[
                 { icon: '🔒', textAr: 'مدفوعات آمنة 100%', textEn: '100% Secure Payments' },
                 { icon: '🚚', textAr: 'توصيل سريع لجميع مناطق السعودية', textEn: 'Fast delivery across Saudi Arabia' },
-                { icon: '↩️', textAr: 'إرجاع مجاني خلال 14 يوم', textEn: 'Free returns within 14 days' },
                 { icon: '📞', textAr: 'دعم على مدار الساعة', textEn: '24/7 customer support' },
               ].map((badge, i) => (
                 <div key={i} className="flex items-center gap-2 text-slate-300 text-sm">
