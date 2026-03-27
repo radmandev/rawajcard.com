@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Smartphone, User, Bell, BarChart3 } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/normalizeImageUrl';
 
 const translations = {
   en: {
@@ -138,7 +139,7 @@ export default function StepsSection() {
                 {/* Image preview */}
                 <div className="mt-6 relative">
                   <div className="w-full aspect-[3/4] bg-white dark:bg-slate-900 rounded-xl shadow-inner overflow-hidden border border-slate-100 dark:border-slate-700">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    <img src={normalizeImageUrl(item.image)} alt={item.title} className="w-full h-full object-cover" />
                   </div>
                 </div>
               </div>
