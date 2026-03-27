@@ -365,21 +365,13 @@ export default function Navbar({ onLoginClick } = {}) {
             </div>
 
             {/* Auth CTA */}
-            <div className="hidden md:flex items-center gap-3">
-              <Button 
-                className="bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
-                onClick={() => onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))}
-              >
-                <LogIn className="w-4 h-4 mr-1.5" />
-                {isAuthenticated ? (language === 'ar' ? 'تسجيل الدخول' : 'Login') : translations[language].createCard}
-              </Button>
-              <Button
-                className="bg-white text-teal-600 hover:bg-slate-50 border-2 border-teal-600 font-semibold rounded-full px-6 shadow-lg"
-                onClick={() => onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))}
-              >
-                {language === 'ar' ? 'أنشئ بطاقتك مجاناً' : 'Create Free Digital Card'}
-              </Button>
-            </div>
+            <Button 
+              className="hidden md:inline-flex bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
+              onClick={() => isAuthenticated ? navigate(createPageUrl('Dashboard')) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')))}
+            >
+              <LogIn className="w-4 h-4 mr-1.5" />
+              {isAuthenticated ? (language === 'ar' ? 'لوحة التحكم' : 'Dashboard') : translations[language].createCard}
+            </Button>
 
             {/* Mobile menu toggle */}
             <button
@@ -455,10 +447,10 @@ export default function Navbar({ onLoginClick } = {}) {
             <div className="pt-2">
               <Button
                 className="w-full bg-gradient-to-r from-teal-600 to-blue-500 text-white rounded-full"
-                onClick={() => { onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')); setMobileMenuOpen(false); }}
+                onClick={() => { isAuthenticated ? navigate(createPageUrl('Dashboard')) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))); setMobileMenuOpen(false); }}
               >
                 <LogIn className="w-4 h-4 mr-1.5" />
-                {isAuthenticated ? (language === 'ar' ? 'تسجيل الدخول' : 'Login') : translations[language].createCard}
+                {isAuthenticated ? (language === 'ar' ? 'لوحة التحكم' : 'Dashboard') : translations[language].createCard}
               </Button>
             </div>
           </div>
