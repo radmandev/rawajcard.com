@@ -43,7 +43,7 @@ const PRODUCTS = [
     discount: 42,
     rating: 5,
     reviews: 29,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
     badgeAr: 'الأكثر مبيعاً', badgeEn: 'Best Seller',
     badgeColor: 'bg-teal-600',
   },
@@ -56,7 +56,7 @@ const PRODUCTS = [
     discount: null,
     rating: 5,
     reviews: 14,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3.png',
+    image: 'https://rawaj.click/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3-450x450.png',
     badgeAr: 'فاخر', badgeEn: 'Luxury',
     badgeColor: 'bg-amber-500',
   },
@@ -69,7 +69,7 @@ const PRODUCTS = [
     discount: null,
     rating: 5,
     reviews: 8,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/10/6.png',
+    image: 'https://rawaj.click/wp-content/uploads/2024/10/6-450x450.png',
     badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
@@ -82,7 +82,7 @@ const PRODUCTS = [
     discount: null,
     rating: 5,
     reviews: 21,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad-450x450.webp',
     badgeAr: 'بريميوم', badgeEn: 'Premium',
     badgeColor: 'bg-slate-700',
   },
@@ -95,7 +95,7 @@ const PRODUCTS = [
     discount: 42,
     rating: 5,
     reviews: 47,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
     badgeAr: 'خصم 42%', badgeEn: '42% Off',
     badgeColor: 'bg-red-500',
   },
@@ -108,7 +108,7 @@ const PRODUCTS = [
     discount: null,
     rating: 5,
     reviews: 69,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google-450x450.webp',
     badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
@@ -121,7 +121,7 @@ const PRODUCTS = [
     discount: 22,
     rating: 5,
     reviews: 33,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp',
     badgeAr: 'للمحلات', badgeEn: 'For Shops',
     badgeColor: 'bg-indigo-600',
   },
@@ -134,7 +134,7 @@ const PRODUCTS = [
     discount: 19,
     rating: 5,
     reviews: 18,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800-450x450.webp',
     badgeAr: null, badgeEn: null,
     badgeColor: null,
   },
@@ -198,28 +198,28 @@ const HERO_PRODUCT_TYPES = [
     labelEn: 'Smart Business Card',
     icon: '💳',
     productId: 1,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
   },
   {
     labelAr: 'ستاند طاولة',
     labelEn: 'Table Stand',
     icon: '🪧',
     productId: 7,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp',
   },
   {
     labelAr: 'ملصق',
     labelEn: 'NFC Sticker',
     icon: '🏷️',
     productId: 5,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
   },
   {
     labelAr: 'تعليقة مفاتيح',
     labelEn: 'NFC Keychain',
     icon: '🔑',
     productId: 6,
-    image: 'https://rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google.webp',
+    image: 'https://rawaj.click/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google-450x450.webp',
   },
 ];
 
@@ -645,7 +645,7 @@ export default function TestLanding() {
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-slate-50 rounded-3xl" />
                 <div className="relative p-8 md:p-12">
                   <motion.img
-                    src="https://rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800.webp"
+                    src="https://rawaj.click/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800-450x450.webp"
                     alt="الوصول بلمح البصر"
                     className="w-full max-w-sm mx-auto drop-shadow-2xl"
                     whileHover={{ scale: 1.03 }}
@@ -894,7 +894,7 @@ export default function TestLanding() {
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-br from-teal-50 to-slate-100 rounded-3xl -z-10" />
                 <motion.img
-                  src="https://rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12.webp"
+                  src="https://rawaj.click/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp"
                   alt="ستاند طاولة NFC"
                   className="w-full max-w-md mx-auto rounded-2xl drop-shadow-2xl"
                   whileHover={{ scale: 1.02, rotate: -1 }}
