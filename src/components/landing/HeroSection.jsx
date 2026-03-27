@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Star, Linkedin, MessageCircle, Mail, Calendar } from 'lucide-react';
+import { Linkedin, MessageCircle, Mail, Calendar } from 'lucide-react';
 
 const translations = {
   en: {
@@ -11,9 +11,13 @@ const translations = {
     description1: "Capture contacts instantly. Sync to your CRM. Follow up 10x faster.",
     description2: "Rawajcard helps you turn real-life meetings into real revenue.",
     cta: "Start Closing Smarter",
-    reviewsText: "Based on ",
-    reviewsCount: "1000+",
-    reviewsSuffix: " reviews",
+    featuredProductsLabel: "Featured NFC Products",
+    featuredProducts: [
+      "Digital NFC Metal Card",
+      "Digital NFC Wooden Card",
+      "NFC Key Chain",
+      "NFC Table Stand"
+    ],
     profileName: "Ahmed Al-Shamri",
     profileTitle: "CEO @ Rawaj Business Solutions",
     profileStatus: "Let's connect!",
@@ -28,9 +32,13 @@ const translations = {
     description1: "التقط جهات الاتصال فوراً. مزامنة مع نظام إدارة علاقات العملاء. متابعة أسرع بـ 10 مرات.",
     description2: "يساعدك روائج كارد على تحويل اللقاءات الحقيقية إلى إيرادات حقيقية.",
     cta: "ابدأ الإغلاق بذكاء",
-    reviewsText: "بناءً على ",
-    reviewsCount: "1000+",
-    reviewsSuffix: " تقييم",
+    featuredProductsLabel: "منتجات NFC المميزة",
+    featuredProducts: [
+      "البطاقة المعدنية الرقمية NFC",
+      "البطاقة الخشبية الرقمية NFC",
+      "ميدالية مفاتيح NFC",
+      "ستاند طاولة NFC"
+    ],
     profileName: "أحمد الشمري",
     profileTitle: "الرئيس التنفيذي @ روائج للحلول التقنية",
     profileStatus: "لنتواصل!",
@@ -95,16 +103,21 @@ export default function HeroSection() {
               </Button>
             </div>
             
-            {/* Reviews */}
-            <div className="flex items-center gap-3 mt-8">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+            {/* Featured products */}
+            <div className="mt-8">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                {t.featuredProductsLabel}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {t.featuredProducts.map((product) => (
+                  <span
+                    key={product}
+                    className="inline-flex items-center rounded-full bg-teal-50 dark:bg-slate-800 text-teal-700 dark:text-teal-300 px-3 py-1.5 text-sm border border-teal-100 dark:border-slate-700"
+                  >
+                    {product}
+                  </span>
                 ))}
               </div>
-              <span className="text-slate-600 dark:text-slate-400">
-                {t.reviewsText}<span className="font-semibold text-slate-900 dark:text-white">{t.reviewsCount}</span>{t.reviewsSuffix}
-              </span>
             </div>
           </div>
           
