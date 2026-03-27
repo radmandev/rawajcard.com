@@ -194,32 +194,28 @@ const CYCLING_WORDS_EN = ['yourself', 'your business', 'your idea'];
 /* ─── Product type → hero image + product mapping ──────────────────── */
 const HERO_PRODUCT_TYPES = [
   {
-    labelAr: 'سمارت بزنس كارد',
-    labelEn: 'Smart Business Card',
+    labelAr: 'بطاقة NFC معدنية',
+    labelEn: 'Metal NFC Card',
     icon: '💳',
-    productId: 1,
-    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
+    productId: 4,
   },
   {
-    labelAr: 'ستاند طاولة',
-    labelEn: 'Table Stand',
-    icon: '🪧',
-    productId: 7,
-    image: 'https://rawaj.click/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp',
+    labelAr: 'بطاقة NFC خشبية',
+    labelEn: 'Wooden NFC Card',
+    icon: '🪵',
+    productId: 2,
   },
   {
-    labelAr: 'ملصق',
-    labelEn: 'NFC Sticker',
-    icon: '🏷️',
-    productId: 5,
-    image: 'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
-  },
-  {
-    labelAr: 'تعليقة مفاتيح',
+    labelAr: 'تعليقة مفاتيح NFC',
     labelEn: 'NFC Keychain',
     icon: '🔑',
     productId: 6,
-    image: 'https://rawaj.click/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google-450x450.webp',
+  },
+  {
+    labelAr: 'ستاند طاولة NFC',
+    labelEn: 'NFC Table Stand',
+    icon: '🪧',
+    productId: 7,
   },
 ];
 
@@ -319,7 +315,7 @@ export default function TestLanding() {
   const filteredIds = PRODUCT_CATEGORY_MAP[activeTab] || PRODUCT_CATEGORY_MAP.all;
   const filteredProducts = PRODUCTS.filter(p => filteredIds.includes(p.id));
 
-  const heroImages = HERO_PRODUCT_TYPES.map(p => p.image);
+  const heroImages = HERO_PRODUCT_TYPES.map(type => PRODUCTS.find(product => product.id === type.productId)?.image || 'https://placehold.co/600x600/1e293b/94a3b8?text=Rawajcard');
 
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0" dir={isRTL ? 'rtl' : 'ltr'} style={{ fontFamily: isRTL ? "'Tajawal', 'Cairo', sans-serif" : "'Inter', 'Segoe UI', sans-serif" }}>
