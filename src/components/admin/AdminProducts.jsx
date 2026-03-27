@@ -94,13 +94,7 @@ function ImageUploader({ label, value, onChange, isRTL }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <div className="flex gap-2">
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="https://..."
-          className="flex-1 text-sm"
-        />
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           variant="outline"
@@ -109,9 +103,22 @@ function ImageUploader({ label, value, onChange, isRTL }) {
           onClick={() => ref.current?.click()}
           className="shrink-0"
         >
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+          {uploading
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <><ImagePlus className="h-4 w-4 mr-1" />{isRTL ? 'اختيار صورة' : 'Choose Image'}</>}
         </Button>
         <input ref={ref} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        {value && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onChange('')}
+          >
+            <X className="h-4 w-4 mr-1" />
+            {isRTL ? 'إزالة' : 'Remove'}
+          </Button>
+        )}
       </div>
       {value && (
         <img
@@ -185,18 +192,6 @@ function ExtraImagesEditor({ images, onChange, isRTL }) {
           ))}
         </div>
       )}
-      <p className="text-xs text-slate-400">
-        {isRTL ? 'أو أدخل روابط URL مباشرة (فاصلة بين كل رابط):' : 'Or paste URLs directly (comma-separated):'}
-      </p>
-      <Textarea
-        value={images?.join('\n') ?? ''}
-        onChange={(e) =>
-          onChange(e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))
-        }
-        rows={2}
-        placeholder="https://..."
-        className="text-xs"
-      />
     </div>
   );
 }
