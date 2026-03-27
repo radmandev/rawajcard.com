@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { CreditCard, Settings, Share2, BarChart3 } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/normalizeImageUrl';
 
 const translations = {
   en: {
@@ -141,7 +142,7 @@ export default function GetStartedSteps() {
                 
                 {/* Image */}
                 <div className="aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl mb-6 overflow-hidden">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <img src={normalizeImageUrl(item.image)} alt={item.title} className="w-full h-full object-cover" />
                 </div>
                 
                 <Button 

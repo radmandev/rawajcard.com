@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Smartphone, User, RefreshCw } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/normalizeImageUrl';
 
 const translations = {
   en: {
@@ -105,7 +106,7 @@ export default function NFCCardsSection() {
               <div className="bg-white/5 dark:bg-white/5 backdrop-blur-sm rounded-2xl p-8 h-full border border-white/10 dark:border-white/5 hover:border-white/20 dark:hover:border-white/10 transition-all duration-300 hover:bg-white/10 dark:hover:bg-white/5">
                 {/* Image */}
                 <div className="aspect-[4/3] bg-gradient-to-br from-white/5 to-white/10 rounded-xl mb-6 overflow-hidden">
-                  <img src={feature.image} alt={feature.title} className="w-full h-full object-cover" />
+                  <img src={normalizeImageUrl(feature.image)} alt={feature.title} className="w-full h-full object-cover" />
                 </div>
                 
                 <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
