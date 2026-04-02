@@ -23,6 +23,7 @@ const entityTableMap = {
   ActivityLog: 'activity_logs',
   AppSetting: 'app_settings',
   Product: 'products',
+  PhysicalCard: 'physical_cards',
 };
 
 const getTableName = (entityName) => {

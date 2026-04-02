@@ -6,7 +6,7 @@ import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LayoutDashboard, CreditCard, Store, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Store, Users, LogOut, Wifi } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const location = useLocation();
@@ -58,6 +58,12 @@ export default function MobileBottomNav() {
       icon: Users, 
       label: t('myContacts'),
       path: createPageUrl('MyContacts')
+    },
+    {
+      key: 'physicalCards',
+      icon: Wifi,
+      label: t('physicalCards'),
+      path: createPageUrl('PhysicalCards')
     }
   ];
 

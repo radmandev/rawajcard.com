@@ -20,7 +20,8 @@ import {
   Database,
   UsersRound,
   Sparkles,
-  Lock
+  Lock,
+  Wifi
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -36,6 +37,7 @@ const navItems = [
   { key: 'create', icon: Plus, page: 'CardBuilder', label: 'createCard' },
   { key: 'contacts', icon: Users, page: 'MyContacts', label: 'myContacts' },
   { key: 'store', icon: Store, page: 'Store', label: 'store' },
+  { key: 'physicalCards', icon: Wifi, page: 'PhysicalCards', label: 'physicalCards' },
   { key: 'analytics', icon: BarChart3, page: 'Analytics', label: 'analytics' },
 ];
 

@@ -10,6 +10,7 @@ import { CheckCircle, Package, ArrowRight, Loader2, Sparkles } from 'lucide-reac
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useCart } from '@/contexts/CartContext';
+import PhysicalCardCustomizationModule from '@/components/store/PhysicalCardCustomizationModule';
 
 export default function CheckoutSuccess() {
   const { isRTL } = useLanguage();
@@ -276,6 +277,8 @@ export default function CheckoutSuccess() {
                 }
               </div>
             )}
+
+            <PhysicalCardCustomizationModule orderNumber={orderNumber} />
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">

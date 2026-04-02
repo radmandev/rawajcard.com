@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { getPendingPhysicalCards, clearPendingPhysicalCards } from '@/components/store/PhysicalCardCustomizationModule';
 
 // @ts-ignore
 const profileTable = import.meta.env.VITE_SUPABASE_PROFILE_TABLE || 'profiles';
@@ -89,6 +90,32 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(Boolean(authUser));
       setIsLoadingAuth(false);
       setIsLoadingPublicSettings(false);
+
+      // Claim any pending physical cards saved before login
+      if (authUser?.id) {
+        const pending = getPendingPhysicalCards();
+        if (pending.length > 0) {
+          (async () => {
+            try {
+              for (const card of pending) {
+                await supabase.from('physical_cards').insert({
+                  user_id: authUser.id,
+                  order_number: card.order_number || null,
+                  template_id: card.template_id,
+                  name: card.name,
+                  signature: card.signature || card.name,
+                  qr_value: card.qr_value || null,
+                  picture: card.picture || null,
+                  status: 'pending',
+                });
+              }
+              clearPendingPhysicalCards();
+            } catch (e) {
+              console.error('Failed to claim pending physical cards:', e);
+            }
+          })();
+        }
+      }
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
