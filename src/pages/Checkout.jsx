@@ -160,9 +160,18 @@ export default function Checkout() {
     },
     onSuccess: (data) => {
       if (data?.url) { window.location.href = data.url; }
-      else toast.error(data?.error || (isRTL ? 'خطأ في رابط الدفع' : 'Payment link error'));
+      else {
+        const msg = data?.error || (isRTL ? 'خطأ في رابط الدفع' : 'Payment link error');
+        console.error('[Stripe checkout] no URL in response:', data);
+        toast.error(msg);
+      }
     },
-    onError: () => toast.error(isRTL ? 'حدث خطأ في الدفع' : 'Payment error'),
+    onError: (err) => {
+      console.error('[Stripe checkout error]', err);
+      const msg = err?.message || '';
+      // Show Stripe's own error if it came through, otherwise generic
+      toast.error(msg || (isRTL ? 'حدث خطأ في الدفع' : 'Payment error. Please try again.'));
+    },
   });
 
   // ── PayPal ────────────────────────────────────────────────

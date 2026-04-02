@@ -137,23 +137,16 @@ Deno.serve(async (req: Request) => {
       });
     };
 
-    // Attempt 1: Dynamic payment methods (automatic — enables Apple Pay, Google Pay, Link)
-    // This is the recommended approach; requires "Automatic payment methods" in Stripe dashboard
+    // Attempt 1: Automatic payment methods (recommended — enables Apple Pay, Google Pay, etc.)
+    // Most Stripe accounts have this enabled in the dashboard
     let res = await attemptCheckout({
-      'payment_method_types[0]': 'card',
-      'payment_method_types[1]': 'link',
+      'automatic_payment_methods[enabled]': 'true',
     });
     let session = await res.json() as Record<string, unknown>;
 
-    // Attempt 2: card only (Link not enabled in dashboard)
-    if (!res.ok && String((session?.error as Record<string, unknown>)?.message ?? '').toLowerCase().includes('link')) {
-      res = await attemptCheckout({ 'payment_method_types[0]': 'card' });
-      session = await res.json() as Record<string, unknown>;
-    }
-
-    // Attempt 3: bare minimum fallback
+    // Attempt 2: Explicit card-only fallback (accounts with automatic methods disabled)
     if (!res.ok) {
-      res = await attemptCheckout({});
+      res = await attemptCheckout({ 'payment_method_types[0]': 'card' });
       session = await res.json() as Record<string, unknown>;
     }
 
