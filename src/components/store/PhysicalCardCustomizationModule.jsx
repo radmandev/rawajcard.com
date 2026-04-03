@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import {
   ArrowRight,
@@ -52,44 +53,89 @@ export function clearPendingPhysicalCards() {
 
 export const PREMADE_TEMPLATES = [
   {
-    id: 'midnight-teal',
-    nameEn: 'Midnight Teal',
-    nameAr: 'تيـل ليلي',
-    background: 'linear-gradient(135deg, #0f172a 0%, #0f766e 100%)',
-    textColor: '#ecfeff',
-    chipClass: 'bg-white/20 text-white border-white/30',
+    id: 'gold-metal',
+    nameEn: 'Gold Metal',
+    nameAr: 'معدن ذهبي',
+    background: 'linear-gradient(135deg, #7a5a18 0%, #f2cf7a 100%)',
+    textColor: '#fff9e8',
+    chipClass: 'bg-white/25 text-white border-white/40',
   },
   {
-    id: 'royal-navy',
-    nameEn: 'Royal Navy',
-    nameAr: 'كحلي ملكي',
-    background: 'linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%)',
-    textColor: '#eff6ff',
-    chipClass: 'bg-blue-100/20 text-blue-50 border-blue-200/30',
+    id: 'silver-metal',
+    nameEn: 'Silver Metal',
+    nameAr: 'معدن فضي',
+    background: 'linear-gradient(135deg, #4b5563 0%, #d1d5db 100%)',
+    textColor: '#f9fafb',
+    chipClass: 'bg-white/25 text-white border-white/40',
   },
   {
-    id: 'emerald-glass',
-    nameEn: 'Emerald Glass',
-    nameAr: 'زمردي زجاجي',
-    background: 'linear-gradient(135deg, #065f46 0%, #14b8a6 100%)',
-    textColor: '#f0fdfa',
-    chipClass: 'bg-emerald-100/20 text-emerald-50 border-emerald-200/30',
-  },
-  {
-    id: 'sunset-gold',
-    nameEn: 'Sunset Gold',
-    nameAr: 'غروب ذهبي',
-    background: 'linear-gradient(135deg, #92400e 0%, #f59e0b 100%)',
-    textColor: '#fffbeb',
-    chipClass: 'bg-amber-100/20 text-amber-50 border-amber-200/30',
-  },
-  {
-    id: 'mono-carbon',
-    nameEn: 'Mono Carbon',
-    nameAr: 'كاربون أحادي',
+    id: 'black-metal',
+    nameEn: 'Black Metal',
+    nameAr: 'معدن أسود',
     background: 'linear-gradient(135deg, #111827 0%, #374151 100%)',
     textColor: '#f9fafb',
     chipClass: 'bg-slate-100/20 text-slate-50 border-slate-200/30',
+  },
+  {
+    id: 'bright-wood',
+    nameEn: 'Bright Wood',
+    nameAr: 'خشب فاتح',
+    background: 'linear-gradient(135deg, #8b5a2b 0%, #d2b48c 100%)',
+    textColor: '#fff8f0',
+    chipClass: 'bg-white/20 text-white border-white/30',
+  },
+  {
+    id: 'dark-wood',
+    nameEn: 'Dark Wood',
+    nameAr: 'خشب داكن',
+    background: 'linear-gradient(135deg, #3f2a1f 0%, #6b3f2a 100%)',
+    textColor: '#fff7ed',
+    chipClass: 'bg-white/20 text-white border-white/30',
+  },
+  {
+    id: 'white-circle',
+    nameEn: 'White',
+    nameAr: 'أبيض',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%)',
+    textColor: '#0f172a',
+    chipClass: 'bg-slate-900/10 text-slate-700 border-slate-300',
+  },
+  {
+    id: 'black-circle',
+    nameEn: 'Black',
+    nameAr: 'أسود',
+    background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+    textColor: '#f8fafc',
+    chipClass: 'bg-white/20 text-white border-white/30',
+  },
+  {
+    id: 'table-stand',
+    nameEn: 'Table Stand',
+    nameAr: 'ستاند طاولة',
+    background: 'linear-gradient(135deg, #0b3b53 0%, #1f2937 100%)',
+    textColor: '#e0f2fe',
+    chipClass: 'bg-sky-100/20 text-sky-50 border-sky-200/30',
+  },
+];
+
+const CARD_TYPE_OPTIONS = [
+  {
+    id: 'business_cards',
+    nameEn: 'Business Cards',
+    nameAr: 'بطاقات الأعمال',
+    variants: ['gold-metal', 'silver-metal', 'black-metal', 'bright-wood', 'dark-wood'],
+  },
+  {
+    id: 'mobile_sticker_keychains',
+    nameEn: 'Mobile Sticker & Key Chains',
+    nameAr: 'ملصق الجوال والميداليات',
+    variants: ['white-circle', 'black-circle'],
+  },
+  {
+    id: 'table_stand',
+    nameEn: 'Table Stand',
+    nameAr: 'ستاند طاولة',
+    variants: ['table-stand'],
   },
 ];
 
@@ -107,7 +153,7 @@ export function PhysicalCardPreview({ template, name, signature, picture, qrData
           <p className="font-semibold text-base">{name || (isRTL ? 'اسم العميل' : 'Customer Name')}</p>
           <p
             className="text-sm opacity-90"
-            style={{ fontFamily: "'Alexandria', 'Tajawal', sans-serif", fontStyle: 'italic' }}
+            style={{ fontFamily: isRTL ? "'Alexandria', 'Tajawal', sans-serif" : "'Amsterdam Four', 'Alexandria', sans-serif", fontStyle: 'italic' }}
           >
             {signature || name || (isRTL ? 'التوقيع' : 'Signature')}
           </p>
@@ -148,7 +194,10 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   // Steps: 'customize' | 'saved'
   const [step, setStep] = useState('customize');
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState(PREMADE_TEMPLATES[0].id);
+  const [cardType, setCardType] = useState(CARD_TYPE_OPTIONS[0].id);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(CARD_TYPE_OPTIONS[0].variants[0]);
+  const [stickerContent, setStickerContent] = useState('qr');
+  const [tableStandDetails, setTableStandDetails] = useState('');
   const [name, setName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [signature, setSignature] = useState('');
@@ -161,6 +210,16 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   const selectedTemplate = useMemo(
     () => PREMADE_TEMPLATES.find((t) => t.id === selectedTemplateId) || PREMADE_TEMPLATES[0],
     [selectedTemplateId]
+  );
+
+  const selectedCardType = useMemo(
+    () => CARD_TYPE_OPTIONS.find((t) => t.id === cardType) || CARD_TYPE_OPTIONS[0],
+    [cardType]
+  );
+
+  const availableVariants = useMemo(
+    () => PREMADE_TEMPLATES.filter((t) => selectedCardType.variants.includes(t.id)),
+    [selectedCardType]
   );
 
   // Seed QR value from order number
@@ -177,6 +236,11 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
       const raw = localStorage.getItem('checkout_prefill');
       if (!raw) return;
       const parsed = JSON.parse(raw);
+      if (parsed?.name) {
+        setName(parsed.name);
+        setSignature(parsed.name);
+      }
+      if (parsed?.phone) setContactPhone(parsed.phone);
       setPrefill({
         name: parsed?.name || '',
         phone: parsed?.phone || '',
@@ -185,6 +249,13 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
       setPrefill({ name: '', phone: '' });
     }
   }, []);
+
+  useEffect(() => {
+    const type = CARD_TYPE_OPTIONS.find((t) => t.id === cardType) || CARD_TYPE_OPTIONS[0];
+    if (!type.variants.includes(selectedTemplateId)) {
+      setSelectedTemplateId(type.variants[0]);
+    }
+  }, [cardType, selectedTemplateId]);
 
   // Generate QR data URL
   useEffect(() => {
@@ -206,6 +277,13 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   // ── Save mutation (used when already logged in) ──────────────────────────────
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const notes = JSON.stringify({
+        card_type: cardType,
+        card_variant: selectedTemplate.id,
+        sticker_content: cardType === 'mobile_sticker_keychains' ? stickerContent : null,
+        table_stand_details: cardType === 'table_stand' ? tableStandDetails : null,
+      });
+
       const payload = {
         user_id: user.id,
         order_number: orderNumber || null,
@@ -215,6 +293,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
         signature: signature || name,
         qr_value: qrValue,
         picture: picture || null,
+        notes,
         status: 'pending',
       };
       await api.entities.PhysicalCard.create(payload);
@@ -229,6 +308,13 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   });
 
   const handleSave = () => {
+    const notes = JSON.stringify({
+      card_type: cardType,
+      card_variant: selectedTemplate.id,
+      sticker_content: cardType === 'mobile_sticker_keychains' ? stickerContent : null,
+      table_stand_details: cardType === 'table_stand' ? tableStandDetails : null,
+    });
+
     const cardData = {
       order_number: orderNumber || null,
       template_id: selectedTemplate.id,
@@ -237,6 +323,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
       signature: signature || name,
       qr_value: qrValue,
       picture: picture || null,
+      notes,
     };
 
     if (isLoggedIn) {
@@ -271,7 +358,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => setPicture(e.target?.result || '');
+    reader.onload = (e) => setPicture(typeof e.target?.result === 'string' ? e.target.result : '');
     reader.readAsDataURL(file);
     event.target.value = '';
   };
@@ -280,7 +367,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   if (step === 'saved') {
     return (
       <Card className="bg-white dark:bg-slate-900 border-teal-200 dark:border-teal-800 text-start">
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap');`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap'); @import url('https://fonts.cdnfonts.com/css/amsterdam-four');`}</style>
         <CardContent className="p-6 space-y-5">
           {/* Success header */}
           <div className="flex items-center gap-3">
@@ -380,21 +467,42 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   return (
     <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-start">
       <CardHeader>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap');`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&display=swap'); @import url('https://fonts.cdnfonts.com/css/amsterdam-four');`}</style>
         <CardTitle className="text-lg md:text-xl">
           {isRTL ? '🪪 خصّص بطاقة NFC الفيزيائية' : '🪪 Customize Your Physical NFC Card'}
         </CardTitle>
         <CardDescription>
           {isRTL
-            ? 'ابدأ بأحد القوالب الجاهزة ثم عدّل الاسم، التوقيع، رمز QR، وأضف صورة اختيارية.'
-            : 'Start from a premade template, then edit name, signature, QR code, and optional picture.'}
+            ? 'اختر نوع المنتج وخامته ثم عدّل الاسم، التوقيع، QR والصورة.'
+            : 'Choose product type and material, then edit name, signature, QR, and photo.'}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Card type picker */}
+        <div className="space-y-2">
+          <Label>{isRTL ? 'نوع المنتج' : 'Product Type'}</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {CARD_TYPE_OPTIONS.map((type) => (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => setCardType(type.id)}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                  cardType === type.id
+                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-400 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {isRTL ? type.nameAr : type.nameEn}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Template picker */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {PREMADE_TEMPLATES.map((template) => (
+          {availableVariants.map((template) => (
             <button
               key={template.id}
               type="button"
@@ -409,6 +517,45 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
             </button>
           ))}
         </div>
+
+        {/* Extra options per type */}
+        {cardType === 'mobile_sticker_keychains' && (
+          <div className="space-y-2">
+            <Label>{isRTL ? 'محتوى الدائرة الصغيرة' : 'Small Circle Content'}</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'logo', en: 'Logo', ar: 'شعار' },
+                { id: 'qr', en: 'QR', ar: 'QR' },
+                { id: 'nfc', en: 'NFC Icon', ar: 'أيقونة NFC' },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setStickerContent(opt.id)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                    stickerContent === opt.id
+                      ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
+                      : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  {isRTL ? opt.ar : opt.en}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {cardType === 'table_stand' && (
+          <div className="space-y-2">
+            <Label>{isRTL ? 'تفاصيل الستاند (شعار/اسم/روابط...)' : 'Table Stand Details (logo/store/url/social...)'}</Label>
+            <Textarea
+              value={tableStandDetails}
+              onChange={(e) => setTableStandDetails(e.target.value)}
+              rows={3}
+              placeholder={isRTL ? 'مثال: اسم المتجر + رابط Google + السوشال ميديا + أي تصميم مخصص' : 'Example: store name + Google URL + social links + custom design notes'}
+            />
+          </div>
+        )}
 
         {/* Form + Preview */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -434,12 +581,12 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
             </div>
 
             <div className="space-y-2">
-              <Label>{isRTL ? 'التوقيع (Alexandria)' : 'Signature (Alexandria font)'}</Label>
+              <Label>{isRTL ? 'التوقيع (Alexandria)' : 'Signature (Amsterdam Four)'}</Label>
               <Input
                 value={signature}
                 onChange={(e) => setSignature(e.target.value)}
                 placeholder={isRTL ? 'نص التوقيع على البطاقة' : 'Signature text on card'}
-                style={{ fontFamily: "'Alexandria', 'Tajawal', sans-serif", fontStyle: 'italic' }}
+                style={{ fontFamily: isRTL ? "'Alexandria', 'Tajawal', sans-serif" : "'Amsterdam Four', 'Alexandria', sans-serif", fontStyle: 'italic' }}
               />
             </div>
 
