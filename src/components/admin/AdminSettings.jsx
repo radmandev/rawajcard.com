@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,12 @@ import { ALL_TEMPLATES, DEFAULT_TIERS } from '@/lib/templateConfig';
 export default function AdminSettings() {
   const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const DEFAULT_EARLY_BIRD_OFFER = {
+    enabled: false,
+    trial_days: 365,
+    popup_delay_ms: 5000,
+    new_user_window_days: 30,
+  };
 
   const { data: users = [] } = useQuery({ queryKey: ['admin-users'], queryFn: () => api.entities.User.list() });
   const { data: subscriptions = [] } = useQuery({ queryKey: ['admin-subscriptions'], queryFn: () => api.entities.Subscription.list() });
@@ -24,7 +30,19 @@ export default function AdminSettings() {
     queryKey: ['template-tiers'],
     queryFn: () => api.appSettings.get('template_tiers'),
   });
+  const { data: savedEarlyBirdOffer = null } = useQuery({
+    queryKey: ['early-bird-offer-setting'],
+    queryFn: () => api.appSettings.get('premium_early_bird_offer'),
+  });
   const effectiveTiers = { ...DEFAULT_TIERS, ...savedTiers };
+
+  const [earlyBirdOffer, setEarlyBirdOffer] = useState(DEFAULT_EARLY_BIRD_OFFER);
+
+  useEffect(() => {
+    if (savedEarlyBirdOffer && typeof savedEarlyBirdOffer === 'object') {
+      setEarlyBirdOffer({ ...DEFAULT_EARLY_BIRD_OFFER, ...savedEarlyBirdOffer });
+    }
+  }, [savedEarlyBirdOffer]);
 
   const saveTiersMutation = useMutation({
     mutationFn: (newTiers) => api.appSettings.set('template_tiers', newTiers),
@@ -33,6 +51,16 @@ export default function AdminSettings() {
       toast.success(isRTL ? 'تم حفظ إعدادات القوالب' : 'Template tiers saved');
     },
     onError: () => toast.error(isRTL ? 'فشل الحفظ' : 'Save failed'),
+  });
+
+  const saveEarlyBirdOfferMutation = useMutation({
+    mutationFn: (nextOffer) => api.appSettings.set('premium_early_bird_offer', nextOffer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['early-bird-offer-setting'] });
+      queryClient.invalidateQueries({ queryKey: ['premium-early-bird-offer-public'] });
+      toast.success(isRTL ? 'تم حفظ إعدادات العرض الخاص' : 'Special offer settings saved');
+    },
+    onError: () => toast.error(isRTL ? 'فشل حفظ العرض الخاص' : 'Failed to save special offer settings'),
   });
 
   const toggleTemplateTier = (templateId) => {
@@ -108,6 +136,85 @@ export default function AdminSettings() {
               <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">SAR {subStats.mrr.toLocaleString()}</p>
               <p className="text-xs text-amber-600 mt-1">{isRTL ? 'إيرادات شهرية (تقدير)' : 'Est. MRR'}</p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-600" />
+            {isRTL ? 'عرض الطيور المبكرة (بريميوم)' : 'Early Bird Offer (Premium)'}
+          </CardTitle>
+          <CardDescription>
+            {isRTL
+              ? 'تفعيل سنة مجانية للمستخدمين الجدد على خطة بريميوم مع مطالبتهم ببدء تجربة مجانية عبر Stripe.'
+              : 'Enable a 1-year free Premium trial for new users and prompt them to start trial checkout via Stripe.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>{isRTL ? 'تفعيل العرض' : 'Enable offer'}</Label>
+              <p className="text-sm text-slate-500">
+                {isRTL
+                  ? 'عند التفعيل، المستخدمون الجدد المؤهلون يحصلون على تجربة 365 يومًا على بريميوم.'
+                  : 'When enabled, eligible new users get a 365-day Premium trial.'}
+              </p>
+            </div>
+            <Switch
+              checked={Boolean(earlyBirdOffer.enabled)}
+              onCheckedChange={(checked) => setEarlyBirdOffer(prev => ({ ...prev, enabled: checked }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'عدد أيام التجربة' : 'Trial days'}</Label>
+              <Input
+                type="number"
+                min={1}
+                value={Number(earlyBirdOffer.trial_days || 365)}
+                onChange={(e) => setEarlyBirdOffer(prev => ({ ...prev, trial_days: Math.max(1, Number(e.target.value || 365)) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'تأخير ظهور النافذة (مللي ثانية)' : 'Popup delay (ms)'}</Label>
+              <Input
+                type="number"
+                min={1000}
+                step={500}
+                value={Number(earlyBirdOffer.popup_delay_ms || 5000)}
+                onChange={(e) => setEarlyBirdOffer(prev => ({ ...prev, popup_delay_ms: Math.max(1000, Number(e.target.value || 5000)) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'نافذة المستخدم الجديد (بالأيام)' : 'New user window (days)'}</Label>
+              <Input
+                type="number"
+                min={1}
+                value={Number(earlyBirdOffer.new_user_window_days || 30)}
+                onChange={(e) => setEarlyBirdOffer(prev => ({ ...prev, new_user_window_days: Math.max(1, Number(e.target.value || 30)) }))}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-amber-200/80 bg-amber-50 dark:bg-amber-950/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+            {isRTL
+              ? 'النص المستخدم في النافذة: "Special offer: 1 year premium subscitpiton for early birds"'
+              : 'Popup text used: "Special offer: 1 year premium subscitpiton for early birds"'}
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={() => saveEarlyBirdOfferMutation.mutate(earlyBirdOffer)}
+              disabled={saveEarlyBirdOfferMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {saveEarlyBirdOfferMutation.isPending
+                ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                : (isRTL ? 'حفظ إعدادات العرض' : 'Save Offer Settings')}
+            </Button>
           </div>
         </CardContent>
       </Card>
