@@ -32,8 +32,8 @@ export function CartProvider({ children }) {
         id: `${product.id}_${Date.now()}`,
         product_id: product.id,
         // Store both language variants for display
-        product_name:    product.name    || product.name_en || product.name_ar || '',
-        product_name_ar: product.name_ar || product.name    || product.name_en || '',
+        product_name:    product.name || product.name_en || product.title || product.name_ar || 'Rawaj Card Item',
+        product_name_ar: product.name_ar || product.name || product.name_en || product.title || 'منتج رواج كارد',
         product_price:   product.price,
         product_image:   product.image   || product.image_url || '',
         quantity: 1,

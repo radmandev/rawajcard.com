@@ -121,6 +121,14 @@ export default function Checkout() {
   // Cart from global context (localStorage)
   const { items: cartItems, clearCart } = useCart();
 
+  const normalizedCartItems = cartItems.map((i, idx) => ({
+    product_name:
+      i.product_name || i.product_name_ar || i.name || i.title || `Rawaj Item ${idx + 1}`,
+    product_price: Number(i.product_price) || 0,
+    quantity: Math.max(1, Number(i.quantity) || 1),
+    product_image: i.product_image || i.image || i.image_url || '',
+  }));
+
   const total = cartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
   const freeShipping = total >= 250;
 
@@ -149,12 +157,7 @@ export default function Checkout() {
   const stripeOrderMutation = useMutation({
     mutationFn: async () => {
       return await api.functions.invoke('createStripeOrderCheckout', {
-        cartItems: cartItems.map((i) => ({
-          product_name: i.product_name,
-          product_price: i.product_price,
-          quantity: i.quantity,
-          product_image: i.product_image,
-        })),
+        cartItems: normalizedCartItems,
         shippingInfo,
       });
     },
@@ -179,7 +182,7 @@ export default function Checkout() {
     mutationFn: async () => {
       return await api.functions.invoke('createPayPalOrder', {
         amount: total,
-        orderData: { cartItems, shippingInfo },
+        orderData: { cartItems: normalizedCartItems, shippingInfo },
       });
     },
     onSuccess: (data) => {
@@ -218,12 +221,7 @@ export default function Checkout() {
           payment_method: 'bank_transfer',
           receipt_url: receiptUrl,
           shippingInfo,
-          cartItems: cartItems.map((i) => ({
-            product_name: i.product_name,
-            product_price: i.product_price,
-            quantity: i.quantity,
-            product_image: i.product_image,
-          })),
+          cartItems: normalizedCartItems,
         },
       });
       if (error) throw error;

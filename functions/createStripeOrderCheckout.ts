@@ -102,14 +102,16 @@ Deno.serve(async (req: Request) => {
 
       // Line items
       cartItems.forEach((item, i) => {
-        const amount = Math.round(item.product_price * 100);
+        const amount = Math.max(0, Math.round((Number(item.product_price) || 0) * 100));
+        const quantity = Math.max(1, Number(item.quantity) || 1);
+        const safeName = String(item.product_name || '').trim() || `Rawaj Item ${i + 1}`;
         p.set(`line_items[${i}][price_data][currency]`, 'sar');
         p.set(`line_items[${i}][price_data][unit_amount]`, String(amount));
-        p.set(`line_items[${i}][price_data][product_data][name]`, item.product_name);
+        p.set(`line_items[${i}][price_data][product_data][name]`, safeName);
         if (item.product_image) {
           p.set(`line_items[${i}][price_data][product_data][images][0]`, item.product_image);
         }
-        p.set(`line_items[${i}][quantity]`, String(item.quantity));
+        p.set(`line_items[${i}][quantity]`, String(quantity));
       });
 
       // Metadata for fulfillment
