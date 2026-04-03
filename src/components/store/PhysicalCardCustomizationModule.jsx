@@ -26,11 +26,25 @@ import {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'pending_physical_cards';
+const STORAGE_KEY_FALLBACK = 'pending_physical_cards_persisted';
+const POST_AUTH_REDIRECT_KEY = 'post_auth_redirect';
+
+const dedupePendingCards = (cards) => {
+  const map = new Map();
+  cards.forEach((card, index) => {
+    const key = card?.order_number || `${card?.template_id || 'card'}_${index}`;
+    if (card) map.set(key, card);
+  });
+  return Array.from(map.values());
+};
 
 export function getPendingPhysicalCards() {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const sessionRaw = sessionStorage.getItem(STORAGE_KEY);
+    const localRaw = localStorage.getItem(STORAGE_KEY_FALLBACK);
+    const sessionCards = sessionRaw ? JSON.parse(sessionRaw) : [];
+    const localCards = localRaw ? JSON.parse(localRaw) : [];
+    return dedupePendingCards([...sessionCards, ...localCards]);
   } catch {
     return [];
   }
@@ -39,14 +53,29 @@ export function getPendingPhysicalCards() {
 export function savePendingPhysicalCard(card) {
   try {
     const existing = getPendingPhysicalCards();
-    // Deduplicate by order_number
-    const filtered = existing.filter((c) => c.order_number !== card.order_number);
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify([...filtered, card]));
+    const merged = dedupePendingCards([...existing, card]);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    localStorage.setItem(STORAGE_KEY_FALLBACK, JSON.stringify(merged));
   } catch { /* ignore */ }
 }
 
 export function clearPendingPhysicalCards() {
-  try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY_FALLBACK);
+  } catch { /* ignore */ }
+}
+
+export function setPostAuthRedirect(path) {
+  try { localStorage.setItem(POST_AUTH_REDIRECT_KEY, path); } catch { /* ignore */ }
+}
+
+export function getPostAuthRedirect() {
+  try { return localStorage.getItem(POST_AUTH_REDIRECT_KEY) || ''; } catch { return ''; }
+}
+
+export function clearPostAuthRedirect() {
+  try { localStorage.removeItem(POST_AUTH_REDIRECT_KEY); } catch { /* ignore */ }
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
@@ -339,6 +368,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
+      setPostAuthRedirect(createPageUrl('PhysicalCards'));
       const base = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -450,7 +480,10 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
                 <Button
                   variant="outline"
                   className="flex-1 border-slate-300 dark:border-slate-600"
-                  onClick={() => navigate(createPageUrl('Login'))}
+                  onClick={() => {
+                    setPostAuthRedirect(createPageUrl('PhysicalCards'));
+                    navigate(`${createPageUrl('Login')}?next=${encodeURIComponent(createPageUrl('PhysicalCards'))}`);
+                  }}
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   {isRTL ? 'تسجيل الدخول / إنشاء حساب' : 'Sign in / Create account'}

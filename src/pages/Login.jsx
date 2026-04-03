@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
 import { useTheme } from '@/components/shared/ThemeContext';
+import { clearPostAuthRedirect, getPostAuthRedirect } from '@/components/store/PhysicalCardCustomizationModule';
 import { Sun, Moon, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
@@ -15,16 +16,23 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const { theme, toggleTheme, isDark } = useTheme();
+  const nextParam = new URLSearchParams(window.location.search).get('next');
+
+  const getRedirectPath = () => {
+    const stored = getPostAuthRedirect();
+    const target = nextParam || stored || createPageUrl('Dashboard');
+    return target.startsWith('/') ? target : createPageUrl('Dashboard');
+  };
 
   useEffect(() => {
     let isMounted = true;
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data?.session && isMounted) redirectToDashboard();
+      if (data?.session && isMounted) redirectAfterAuth();
     };
     checkSession();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) redirectToDashboard();
+      if (session) redirectAfterAuth();
     });
     return () => {
       isMounted = false;
@@ -32,8 +40,10 @@ export default function Login() {
     };
   }, []);
 
-  const redirectToDashboard = () => {
-    window.location.href = createPageUrl('Dashboard');
+  const redirectAfterAuth = () => {
+    const target = getRedirectPath();
+    clearPostAuthRedirect();
+    window.location.href = target;
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +54,7 @@ export default function Login() {
 
     if (forgotMode) {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + createPageUrl('Dashboard'),
+        redirectTo: window.location.origin + getRedirectPath(),
       });
       setIsSubmitting(false);
       if (resetError) { setError(resetError.message); return; }
@@ -53,7 +63,11 @@ export default function Login() {
     }
 
     if (mode === 'signup') {
-      const { error: signUpError } = await supabase.auth.signUp({ email, password });
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin + getRedirectPath() }
+      });
       setIsSubmitting(false);
       if (signUpError) { setError(signUpError.message); return; }
       setSuccessMsg('Account created! Check your email to confirm, then sign in.');
@@ -64,7 +78,7 @@ export default function Login() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setIsSubmitting(false);
     if (signInError) { setError(signInError.message); return; }
-    redirectToDashboard();
+    redirectAfterAuth();
   };
 
   const handleGoogleSignIn = async () => {
@@ -73,7 +87,7 @@ export default function Login() {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${base}/Dashboard`,
+        redirectTo: `${base}${getRedirectPath()}`,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });
