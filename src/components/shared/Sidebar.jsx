@@ -37,7 +37,7 @@ const navItems = [
   { key: 'create', icon: Plus, page: 'CardBuilder', label: 'createCard' },
   { key: 'contacts', icon: Users, page: 'MyContacts', label: 'myContacts' },
   { key: 'store', icon: Store, page: 'Store', label: 'store' },
-  { key: 'physicalCards', icon: Wifi, page: 'PhysicalCards', label: 'physicalCards' },
+  { key: 'myOrders', icon: Wifi, page: 'MyOrders', label: 'myOrders' },
   { key: 'analytics', icon: BarChart3, page: 'Analytics', label: 'analytics' },
 ];
 
@@ -116,7 +116,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         {/* Nav Items — scrollable so logout is always visible */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
           {navItems.map((item) => {
-            const isLocked = hasNoCards && item.page !== 'CardBuilder';
+            const isLocked = hasNoCards && !['CardBuilder', 'Store', 'MyOrders'].includes(item.page);
             const itemClass = cn(
               "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
               isLocked

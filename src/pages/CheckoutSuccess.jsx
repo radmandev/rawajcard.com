@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
+import { supabase } from '@/lib/supabaseClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,13 +11,15 @@ import { CheckCircle, Package, ArrowRight, Loader2, Sparkles } from 'lucide-reac
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useCart } from '@/contexts/CartContext';
-import PhysicalCardCustomizationModule from '@/components/store/PhysicalCardCustomizationModule';
+import { useAuth } from '@/lib/AuthContext';
+import { setPostAuthRedirect } from '@/components/store/PhysicalCardCustomizationModule';
 
 export default function CheckoutSuccess() {
   const { isRTL } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState(null);
   const [successType, setSuccessType] = useState(null); // 'order' | 'subscription'
@@ -80,13 +83,13 @@ export default function CheckoutSuccess() {
     setIsProcessing(true);
     try {
       const result = await api.functions.invoke('confirmStripeOrder', { sessionId });
-      if (result?.data?.success) {
-        setOrderNumber(result.data.order_number);
+      if (result?.success) {
+        setOrderNumber(result.order_number);
         setSuccessType('order');
         queryClient.invalidateQueries({ queryKey: ['cart'] });
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       } else {
-        throw new Error(result?.data?.error || 'Confirmation failed');
+        throw new Error(result?.error || 'Confirmation failed');
       }
     } catch (error) {
       console.error('Stripe order confirmation error:', error);
@@ -118,8 +121,8 @@ export default function CheckoutSuccess() {
         totalSAR: parseFloat(totalSAR)
       });
 
-      if (response.data.success) {
-        setOrderNumber(response.data.order_number);
+      if (response?.success) {
+        setOrderNumber(response.order_number);
         setSuccessType('order');
         // Clear localStorage
         localStorage.removeItem('checkout_cart');
@@ -278,7 +281,54 @@ export default function CheckoutSuccess() {
               </div>
             )}
 
-            <PhysicalCardCustomizationModule orderNumber={orderNumber} />
+            {successType === 'order' && (
+              <div className="rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/10 p-5 text-start space-y-4">
+                <div>
+                  <p className="font-semibold text-slate-900 dark:text-white">
+                    {isRTL ? 'خصّص منتجاتك من داخل حسابك' : 'Customize your ordered items from your account'}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    {isRTL
+                      ? 'اعرض طلبات المتجر، اختر المنتج الذي طلبته، ثم خصّصه واربطه ببطاقتك الرقمية من صفحة طلباتي.'
+                      : 'Open My Orders, select the purchased item, then customize it and link it to your digital card.'}
+                  </p>
+                </div>
+
+                {isAuthenticated ? (
+                  <Link to={createPageUrl('MyOrders')} className="block">
+                    <Button className="w-full bg-teal-600 hover:bg-teal-700">
+                      {isRTL ? 'اذهب إلى طلباتي' : 'Go to My Orders'}
+                    </Button>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={async () => {
+                        setPostAuthRedirect(createPageUrl('MyOrders'));
+                        const base = import.meta.env.VITE_APP_URL || window.location.origin;
+                        const { error } = await supabase.auth.signInWithOAuth({
+                          provider: 'google',
+                          options: {
+                            redirectTo: `${base}${createPageUrl('MyOrders')}`,
+                            queryParams: { access_type: 'offline', prompt: 'consent' },
+                          },
+                        });
+                        if (error) console.error(error);
+                      }}
+                    >
+                      {isRTL ? 'المتابعة بجوجل' : 'Continue with Google'}
+                    </Button>
+                    <Link to={`${createPageUrl('Login')}?next=${encodeURIComponent(createPageUrl('MyOrders'))}`} className="flex-1">
+                      <Button variant="outline" className="w-full" onClick={() => setPostAuthRedirect(createPageUrl('MyOrders'))}>
+                        {isRTL ? 'تسجيل الدخول لإدارة الطلب' : 'Sign in to manage order'}
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">

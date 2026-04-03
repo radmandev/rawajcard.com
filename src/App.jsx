@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
+import { createPageUrl } from '@/utils';
 import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -63,7 +64,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/PhysicalCards'
+    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards'
   ].includes(location.pathname) || location.pathname.startsWith('/c/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
@@ -117,6 +118,7 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         } />
         <Route path="/Home" element={<Navigate to="/" replace />} />
+        <Route path="/PhysicalCards" element={<Navigate to={createPageUrl('MyOrders')} replace />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}

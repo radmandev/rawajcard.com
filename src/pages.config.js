@@ -74,6 +74,7 @@ const TemplateEditor  = lazy(() => import('./pages/TemplateEditor'));
 const Upgrade         = lazy(() => import('./pages/Upgrade'));
 const TestLanding     = lazy(() => import('./pages/TestLanding'));
 const Demo3D          = lazy(() => import('./pages/Demo3D'));
+const MyOrders        = lazy(() => import('./pages/MyOrders'));
 const PhysicalCards   = lazy(() => import('./pages/PhysicalCards'));
 
 
@@ -101,6 +102,7 @@ export const PAGES = {
     "Upgrade": Upgrade,
     "TestLanding": TestLanding,
     "Demo3D": Demo3D,
+    "MyOrders": MyOrders,
     "PhysicalCards": PhysicalCards,
 }
 

@@ -368,12 +368,12 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      setPostAuthRedirect(createPageUrl('PhysicalCards'));
+      setPostAuthRedirect(createPageUrl('MyOrders'));
       const base = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${base}${createPageUrl('PhysicalCards')}`,
+          redirectTo: `${base}${createPageUrl('MyOrders')}`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       });
@@ -439,7 +439,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
               </p>
               <Button
                 className="w-full bg-teal-600 hover:bg-teal-700"
-                onClick={() => navigate(createPageUrl('PhysicalCards'))}
+                onClick={() => navigate(createPageUrl('MyOrders'))}
               >
                 <CreditCard className="h-4 w-4 mr-2" />
                 {isRTL ? 'بطاقاتي الفيزيائية' : 'My Physical Cards'}
@@ -481,8 +481,8 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
                   variant="outline"
                   className="flex-1 border-slate-300 dark:border-slate-600"
                   onClick={() => {
-                    setPostAuthRedirect(createPageUrl('PhysicalCards'));
-                    navigate(`${createPageUrl('Login')}?next=${encodeURIComponent(createPageUrl('PhysicalCards'))}`);
+                    setPostAuthRedirect(createPageUrl('MyOrders'));
+                    navigate(`${createPageUrl('Login')}?next=${encodeURIComponent(createPageUrl('MyOrders'))}`);
                   }}
                 >
                   <LogIn className="h-4 w-4 mr-2" />

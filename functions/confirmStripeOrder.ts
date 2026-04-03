@@ -72,11 +72,31 @@ Deno.serve(async (req: Request) => {
     const meta = (session?.metadata ?? {}) as Record<string, string>;
     const shippingInfo = {
       name: meta.shipping_name ?? '',
+      email: meta.shipping_email ?? '',
       phone: meta.shipping_phone ?? '',
       address: meta.shipping_address ?? '',
       city: meta.shipping_city ?? '',
       country: meta.shipping_country ?? 'Saudi Arabia',
     };
+
+    const lineItemsRes = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${sessionId}/line_items?limit=100`,
+      { headers: { Authorization: `Bearer ${stripeKey}` } }
+    );
+    const lineItemsData = await lineItemsRes.json() as { data?: Array<Record<string, unknown>> };
+    const cartItems = Array.isArray(lineItemsData?.data)
+      ? lineItemsData.data.map((item, index) => {
+          const quantity = Number(item.quantity ?? 1) || 1;
+          const amountTotal = Number(item.amount_total ?? 0) / 100;
+          return {
+            product_id: String(item.price?.id ?? index),
+            product_name: String(item.description ?? `Rawaj Item ${index + 1}`),
+            quantity,
+            product_price: quantity ? amountTotal / quantity : amountTotal,
+            product_image: '',
+          };
+        })
+      : [];
 
     // Amount in SAR (Stripe stores in halalas)
     const amountTotal = typeof session?.amount_total === 'number'
@@ -98,7 +118,7 @@ Deno.serve(async (req: Request) => {
       method: 'POST',
       headers: dbHeaders,
       body: JSON.stringify({
-        created_by: userEmail || userId,
+        created_by: userEmail || shippingInfo.email || userId,
         created_by_user_id: userId || undefined,
         amount: amountTotal,
         currency: 'SAR',
@@ -106,7 +126,8 @@ Deno.serve(async (req: Request) => {
         metadata: {
           order_number: orderNumber,
           stripe_session_id: sessionId,
-          shipping: shippingInfo,
+          shippingInfo,
+          cartItems,
           payment_method: 'stripe',
         },
       }),

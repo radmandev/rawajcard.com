@@ -52,6 +52,7 @@ Deno.serve(async (req: Request) => {
     }
     interface ShippingInfo {
       name?: string;
+      email?: string;
       phone?: string;
       address?: string;
       city?: string;
@@ -119,6 +120,7 @@ Deno.serve(async (req: Request) => {
       p.set('metadata[user_email]', userEmail);
       p.set('metadata[guest]', userId ? 'false' : 'true');
       p.set('metadata[shipping_name]', shippingInfo.name ?? '');
+      p.set('metadata[shipping_email]', shippingInfo.email ?? '');
       p.set('metadata[shipping_phone]', shippingInfo.phone ?? '');
       p.set('metadata[shipping_address]', shippingInfo.address ?? '');
       p.set('metadata[shipping_city]', shippingInfo.city ?? '');

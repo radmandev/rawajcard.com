@@ -60,10 +60,10 @@ export default function MobileBottomNav() {
       path: createPageUrl('MyContacts')
     },
     {
-      key: 'physicalCards',
+      key: 'myOrders',
       icon: Wifi,
-      label: t('physicalCards'),
-      path: createPageUrl('PhysicalCards')
+      label: t('myOrders'),
+      path: createPageUrl('MyOrders')
     }
   ];
 
@@ -79,7 +79,7 @@ export default function MobileBottomNav() {
     >
       <div className="flex items-center justify-around">
         {navItems.map(({ key, icon: Icon, label, path }) => {
-          if (hasNoCards) {
+          if (hasNoCards && key !== 'store' && key !== 'myOrders') {
             return (
               <button
                 key={key}

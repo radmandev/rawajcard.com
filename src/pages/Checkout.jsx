@@ -247,7 +247,7 @@ export default function Checkout() {
         currency: 'SAR',
         status: 'pending',
         user_id: user?.id || null,
-        created_by: user?.email || null,
+        created_by: user?.email || shippingInfo.email || null,
         created_by_user_id: user?.id || null,
         metadata: {
           order_number: orderNumber,
