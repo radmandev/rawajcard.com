@@ -107,6 +107,7 @@ export const AuthProvider = ({ children }) => {
                   signature: card.signature || card.name,
                   qr_value: card.qr_value || null,
                   picture: card.picture || null,
+                  notes: card.notes || null,
                   status: 'pending',
                 });
               }
