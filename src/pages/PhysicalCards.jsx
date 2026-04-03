@@ -318,6 +318,7 @@ export default function PhysicalCards() {
             order_number: card.order_number || null,
             template_id: card.template_id,
             name: card.name,
+            contact_phone: card.contact_phone || null,
             signature: card.signature || card.name,
             qr_value: card.qr_value || null,
             picture: card.picture || null,

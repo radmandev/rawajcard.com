@@ -150,11 +150,13 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
 
   const [selectedTemplateId, setSelectedTemplateId] = useState(PREMADE_TEMPLATES[0].id);
   const [name, setName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [signature, setSignature] = useState('');
   const [qrValue, setQrValue] = useState('');
   const [picture, setPicture] = useState('');
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [prefill, setPrefill] = useState({ name: '', phone: '' });
 
   const selectedTemplate = useMemo(
     () => PREMADE_TEMPLATES.find((t) => t.id === selectedTemplateId) || PREMADE_TEMPLATES[0],
@@ -169,6 +171,20 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
         : `https://rawajcard.com/order/${orderNumber || 'new'}`;
     setQrValue(defaultQr);
   }, [orderNumber]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('checkout_prefill');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setPrefill({
+        name: parsed?.name || '',
+        phone: parsed?.phone || '',
+      });
+    } catch {
+      setPrefill({ name: '', phone: '' });
+    }
+  }, []);
 
   // Generate QR data URL
   useEffect(() => {
@@ -195,6 +211,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
         order_number: orderNumber || null,
         template_id: selectedTemplate.id,
         name,
+        contact_phone: contactPhone || null,
         signature: signature || name,
         qr_value: qrValue,
         picture: picture || null,
@@ -216,6 +233,7 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
       order_number: orderNumber || null,
       template_id: selectedTemplate.id,
       name,
+      contact_phone: contactPhone || null,
       signature: signature || name,
       qr_value: qrValue,
       picture: picture || null,
@@ -401,7 +419,17 @@ export default function PhysicalCardCustomizationModule({ orderNumber }) {
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={isRTL ? 'مثال: أحمد علي' : 'e.g. John Doe'}
+                placeholder={prefill.name || (isRTL ? 'مثال: أحمد علي' : 'e.g. John Doe')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{isRTL ? 'رقم الجوال (اختياري)' : 'Phone (Optional)'}</Label>
+              <Input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder={prefill.phone || (isRTL ? '+9665XXXXXXXX' : '+9665XXXXXXXX')}
+                dir="ltr"
               />
             </div>
 

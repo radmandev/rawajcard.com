@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/landing/Navbar';
 import {
@@ -39,43 +38,74 @@ import { useAuth } from '@/lib/AuthContext';
 const BANK_DETAILS = {
   bankName:    'البنك الأهلي السعودي',
   bankNameEn:  'Saudi National Bank (SNB)',
-  accountName: 'رواج كارد',
-  accountNameEn: 'Rawajcard',
-  iban:        'SA0000000000000000000000',   // ← replace with real IBAN
-  accountNo:   '0000000000',                 // ← replace with real account number
+    accountName: 'العلامة الثلاثية',
+    accountNameEn: 'Triple Mark',
+    iban:        'SA4310000001400005984607',
+    accountNo:   '01400005984607',
 };
 
 // ── Payment method options ───────────────────────────────────
 const PAYMENT_METHODS = [
   {
     id: 'stripe',
-    label: 'Credit / Debit Card',
-    labelAr: 'بطاقة ائتمان / خصم',
-    desc: 'Visa, Mastercard, Mada — secured by Stripe',
-    descAr: 'فيزا، ماستركارد، مدى — مؤمَّن بـ Stripe',
-    badge: 'Recommended',
-    badgeAr: 'موصى به',
+      label: 'Card',
+      labelAr: 'بطاقة',
     color: 'border-teal-500 bg-teal-50/60 dark:bg-teal-950/20',
   },
   {
     id: 'paypal',
     label: 'PayPal',
     labelAr: 'PayPal',
-    desc: 'Pay securely with your PayPal account',
-    descAr: 'ادفع بأمان عبر حساب PayPal',
-    badge: null,
     color: 'border-slate-200 dark:border-slate-700',
   },
   {
     id: 'bank_transfer',
-    label: 'Bank Transfer',
-    labelAr: 'تحويل بنكي',
-    desc: 'Transfer to our bank account and upload receipt',
-    descAr: 'حوّل للحساب البنكي وارفع إيصال التحويل',
-    badge: null,
+      label: 'Bank',
+      labelAr: 'تحويل',
     color: 'border-slate-200 dark:border-slate-700',
   },
 ];
+
+const COUNTRY_CODES = [
+  { code: 'SA', dial: '+966', flag: '🇸🇦', name: 'Saudi Arabia', nameAr: 'السعودية' },
+  { code: 'AE', dial: '+971', flag: '🇦🇪', name: 'UAE', nameAr: 'الإمارات' },
+  { code: 'KW', dial: '+965', flag: '🇰🇼', name: 'Kuwait', nameAr: 'الكويت' },
+  { code: 'QA', dial: '+974', flag: '🇶🇦', name: 'Qatar', nameAr: 'قطر' },
+  { code: 'BH', dial: '+973', flag: '🇧🇭', name: 'Bahrain', nameAr: 'البحرين' },
+  { code: 'OM', dial: '+968', flag: '🇴🇲', name: 'Oman', nameAr: 'عُمان' },
+  { code: 'EG', dial: '+20', flag: '🇪🇬', name: 'Egypt', nameAr: 'مصر' },
+];
+
+const SAUDI_CITIES = [
+  'Riyadh', 'Jeddah', 'Makkah', 'Madinah', 'Dammam', 'Khobar', 'Dhahran', 'Taif',
+  'Tabuk', 'Abha', 'Khamis Mushait', 'Najran', 'Jazan', 'Hail', 'Qassim', 'Buraidah',
+  'Al Ahsa', 'Jubail', 'Yanbu', 'Al Khafji',
+];
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+const normalizePhone = (countryCode, input) => {
+  let digits = String(input || '').replace(/\D/g, '');
+
+  if (countryCode === '+966') {
+    if (digits.startsWith('966')) digits = digits.slice(3);
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    const valid = /^5\d{8}$/.test(digits);
+    return {
+      valid,
+      formatted: valid ? `+966${digits}` : '',
+      local: digits,
+    };
+  }
+
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  const valid = digits.length >= 6 && digits.length <= 14;
+  return {
+    valid,
+    formatted: valid ? `${countryCode}${digits}` : '',
+    local: digits,
+  };
+};
 
 // ── Helpers ───────────────────────────────────────────────────
 async function uploadReceiptFile(file) {
@@ -102,11 +132,14 @@ export default function Checkout() {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const receiptRef = useRef(null);
+  const submitShippingRef = useRef(null);
   const { user } = useAuth();
 
   const [paymentMethod, setPaymentMethod] = useState('stripe');
+  const [countryCode, setCountryCode] = useState('+966');
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
+    email: '',
     phone: '',
     address: '',
     city: '',
@@ -158,7 +191,7 @@ export default function Checkout() {
     mutationFn: async () => {
       return await api.functions.invoke('createStripeOrderCheckout', {
         cartItems: normalizedCartItems,
-        shippingInfo,
+        shippingInfo: submitShippingRef.current || shippingInfo,
       });
     },
     onSuccess: (data) => {
@@ -182,13 +215,13 @@ export default function Checkout() {
     mutationFn: async () => {
       return await api.functions.invoke('createPayPalOrder', {
         amount: total,
-        orderData: { cartItems: normalizedCartItems, shippingInfo },
+        orderData: { cartItems: normalizedCartItems, shippingInfo: submitShippingRef.current || shippingInfo },
       });
     },
     onSuccess: (data) => {
       if (data?.approvalUrl) {
         localStorage.setItem('checkout_cart', JSON.stringify(cartItems));
-        localStorage.setItem('checkout_shipping', JSON.stringify(shippingInfo));
+        localStorage.setItem('checkout_shipping', JSON.stringify(submitShippingRef.current || shippingInfo));
         localStorage.setItem('checkout_total', total.toString());
         window.location.href = data.approvalUrl;
       } else {
@@ -220,7 +253,7 @@ export default function Checkout() {
           order_number: orderNumber,
           payment_method: 'bank_transfer',
           receipt_url: receiptUrl,
-          shippingInfo,
+          shippingInfo: submitShippingRef.current || shippingInfo,
           cartItems: normalizedCartItems,
         },
       });
@@ -233,7 +266,7 @@ export default function Checkout() {
     },
     onError: (err) => {
       setReceiptUploading(false);
-      const detail = err?.message || err?.details || '';
+      const detail = err?.message || ((err && typeof err === 'object' && 'details' in err) ? String(err.details || '') : '');
       toast.error(
         isRTL
           ? `فشل تقديم الطلب${detail ? ': ' + detail : ''}`
@@ -247,10 +280,40 @@ export default function Checkout() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city) {
+    if (!shippingInfo.name || !shippingInfo.email || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
+
+    if (!isValidEmail(shippingInfo.email)) {
+      toast.error(isRTL ? 'البريد الإلكتروني غير صالح' : 'Please enter a valid email address');
+      return;
+    }
+
+    const phone = normalizePhone(countryCode, shippingInfo.phone);
+    if (!phone.valid) {
+      toast.error(
+        countryCode === '+966'
+          ? (isRTL ? 'رقم السعودية غير صالح (مثال: 5XXXXXXXX)' : 'Invalid Saudi phone number (example: 5XXXXXXXX)')
+          : (isRTL ? 'رقم الهاتف غير صالح' : 'Invalid phone number')
+      );
+      return;
+    }
+
+    const finalShippingInfo = {
+      ...shippingInfo,
+      email: shippingInfo.email.trim(),
+      phone: phone.formatted,
+      country: 'Saudi Arabia',
+    };
+
+    localStorage.setItem('checkout_prefill', JSON.stringify({
+      name: finalShippingInfo.name,
+      phone: finalShippingInfo.phone,
+      email: finalShippingInfo.email,
+    }));
+    submitShippingRef.current = finalShippingInfo;
+
     if (paymentMethod === 'bank_transfer' && !receiptFile) {
       toast.error(isRTL ? 'يرجى رفع إيصال التحويل البنكي' : 'Please upload your bank transfer receipt');
       return;
@@ -304,10 +367,35 @@ export default function Checkout() {
                       <Input value={shippingInfo.name} onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })} required />
                     </div>
                     <div className="space-y-2">
-                      <Label>{isRTL ? 'رقم الهاتف' : 'Phone Number'} *</Label>
-                      <Input type="tel" value={shippingInfo.phone} onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })} required />
+                        <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'} *</Label>
+                        <Input type="email" value={shippingInfo.email} onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })} required />
                     </div>
                   </div>
+
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'رقم الهاتف' : 'Phone Number'} *</Label>
+                      <div className="flex gap-2">
+                        <select
+                          className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                        >
+                          {COUNTRY_CODES.map((c) => (
+                            <option key={c.code} value={c.dial}>
+                              {`${c.flag} ${c.dial}`}
+                            </option>
+                          ))}
+                        </select>
+                        <Input
+                          type="tel"
+                          value={shippingInfo.phone}
+                          onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                          placeholder={countryCode === '+966' ? '5XXXXXXXX' : 'Phone number'}
+                          required
+                        />
+                      </div>
+                    </div>
+
                   <div className="space-y-2">
                     <Label>{isRTL ? 'العنوان' : 'Address'} *</Label>
                     <Textarea value={shippingInfo.address} onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })} rows={2} required />
@@ -315,11 +403,14 @@ export default function Checkout() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>{isRTL ? 'المدينة' : 'City'} *</Label>
-                      <Input value={shippingInfo.city} onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })} required />
+                        <Input list="sa-cities" value={shippingInfo.city} onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })} placeholder={isRTL ? 'ابدأ بكتابة اسم المدينة' : 'Start typing city name'} required />
+                        <datalist id="sa-cities">
+                          {SAUDI_CITIES.map((city) => <option key={city} value={city} />)}
+                        </datalist>
                     </div>
                     <div className="space-y-2">
                       <Label>{isRTL ? 'البلد' : 'Country'}</Label>
-                      <Input value={shippingInfo.country} onChange={(e) => setShippingInfo({ ...shippingInfo, country: e.target.value })} />
+                        <Input value={isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia'} readOnly className="bg-slate-50 dark:bg-slate-800" />
                     </div>
                   </div>
                 </CardContent>
@@ -334,44 +425,31 @@ export default function Checkout() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
                   {PAYMENT_METHODS.map((method) => (
                     <motion.div
                       key={method.id}
                       whileTap={{ scale: 0.99 }}
                       onClick={() => setPaymentMethod(method.id)}
                       className={cn(
-                        'relative flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                        'relative flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 cursor-pointer transition-all duration-200 min-h-[54px]',
                         paymentMethod === method.id
                           ? method.color
                           : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                       )}
                     >
-                      {/* Radio */}
                       <div className={cn(
-                        'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                        'w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors',
                         paymentMethod === method.id ? 'border-teal-600 bg-teal-600' : 'border-slate-300 dark:border-slate-600'
                       )}>
-                        {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                        {paymentMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
-                      {/* Text */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                            {isRTL ? method.labelAr : method.label}
-                          </span>
-                          {method.badge && (
-                            <Badge className="bg-teal-600 text-white text-[10px] px-1.5 py-0 h-4">
-                              {isRTL ? method.badgeAr : method.badge}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          {isRTL ? method.descAr : method.desc}
-                        </p>
-                      </div>
+                      <span className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm whitespace-nowrap">
+                        {isRTL ? method.labelAr : method.label}
+                      </span>
                       {/* Logo */}
                       {method.id === 'stripe' && (
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-1">
                           <div className="h-6 px-2 bg-[#1a1f71] rounded flex items-center">
                             <span className="text-white text-[10px] font-black italic">VISA</span>
                           </div>
@@ -400,6 +478,7 @@ export default function Checkout() {
                       )}
                     </motion.div>
                   ))}
+                  </div>
 
                   {/* Stripe security note */}
                   <AnimatePresence>
@@ -438,10 +517,10 @@ export default function Checkout() {
                             </p>
 
                             {[
-                              { labelAr: 'اسم البنك',    labelEn: 'Bank Name',       value: isRTL ? BANK_DETAILS.bankName    : BANK_DETAILS.bankNameEn },
-                              { labelAr: 'اسم الحساب',   labelEn: 'Account Name',    value: isRTL ? BANK_DETAILS.accountName : BANK_DETAILS.accountNameEn },
-                              { labelAr: 'رقم الآيبان',  labelEn: 'IBAN',            value: BANK_DETAILS.iban },
-                              { labelAr: 'رقم الحساب',   labelEn: 'Account Number',  value: BANK_DETAILS.accountNo },
+                              { labelAr: 'البنك',             labelEn: 'Bank',              value: isRTL ? BANK_DETAILS.bankName    : BANK_DETAILS.bankNameEn },
+                              { labelAr: 'رقم الحساب البنكي', labelEn: 'Account Holder',    value: isRTL ? BANK_DETAILS.accountName : BANK_DETAILS.accountNameEn },
+                              { labelAr: 'رقم حساب',          labelEn: 'Account Number',    value: BANK_DETAILS.accountNo },
+                              { labelAr: 'آيبان',             labelEn: 'IBAN',              value: BANK_DETAILS.iban },
                             ].map((row, i) => (
                               <div key={i} className="flex items-center justify-between gap-3 bg-white dark:bg-slate-800 rounded-lg px-3 py-2">
                                 <div>
