@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { api } from '@/api/supabaseAPI';
 import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/components/shared/LanguageContext';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -270,17 +271,11 @@ function EditCardDialog({ card, digitalCards, isOpen, onClose, onSaved, isRTL })
 
 export default function PhysicalCards() {
   const { isRTL } = useLanguage();
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
   const [editCard, setEditCard] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [isClaiming, setIsClaiming] = useState(false);
-
-  // Fetch current user
-  const { data: user } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: () => api.auth.me(),
-    retry: false,
-  });
 
   // Fetch physical cards
   const { data: physicalCards = [], isLoading } = useQuery({
@@ -296,11 +291,10 @@ export default function PhysicalCards() {
   const { data: digitalCards = [] } = useQuery({
     queryKey: ['my-cards'],
     queryFn: async () => {
-      const me = await api.auth.me();
-      if (!me) return [];
-      return api.entities.BusinessCard.filter({ created_by: me.email });
+      if (!user?.email) return [];
+      return api.entities.BusinessCard.filter({ created_by: user.email });
     },
-    enabled: Boolean(user?.id),
+    enabled: Boolean(user?.id && user?.email),
   });
 
   // ── Claim pending cards from sessionStorage on mount / login ─────────────────
@@ -354,10 +348,30 @@ export default function PhysicalCards() {
     onError: () => toast.error(isRTL ? 'تعذر الحذف' : 'Delete failed'),
   });
 
-  if (isLoading || isClaiming) {
+  if (isLoadingAuth || isLoading || isClaiming) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user?.id) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+        <div className="h-14 w-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto">
+          <CreditCard className="h-7 w-7 text-slate-400" />
+        </div>
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
+            {isRTL ? 'جاري إكمال تسجيل الدخول...' : 'Completing your sign-in...'}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {isRTL
+              ? 'إذا لم يتم توجيهك تلقائياً، سجّل الدخول ثم ارجع إلى هذه الصفحة.'
+              : 'If you are not redirected automatically, sign in and return to this page.'}
+          </p>
+        </div>
       </div>
     );
   }
