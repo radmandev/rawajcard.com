@@ -163,9 +163,9 @@ export const createClient = () => {
     invoke: async (name, payload = {}) => {
       switch (name) {
         case 'createPayPalOrder':
-          return { id: 'mock_paypal_order', ...payload, status: 'CREATED' };
+          return { error: 'PayPal is temporarily disabled.' };
         case 'capturePayPalPayment':
-          return { id: 'mock_paypal_capture', status: 'COMPLETED' };
+          return { error: 'PayPal is temporarily disabled.' };
         case 'connectCRM':
         case 'testCRMConnection':
         case 'syncContactsToCRM':

@@ -670,7 +670,6 @@ export default function Checkout() {
                     className={cn(
                       'w-full font-bold text-white',
                       paymentMethod === 'stripe'       ? 'bg-teal-600 hover:bg-teal-700'
-                      : paymentMethod === 'paypal'     ? 'bg-[#003087] hover:bg-[#002070]'
                       :                                  'bg-green-700 hover:bg-green-800'
                     )}
                     size="lg"

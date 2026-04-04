@@ -16,31 +16,44 @@ Deno.serve(async (req: Request) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
 
     if (!supabaseUrl) return ok({ error: 'SUPABASE_URL is not configured.' });
     if (!serviceRoleKey) return ok({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured.' });
+    if (!supabaseAnonKey) return ok({ error: 'SUPABASE_ANON_KEY is not configured.' });
     if (!stripeSecretKey) return ok({ error: 'STRIPE_SECRET_KEY is not configured.' });
 
     const authHeader = req.headers.get('Authorization') ?? '';
     const hasBearer = authHeader.startsWith('Bearer ');
+    if (authHeader && !hasBearer) {
+      return ok({ error: 'Unauthorized: malformed Authorization header.' });
+    }
 
     let userId = '';
     let userEmail = '';
+    let hasValidatedAuth = false;
 
     if (hasBearer) {
-      try {
-        const jwt = authHeader.replace('Bearer ', '');
-        const parts = jwt.split('.');
-        if (parts.length !== 3) throw new Error('malformed');
-        const pad = (s: string) => s + '='.repeat((4 - s.length % 4) % 4);
-        const payload = JSON.parse(atob(pad(parts[1].replace(/-/g, '+').replace(/_/g, '/'))));
-        userId = payload.sub ?? '';
-        userEmail = payload.email ?? '';
-      } catch {
-        // Continue with Stripe-session metadata fallback below.
+      const jwt = authHeader.replace('Bearer ', '').trim();
+      if (!jwt) return ok({ error: 'Unauthorized: missing bearer token.' });
+
+      const authUserRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      if (!authUserRes.ok) {
+        return ok({ error: 'Unauthorized: invalid or expired session token.' });
       }
+
+      const authUser = await authUserRes.json() as Record<string, unknown>;
+      userId = String(authUser?.id || '');
+      userEmail = String(authUser?.email || '');
+      hasValidatedAuth = Boolean(userId);
     }
 
     let sessionId = '';
@@ -76,14 +89,38 @@ Deno.serve(async (req: Request) => {
     // Fallback identity source for post-checkout redirects where app session is missing.
     const metadataUserId = String(session?.metadata?.user_id || '');
     const metadataUserEmail = String(session?.metadata?.user_email || session?.customer_details?.email || '');
-    if (!userId && bodyUserId) userId = bodyUserId;
-    if (!userEmail && bodyUserEmail) userEmail = bodyUserEmail;
+
+    // Trust body-provided identity only when bearer auth was validated.
+    if (hasValidatedAuth) {
+      if (!userId && bodyUserId) userId = bodyUserId;
+      if (!userEmail && bodyUserEmail) userEmail = bodyUserEmail;
+    }
+
     if (!userId && metadataUserId) userId = metadataUserId;
     if (!userEmail && metadataUserEmail) userEmail = metadataUserEmail;
+
+    // Prevent mismatches when we have a validated logged-in user.
+    if (hasValidatedAuth) {
+      const safeLower = (v: string) => String(v || '').trim().toLowerCase();
+      if (metadataUserId && userId && metadataUserId !== userId) {
+        return ok({ error: 'User mismatch: session metadata user_id does not match authenticated user.' });
+      }
+      if (metadataUserEmail && userEmail && safeLower(metadataUserEmail) !== safeLower(userEmail)) {
+        return ok({ error: 'User mismatch: session metadata user_email does not match authenticated user.' });
+      }
+    }
 
     if (!userId && !userEmail) {
       return ok({
         error: 'Unable to resolve user for this checkout session. Ensure createStripeCheckout sets metadata.user_id/user_email.'
+      });
+    }
+
+    // Some live schemas enforce subscriptions.user_id NOT NULL.
+    // Fail early with a clear message instead of a generic Postgres constraint error.
+    if (!userId) {
+      return ok({
+        error: 'Unable to resolve user_id for this checkout session. Ensure createStripeCheckout sets metadata.user_id.'
       });
     }
 
@@ -125,7 +162,9 @@ Deno.serve(async (req: Request) => {
 
     const subData = {
       plan,
+      plan_type: plan,
       status: isTrialing ? 'trialing' : 'active',
+      user_id: userId || null,
       created_by: userEmail || null,
       created_by_user_id: userId || null,
       metadata: {
@@ -159,6 +198,7 @@ Deno.serve(async (req: Request) => {
         headers: restHeaders,
         body: JSON.stringify({
           ...subData,
+          user_id: userId || null,
           created_by: userEmail || null,
           created_by_user_id: userId || null,
         }),

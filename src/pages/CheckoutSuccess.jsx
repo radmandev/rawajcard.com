@@ -47,8 +47,8 @@ export default function CheckoutSuccess() {
       clearCart();
       confirmStripeStoreOrder(stripeSessionId);
     } else if (paypalOrderId && !order) {
-      clearCart();
-      capturePayPalPayment(paypalOrderId);
+      toast.error(isRTL ? 'الدفع عبر PayPal متوقف مؤقتاً' : 'PayPal is temporarily unavailable');
+      navigate(createPageUrl('Checkout'));
     } else if (order) {
       setOrderNumber(order);
       setSuccessType('order');
@@ -112,42 +112,6 @@ export default function CheckoutSuccess() {
       setOrderNumber('RWJ-' + Date.now().toString(36).toUpperCase());
       setSuccessType('order');
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const capturePayPalPayment = async (paypalOrderId) => {
-    setIsProcessing(true);
-    try {
-      // Get cart items and shipping info from localStorage (you may want to pass this differently)
-      const cartItemsStr = localStorage.getItem('checkout_cart');
-      const shippingInfoStr = localStorage.getItem('checkout_shipping');
-      const totalSAR = localStorage.getItem('checkout_total');
-      
-      if (!cartItemsStr || !shippingInfoStr) {
-        throw new Error('Missing order data');
-      }
-
-      const response = await api.functions.invoke('capturePayPalPayment', {
-        orderId: paypalOrderId,
-        cartItems: JSON.parse(cartItemsStr),
-        shippingInfo: JSON.parse(shippingInfoStr),
-        totalSAR: parseFloat(totalSAR),
-        createdBy: JSON.parse(shippingInfoStr)?.email || null,
-      });
-
-      if (response?.success) {
-        setOrderNumber(response.order_number);
-        setSuccessType('order');
-        // Clear localStorage
-        localStorage.removeItem('checkout_cart');
-        localStorage.removeItem('checkout_shipping');
-        localStorage.removeItem('checkout_total');
-      }
-    } catch (error) {
-      console.error('Payment capture error:', error);
-      navigate(createPageUrl('Checkout'));
     } finally {
       setIsProcessing(false);
     }

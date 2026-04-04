@@ -405,20 +405,23 @@ export const api = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // Guests use the anon key as Bearer; authenticated users use their JWT
-      const authToken = token || supabaseAnonKey;
-
-      const callFunction = async (jwt) => fetch(`${supabaseUrl}/functions/v1/${name}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`,
+      const callFunction = async (jwt = null) => {
+        const headers = {
           'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify(payload),
-      });
+        };
 
-      let res = await callFunction(authToken);
+        if (jwt) {
+          headers.Authorization = `Bearer ${jwt}`;
+        }
+
+        return fetch(`${supabaseUrl}/functions/v1/${name}`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+      };
+
+      let res = await callFunction(token);
 
       // Retry once with forced refresh only if we had a real token and got 401
       if (res.status === 401 && token) {
