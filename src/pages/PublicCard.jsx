@@ -152,6 +152,9 @@ export default function PublicCard() {
     onShareDetails: () => setShowContactForm(true)
   };
 
+  const shouldRenderExternalContactForm =
+    !!card?.contact_form?.enabled && card?.contact_form?.form_type !== 'inline';
+
   return (
     <div className={cn("min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4", isRTL && "rtl")}>
       {/* Mobile-sized Container */}
@@ -203,9 +206,11 @@ export default function PublicCard() {
         cardUrl={window.location.href}
       />
 
-      <Suspense fallback={null}>
-        <ContactCollectionForm card={card} isRTL={isRTL} />
-      </Suspense>
+      {shouldRenderExternalContactForm && (
+        <Suspense fallback={null}>
+          <ContactCollectionForm card={card} isRTL={isRTL} />
+        </Suspense>
+      )}
     </div>
   );
 }

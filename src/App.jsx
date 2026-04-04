@@ -59,13 +59,29 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+const TrackQRScanRedirect = () => {
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  const params = new URLSearchParams(search);
+  const slug = params.get('slug');
+
+  if (typeof window !== 'undefined') {
+    if (slug) {
+      window.location.replace(`/c/${encodeURIComponent(slug)}?source=qr`);
+    } else {
+      window.location.replace('/');
+    }
+  }
+
+  return null;
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
     '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards',
-    '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments'
+    '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
   ].includes(location.pathname) || location.pathname.startsWith('/c/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
@@ -113,6 +129,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/c/:slug" element={<PublicCard />} />
+        <Route path="/trackQRScan" element={<TrackQRScanRedirect />} />
         <Route path="/" element={
           <LayoutWrapper currentPageName="TestLanding">
             <TestLandingPage />
