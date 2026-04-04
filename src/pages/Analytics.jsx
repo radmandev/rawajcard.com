@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
@@ -9,6 +9,7 @@ import { useUpgrade } from '@/lib/UpgradeContext';
 import CustomizationRequestDialog from '@/components/shared/CustomizationRequestDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { 
   Select, 
   SelectContent, 
@@ -27,7 +28,7 @@ import {
   Lock,
   Sparkles
 } from 'lucide-react';
-import { format, subDays, startOfWeek, startOfMonth, isAfter } from 'date-fns';
+import { format, subDays, startOfWeek } from 'date-fns';
 import { motion } from 'framer-motion';
 
 export default function Analytics() {
@@ -37,6 +38,9 @@ export default function Analytics() {
 
   const [selectedCard, setSelectedCard] = useState(preselectedCard || 'all');
   const [timeRange, setTimeRange] = useState('week');
+  const [qrMetricMode, setQrMetricMode] = useState('total'); // total | unique
+  const [qrGroupBy, setQrGroupBy] = useState('day'); // day | week
+  const [excludeBots, setExcludeBots] = useState(true);
   const { openUpgradeDialog } = useUpgrade();
   const [showRequestDialog, setShowRequestDialog] = useState(false);
 
@@ -49,6 +53,45 @@ export default function Analytics() {
   });
 
   const isPremium = subscription?.plan === 'premium';
+
+  const getEventDateValue = (row) => row?.created_at || row?.created_date || null;
+  const getEventDate = (row) => {
+    const raw = getEventDateValue(row);
+    if (!raw) return null;
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const isBotEvent = (row) => {
+    const ua = (row?.user_agent || '').toLowerCase();
+    if (!ua) return false;
+    return /(bot|spider|crawl|slurp|preview|whatsapp|telegram|facebookexternalhit|headless)/.test(ua);
+  };
+
+  const getReferrerHost = (row) => {
+    const ref = row?.referrer;
+    if (!ref) return isRTL ? 'مباشر' : 'Direct';
+    try {
+      return new URL(ref).hostname.replace(/^www\./, '');
+    } catch {
+      return isRTL ? 'غير معروف' : 'Unknown';
+    }
+  };
+
+  const getDeviceType = (row) => {
+    const ua = (row?.user_agent || '').toLowerCase();
+    if (!ua) return isRTL ? 'غير معروف' : 'Unknown';
+    if (/tablet|ipad/.test(ua)) return isRTL ? 'تابلت' : 'Tablet';
+    if (/mobile|iphone|android/.test(ua)) return isRTL ? 'جوال' : 'Mobile';
+    return isRTL ? 'كمبيوتر' : 'Desktop';
+  };
+
+  const getVisitorKey = (row) => {
+    if (row?.visitor_id) return row.visitor_id;
+    const ua = row?.user_agent || '';
+    const ref = row?.referrer || '';
+    return ua || ref ? `anon:${ua}|${ref}` : null;
+  };
 
   // Fetch user's cards
   const { data: cards = [] } = useQuery({
@@ -64,7 +107,12 @@ export default function Analytics() {
     queryKey: ['analytics-views'],
     queryFn: async () => {
       const me = await api.auth.me();
-      return api.entities.CardView.filter({ card_owner: me.email }, '-created_date');
+      const rows = await api.entities.CardView.filter({ card_owner: me.email });
+      return [...rows].sort((a, b) => {
+        const ad = getEventDate(a)?.getTime() || 0;
+        const bd = getEventDate(b)?.getTime() || 0;
+        return bd - ad;
+      });
     }
   });
 
@@ -92,29 +140,39 @@ export default function Analytics() {
     }
 
     if (startDate) {
-      views = views.filter(v => v.created_date && isAfter(new Date(v.created_date), startDate));
+      views = views.filter(v => {
+        const d = getEventDate(v);
+        return d ? d >= startDate : false;
+      });
     }
 
     return views;
   };
 
   const filteredViews = getFilteredViews();
+  const cleanViews = useMemo(
+    () => (excludeBots ? filteredViews.filter((v) => !isBotEvent(v)) : filteredViews),
+    [filteredViews, excludeBots]
+  );
 
   // Calculate stats
-  const pageViews = filteredViews.filter(v => v.view_type === 'page_view');
-  const qrScans = filteredViews.filter(v => v.view_type === 'qr_scan');
-  const linkClicks = filteredViews.filter(v => v.view_type === 'link_click');
-  const uniqueVisitors = new Set(filteredViews.map(v => v.visitor_id)).size;
+  const pageViews = cleanViews.filter(v => v.view_type === 'page_view');
+  const qrScans = cleanViews.filter(v => v.view_type === 'qr_scan');
+  const linkClicks = cleanViews.filter(v => v.view_type === 'link_click');
+  const uniqueVisitors = new Set(cleanViews.map(getVisitorKey).filter(Boolean)).size;
+  const uniqueQrScans = new Set(qrScans.map(getVisitorKey).filter(Boolean)).size;
+  const scanRate = pageViews.length > 0 ? Math.round((qrScans.length / pageViews.length) * 100) : 0;
 
   // Prepare chart data
   const getChartData = (viewType) => {
     const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90;
-    return Array.from({ length: Math.min(days, 14) }, (_, i) => {
+    return Array.from({ length: days }, (_, i) => {
       const date = subDays(new Date(), days - 1 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      const dayViews = filteredViews.filter(v => {
+      const dayViews = cleanViews.filter(v => {
         const isViewType = viewType === 'all' || v.view_type === viewType;
-        return isViewType && v.created_date?.startsWith(dateStr);
+        const eventDate = getEventDate(v);
+        return isViewType && eventDate && format(eventDate, 'yyyy-MM-dd') === dateStr;
       }).length;
       return {
         date: format(date, 'MMM dd'),
@@ -122,6 +180,66 @@ export default function Analytics() {
       };
     });
   };
+
+  const getQrTimelineData = () => {
+    if (qrGroupBy === 'week') {
+      const weeks = timeRange === 'week' ? 2 : timeRange === 'month' ? 6 : 12;
+      return Array.from({ length: weeks }, (_, i) => {
+        const current = subDays(new Date(), (weeks - 1 - i) * 7);
+        const bucketStart = startOfWeek(current, { weekStartsOn: 1 });
+        const bucketKey = format(bucketStart, 'yyyy-MM-dd');
+        const bucket = qrScans.filter((v) => {
+          const d = getEventDate(v);
+          return d && format(startOfWeek(d, { weekStartsOn: 1 }), 'yyyy-MM-dd') === bucketKey;
+        });
+
+        const value = qrMetricMode === 'unique'
+          ? new Set(bucket.map(getVisitorKey).filter(Boolean)).size
+          : bucket.length;
+
+        return {
+          date: format(bucketStart, 'MMM dd'),
+          value,
+        };
+      });
+    }
+
+    const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90;
+    return Array.from({ length: days }, (_, i) => {
+      const date = subDays(new Date(), days - 1 - i);
+      const key = format(date, 'yyyy-MM-dd');
+      const bucket = qrScans.filter((v) => {
+        const d = getEventDate(v);
+        return d && format(d, 'yyyy-MM-dd') === key;
+      });
+      const value = qrMetricMode === 'unique'
+        ? new Set(bucket.map(getVisitorKey).filter(Boolean)).size
+        : bucket.length;
+
+      return {
+        date: format(date, 'MMM dd'),
+        value,
+      };
+    });
+  };
+
+  const topReferrers = useMemo(() => {
+    const map = {};
+    qrScans.forEach((scan) => {
+      const key = getReferrerHost(scan);
+      map[key] = (map[key] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  }, [qrScans]);
+
+  const topDevices = useMemo(() => {
+    const map = {};
+    qrScans.forEach((scan) => {
+      const key = getDeviceType(scan);
+      map[key] = (map[key] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }, [qrScans]);
 
   // Click breakdown
   const getClickBreakdown = () => {
@@ -132,6 +250,44 @@ export default function Analytics() {
     });
     return Object.entries(breakdown)
       .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  };
+
+  const getCardPerformance = () => {
+    const byCard = {};
+
+    filteredViews.forEach((event) => {
+      const id = event.card_id;
+      if (!id) return;
+      if (!byCard[id]) {
+        byCard[id] = {
+          card_id: id,
+          pageViews: 0,
+          qrScans: 0,
+          clicks: 0,
+          uniqueVisitorSet: new Set(),
+        };
+      }
+
+      if (event.view_type === 'page_view') byCard[id].pageViews += 1;
+      if (event.view_type === 'qr_scan') byCard[id].qrScans += 1;
+      if (event.view_type === 'link_click') byCard[id].clicks += 1;
+
+      const visitorKey = getVisitorKey(event);
+      if (visitorKey) byCard[id].uniqueVisitorSet.add(visitorKey);
+    });
+
+    return Object.values(byCard)
+      .map((row) => {
+        const cardMeta = cards.find((c) => c.id === row.card_id) || {};
+        return {
+          ...cardMeta,
+          ...row,
+          uniqueVisitors: row.uniqueVisitorSet.size,
+          totalEngagement: row.pageViews + row.qrScans + row.clicks,
+        };
+      })
+      .sort((a, b) => b.totalEngagement - a.totalEngagement)
       .slice(0, 5);
   };
 
@@ -192,6 +348,50 @@ export default function Analytics() {
         </div>
       </div>
 
+      {/* Advanced QR Settings */}
+      <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+        <CardHeader>
+          <CardTitle className="text-base">{isRTL ? 'إعدادات تحليل QR المتقدمة' : 'Advanced QR Analytics Settings'}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm mb-2 text-slate-500 dark:text-slate-400">{isRTL ? 'نوع القياس' : 'Metric Type'}</p>
+            <Select value={qrMetricMode} onValueChange={setQrMetricMode}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="total">{isRTL ? 'إجمالي المسح' : 'Total Scans'}</SelectItem>
+                <SelectItem value="unique">{isRTL ? 'مسح فريد' : 'Unique Scans'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <p className="text-sm mb-2 text-slate-500 dark:text-slate-400">{isRTL ? 'تجميع الخط الزمني' : 'Timeline Grouping'}</p>
+            <Select value={qrGroupBy} onValueChange={setQrGroupBy}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">{isRTL ? 'يومي' : 'Daily'}</SelectItem>
+                <SelectItem value="week">{isRTL ? 'أسبوعي' : 'Weekly'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-end">
+            <div className="flex items-center justify-between w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium">{isRTL ? 'استبعاد البوتات' : 'Exclude Bots'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{isRTL ? 'تنقية الزيارات غير البشرية' : 'Filter non-human scans'}</p>
+              </div>
+              <Switch checked={excludeBots} onCheckedChange={setExcludeBots} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
@@ -203,7 +403,7 @@ export default function Analytics() {
         />
         <StatsCard
           title={t('scans')}
-          value={qrScans.length}
+          value={qrMetricMode === 'unique' ? uniqueQrScans : qrScans.length}
           icon={QrCode}
           gradient="bg-gradient-to-br from-purple-500 to-purple-600"
           delay={0.2}
@@ -222,6 +422,61 @@ export default function Analytics() {
           gradient="bg-gradient-to-br from-teal-500 to-teal-600"
           delay={0.4}
         />
+      </div>
+
+      {/* QR Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+          <CardHeader>
+            <CardTitle>{isRTL ? 'أعلى مصادر المسح' : 'Top Scan Referrers'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {topReferrers.length === 0 ? (
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{isRTL ? 'لا توجد بيانات بعد' : 'No data yet'}</p>
+            ) : topReferrers.map(([source, count]) => (
+              <div key={source} className="flex items-center justify-between text-sm">
+                <span className="text-slate-700 dark:text-slate-300 truncate max-w-[70%]">{source}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{count}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+          <CardHeader>
+            <CardTitle>{isRTL ? 'الأجهزة' : 'Scan Devices'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {topDevices.length === 0 ? (
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{isRTL ? 'لا توجد بيانات بعد' : 'No data yet'}</p>
+            ) : topDevices.map(([device, count]) => (
+              <div key={device} className="flex items-center justify-between text-sm">
+                <span className="text-slate-700 dark:text-slate-300">{device}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{count}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+          <CardHeader>
+            <CardTitle>{isRTL ? 'مؤشرات QR' : 'QR KPIs'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-600 dark:text-slate-400">{isRTL ? 'إجمالي المسح' : 'Total Scans'}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{qrScans.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-600 dark:text-slate-400">{isRTL ? 'المسح الفريد' : 'Unique Scans'}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{uniqueQrScans}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-600 dark:text-slate-400">{isRTL ? 'معدل المسح/المشاهدة' : 'Scan/View Rate'}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{scanRate}%</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts */}
@@ -289,7 +544,7 @@ export default function Analytics() {
                   data={!isPremium ? Array.from({ length: 7 }, (_, i) => ({
                     date: format(subDays(new Date(), 6 - i), 'MMM dd'),
                     value: Math.floor(Math.random() * 15) + 3
-                  })) : getChartData('qr_scan')} 
+                  })) : getQrTimelineData()} 
                   color="#8B5CF6" 
                   type="bar"
                 />
@@ -420,15 +675,16 @@ export default function Analytics() {
                 </div>
               )}
               <div className={cn(!isPremium && "blur-sm opacity-50", "space-y-4")}>
-                {(!isPremium ? ['Business Card', 'Personal Card', 'Portfolio'] : cards
-                  .sort((a, b) => (b.view_count || 0) - (a.view_count || 0)))
-                  .slice(0, 3)
+                {(!isPremium ? ['Business Card', 'Personal Card', 'Portfolio'] : getCardPerformance())
+                  .slice(0, 5)
                   .map((card, index) => {
                     const mockCard = typeof card === 'string' ? {
                       name: card,
                       status: 'published',
-                      view_count: Math.floor(Math.random() * 100) + 20,
-                      scan_count: Math.floor(Math.random() * 50) + 10
+                      pageViews: Math.floor(Math.random() * 100) + 20,
+                      qrScans: Math.floor(Math.random() * 50) + 10,
+                      clicks: Math.floor(Math.random() * 30) + 6,
+                      uniqueVisitors: Math.floor(Math.random() * 70) + 12,
                     } : card;
                     
                     return (
@@ -453,12 +709,20 @@ export default function Analytics() {
                         </div>
                         <div className="flex items-center gap-6 text-sm">
                           <div className="text-center">
-                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.view_count || 0}</p>
-                            <p className="text-slate-500 dark:text-slate-400">{t('views')}</p>
+                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.pageViews || 0}</p>
+                            <p className="text-slate-500 dark:text-slate-400">{isRTL ? 'مشاهدات' : 'Views'}</p>
                           </div>
                           <div className="text-center">
-                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.scan_count || 0}</p>
-                            <p className="text-slate-500 dark:text-slate-400">{t('scans')}</p>
+                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.qrScans || 0}</p>
+                            <p className="text-slate-500 dark:text-slate-400">{isRTL ? 'مسح QR' : 'QR'}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.clicks || 0}</p>
+                            <p className="text-slate-500 dark:text-slate-400">{isRTL ? 'نقرات' : 'Clicks'}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-bold text-slate-900 dark:text-white">{mockCard.uniqueVisitors || 0}</p>
+                            <p className="text-slate-500 dark:text-slate-400">{isRTL ? 'فريدون' : 'Unique'}</p>
                           </div>
                         </div>
                       </div>

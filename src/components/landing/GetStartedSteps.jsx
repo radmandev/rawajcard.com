@@ -19,9 +19,9 @@ const translations = {
       {
         step: 2,
         title: "Set Up Your Profile",
-        description: "Use our free Rawajcard app to add your contact info, links, and pitch.",
+        description: "Use our free Rawajcard platform to add your contact info, links, and pitch. Soon (available as mobile app).",
         icon: Settings,
-        cta: "Download App",
+        cta: "Get Started",
         image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F8a488a50cf0dba91666dac8c51a3c192c04b0744c6c07f7a4d2e5ff28a014b45.png&w=1080&q=75"
       },
       {
@@ -57,9 +57,9 @@ const translations = {
       {
         step: 2,
         title: "أعد ملفك الشخصي",
-        description: "استخدم تطبيق روائج كارد المجاني لإضافة معلومات الاتصال والروابط والعرض التقديمي.",
+        description: "استخدم منصة روائج كارد المجانية لإضافة معلومات الاتصال والروابط والعرض التقديمي. قريباً (متاح كتطبيق جوال).",
         icon: Settings,
-        cta: "تنزيل التطبيق",
+        cta: "ابدأ الآن",
         image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F8a488a50cf0dba91666dac8c51a3c192c04b0744c6c07f7a4d2e5ff28a014b45.png&w=1080&q=75"
       },
       {

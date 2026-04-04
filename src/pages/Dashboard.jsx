@@ -19,7 +19,11 @@ import {
   ArrowLeft,
   Sparkles,
   Clock,
-  Lock
+  Lock,
+  Store,
+  Users,
+  BarChart3,
+  Settings
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -120,6 +124,15 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date))
     .slice(0, 3);
 
+  const quickActions = [
+    { key: 'create', icon: Plus, label: t('createCard'), path: createPageUrl('CardBuilder'), color: 'from-teal-500 to-teal-600' },
+    { key: 'cards', icon: CreditCard, label: t('myCards'), path: createPageUrl('MyCards'), color: 'from-blue-500 to-blue-600' },
+    { key: 'contacts', icon: Users, label: t('myContacts'), path: createPageUrl('MyContacts'), color: 'from-purple-500 to-purple-600' },
+    { key: 'analytics', icon: BarChart3, label: t('analytics'), path: createPageUrl('Analytics'), color: 'from-indigo-500 to-indigo-600' },
+    { key: 'store', icon: Store, label: t('store'), path: createPageUrl('Store'), color: 'from-pink-500 to-pink-600' },
+    { key: 'settings', icon: Settings, label: t('settings'), path: createPageUrl('Settings'), color: 'from-slate-500 to-slate-600' },
+  ];
+
   return (
     <div 
       className="max-w-7xl mx-auto space-y-8"
@@ -179,6 +192,33 @@ export default function Dashboard() {
           </Link>
         </div>
       </motion.div>
+
+      {/* Quick Actions Slider */}
+      <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+        <CardHeader className="pb-3">
+          <CardTitle>{t('quickActions')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
+            {quickActions.map((item) => (
+              <Link
+                key={item.key}
+                to={item.path}
+                className="snap-start min-w-[128px]"
+              >
+                <div className="h-full rounded-2xl border border-slate-200 dark:border-slate-700 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-3`}>
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-tight">
+                    {item.label}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -330,48 +370,6 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="bg-white dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
-        <CardHeader>
-          <CardTitle>{t('quickActions')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link to={createPageUrl('CardBuilder')}>
-              <Button variant="outline" className="w-full h-auto py-6 flex flex-col items-center gap-2">
-                <div className="p-3 rounded-full bg-teal-100 dark:bg-teal-900/30">
-                  <Plus className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-                </div>
-                <span>{t('createCard')}</span>
-              </Button>
-            </Link>
-            <Link to={createPageUrl('MyCards')}>
-              <Button variant="outline" className="w-full h-auto py-6 flex flex-col items-center gap-2">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                  <CreditCard className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{t('myCards')}</span>
-              </Button>
-            </Link>
-            <Link to={createPageUrl('Analytics')}>
-              <Button variant="outline" className="w-full h-auto py-6 flex flex-col items-center gap-2">
-                <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                  <Eye className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <span>{t('analytics')}</span>
-              </Button>
-            </Link>
-            <Link to={createPageUrl('Store')}>
-              <Button variant="outline" className="w-full h-auto py-6 flex flex-col items-center gap-2">
-                <div className="p-3 rounded-full bg-pink-100 dark:bg-pink-900/30">
-                  <Sparkles className="h-6 w-6 text-pink-600 dark:text-pink-400" />
-                </div>
-                <span>{t('store')}</span>
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

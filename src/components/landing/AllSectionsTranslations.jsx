@@ -308,8 +308,8 @@ export const getStartedStepsTranslations = {
       {
         step: 2,
         title: "Set Up Your Profile",
-        description: "Use our free Rawajcard app to add your contact info, links, and pitch.",
-        cta: "Download App"
+        description: "Use our free Rawajcard platform to add your contact info, links, and pitch. Soon (available as mobile app).",
+        cta: "Get Started"
       },
       {
         step: 3,
@@ -332,8 +332,8 @@ export const getStartedStepsTranslations = {
       {
         step: 2,
         title: "أعد ملفك الشخصي",
-        description: "استخدم تطبيق روائج كارد المجاني لإضافة معلومات الاتصال والروابط والعرض التقديمي.",
-        cta: "تنزيل التطبيق"
+        description: "استخدم منصة روائج كارد المجانية لإضافة معلومات الاتصال والروابط والعرض التقديمي. قريباً (متاح كتطبيق جوال).",
+        cta: "ابدأ الآن"
       },
       {
         step: 3,

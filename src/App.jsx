@@ -64,7 +64,8 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards'
+    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards',
+    '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments'
   ].includes(location.pathname) || location.pathname.startsWith('/c/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
@@ -119,6 +120,9 @@ const AuthenticatedApp = () => {
         } />
         <Route path="/Home" element={<Navigate to="/" replace />} />
         <Route path="/PhysicalCards" element={<Navigate to={createPageUrl('MyOrders')} replace />} />
+        <Route path="/returns" element={<Navigate to={createPageUrl('Return')} replace />} />
+        <Route path="/privacy-policy" element={<Navigate to={createPageUrl('PrivacyPolicy')} replace />} />
+        <Route path="/payments" element={<Navigate to={createPageUrl('Payments')} replace />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}

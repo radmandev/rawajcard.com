@@ -68,7 +68,7 @@ export default function WhatsAppButton() {
         <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
       )}
 
-      <div className={`fixed bottom-6 z-50 flex flex-col gap-3 ${isRTL ? 'left-6 items-start' : 'right-6 items-end'}`}>
+      <div className={`fixed bottom-24 md:bottom-6 z-50 flex flex-col gap-3 ${isRTL ? 'left-6 items-start' : 'right-6 items-end'}`}>
 
         {/* Dialog card */}
         {open && (

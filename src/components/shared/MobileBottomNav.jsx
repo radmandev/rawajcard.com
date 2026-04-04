@@ -6,7 +6,7 @@ import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LayoutDashboard, CreditCard, Store, Users, LogOut, Wifi } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Store, Users, LogOut } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const location = useLocation();
@@ -58,12 +58,6 @@ export default function MobileBottomNav() {
       icon: Users, 
       label: t('myContacts'),
       path: createPageUrl('MyContacts')
-    },
-    {
-      key: 'myOrders',
-      icon: Wifi,
-      label: t('myOrders'),
-      path: createPageUrl('MyOrders')
     }
   ];
 
@@ -79,7 +73,7 @@ export default function MobileBottomNav() {
     >
       <div className="flex items-center justify-around">
         {navItems.map(({ key, icon: Icon, label, path }) => {
-          if (hasNoCards && key !== 'store' && key !== 'myOrders') {
+          if (hasNoCards && key !== 'store') {
             return (
               <button
                 key={key}

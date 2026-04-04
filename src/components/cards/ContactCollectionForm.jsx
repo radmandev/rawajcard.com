@@ -54,7 +54,11 @@ export default function ContactCollectionForm({ card, isRTL }) {
       findValue((f) => /message|notes|comment|ملاحظة|رسالة/i.test(f.label || '')) ||
       '';
 
-    return { name, email, phone, message };
+    const company =
+      findValue((f) => /company|organization|business|شركة|مؤسسة/i.test(f.label || '')) ||
+      '';
+
+    return { name, email, phone, message, company };
   };
 
   useEffect(() => {
@@ -100,7 +104,7 @@ export default function ContactCollectionForm({ card, isRTL }) {
     try {
       // Map dynamic form fields to Supabase contact_submissions schema
       const mapped = extractMappedFields();
-      const submission = {
+      const submissionV2 = {
         card_id: card.id,
         card_owner: card.created_by || '',
         name: mapped.name,
@@ -110,7 +114,22 @@ export default function ContactCollectionForm({ card, isRTL }) {
         data: formData
       };
 
-      const createdSubmission = await api.entities.ContactSubmission.create(submission);
+      let createdSubmission;
+      try {
+        createdSubmission = await api.entities.ContactSubmission.create(submissionV2);
+      } catch (insertError) {
+        const submissionLegacy = {
+          card_id: card.id,
+          card_owner: card.created_by || '',
+          visitor_name: mapped.name,
+          visitor_email: mapped.email,
+          visitor_phone: mapped.phone,
+          visitor_company: mapped.company,
+          notes: mapped.message,
+          data: formData
+        };
+        createdSubmission = await api.entities.ContactSubmission.create(submissionLegacy);
+      }
       
       // Send to CRM webhook if configured
       try {
