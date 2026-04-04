@@ -108,7 +108,7 @@ Deno.serve(async (req: Request) => {
       return ok({ error: `Invalid plan "${plan}". Must be "premium", "teams", or "enterprise".` });
     }
 
-    // Admin-controlled early-bird offer: 1-year Premium trial for new users.
+    // Admin-controlled early-bird offer with enforced 90-day Premium trial.
     let applyEarlyBirdTrial = false;
     let earlyBirdTrialDays = 90;
     if (serviceRoleKey) {
@@ -126,7 +126,8 @@ Deno.serve(async (req: Request) => {
         const settingRows = await settingRes.json() as Array<{ value?: Record<string, unknown> }>;
         const settingValue = Array.isArray(settingRows) ? (settingRows[0]?.value || {}) : {};
         const offerEnabled = Boolean(settingValue?.enabled);
-        const premiumTrialDays = Math.max(1, Number(settingValue?.trial_days ?? 90));
+        // Safety guard: premium trial must always be 90 days for Stripe checkout.
+        const premiumTrialDays = 90;
         const teamsTrialDays = Math.max(1, Number(settingValue?.teams_trial_days ?? 14));
         const enterpriseTrialDays = Math.max(1, Number(settingValue?.enterprise_trial_days ?? 14));
 
@@ -166,6 +167,10 @@ Deno.serve(async (req: Request) => {
     params.set('line_items[0][quantity]', '1');
     if (applyEarlyBirdTrial) {
       params.set('subscription_data[trial_period_days]', String(earlyBirdTrialDays));
+    } else {
+      // Force no trial when user is not eligible.
+      // This also overrides any trial configured directly on the Stripe Price.
+      params.set('subscription_data[trial_end]', 'now');
     }
     params.set('success_url', `${origin}/CheckoutSuccess?stripe_subscription=true&plan=${plan}&session_id={CHECKOUT_SESSION_ID}`);
     params.set('cancel_url', `${origin}/Upgrade`);
@@ -179,6 +184,8 @@ Deno.serve(async (req: Request) => {
     if (applyEarlyBirdTrial) {
       params.set('metadata[early_bird_offer]', 'true');
       params.set('metadata[trial_days]', String(earlyBirdTrialDays));
+    } else {
+      params.set('metadata[trial_days]', '0');
     }
     params.set('allow_promotion_codes', 'true');
 

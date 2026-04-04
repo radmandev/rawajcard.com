@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -20,7 +19,6 @@ import {
   Database,
   UsersRound,
   Sparkles,
-  Lock,
   Wifi
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,24 +78,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const isAdmin = user?.role === 'admin';
   const isPremium = subscription?.plan === 'premium';
 
-  const { data: cards = [] } = useQuery({
-    queryKey: ['cards'],
-    queryFn: async () => {
-      const me = await api.auth.me();
-      return api.entities.BusinessCard.filter({ created_by: me.email });
-    }
-  });
-
-  const hasNoCards = cards.filter(c => c.status === 'published').length === 0;
-
-  const handleLockedClick = () => {
-    toast.error(
-      isRTL
-        ? 'أنشئ بطاقة واحدة على الأقل لعرض الميزات الأخرى'
-        : 'Create at least one card to view other features'
-    );
-  };
-
   const isActive = (page) => {
     return location.pathname.includes(page);
   };
@@ -146,29 +126,18 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
           {navItems.map((item) => {
             const targetPage = isAdmin && item.key === 'dashboard' ? 'Admin' : item.page;
-            const isLocked = !isAdmin && hasNoCards && !['CardBuilder', 'Store', 'MyOrders'].includes(item.page);
             const itemClass = cn(
               "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-              isLocked
-                ? "opacity-40 cursor-not-allowed"
-                : "hover:bg-slate-100 dark:hover:bg-slate-800",
-              !isLocked && isActive(targetPage) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
+              "hover:bg-slate-100 dark:hover:bg-slate-800",
+              isActive(targetPage) && "bg-gradient-to-r from-teal-500/10 to-blue-500/10 text-teal-600 dark:text-teal-400 font-medium",
               collapsed && "justify-center px-2"
             );
             const itemContent = (
               <>
-                <item.icon className={cn("h-5 w-5 flex-shrink-0", !isLocked && isActive(targetPage) && "text-teal-600 dark:text-teal-400")} />
+                <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive(targetPage) && "text-teal-600 dark:text-teal-400")} />
                 {!collapsed && <span>{t(item.label)}</span>}
-                {isLocked && !collapsed && <Lock className="h-3 w-3 ml-auto opacity-60" />}
               </>
             );
-            if (isLocked) {
-              return (
-                <button key={item.key} onClick={handleLockedClick} className={itemClass}>
-                  {itemContent}
-                </button>
-              );
-            }
             return (
               <Link
                 key={item.key}
@@ -183,21 +152,16 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
           {/* Advanced Section */}
           {!collapsed && (
-            <Collapsible open={hasNoCards ? false : advancedOpen} onOpenChange={hasNoCards ? undefined : setAdvancedOpen}>
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
               <CollapsibleTrigger
-                onClick={hasNoCards ? handleLockedClick : undefined}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl w-full transition-all duration-200",
-                  hasNoCards
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                  "hover:bg-slate-100 dark:hover:bg-slate-800"
                 )}
               >
                 <Sparkles className="h-5 w-5 flex-shrink-0" />
                 <span className="flex-1 text-left">{isRTL ? 'متقدم' : 'Advanced'}</span>
-                {hasNoCards
-                  ? <Lock className="h-3 w-3 opacity-60" />
-                  : <ChevronRight className={cn("h-4 w-4 transition-transform", advancedOpen && "rotate-90")} />}
+                <ChevronRight className={cn("h-4 w-4 transition-transform", advancedOpen && "rotate-90")} />
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 mt-1">
                 {advancedItems.map((item) => (
@@ -224,20 +188,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           )}
 
           {collapsed && advancedItems.map((item) => {
-            if (hasNoCards) {
-              return (
-                <button
-                  key={item.key}
-                  onClick={handleLockedClick}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                    "opacity-40 cursor-not-allowed justify-center px-2"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                </button>
-              );
-            }
             return (
               <Link
                 key={item.key}

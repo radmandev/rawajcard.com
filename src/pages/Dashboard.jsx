@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
@@ -90,8 +90,6 @@ export default function Dashboard() {
 
   const isPremium = subscription?.plan === 'premium';
 
-  const navigate = useNavigate();
-
   const { data: cards = [], isLoading: cardsLoading } = useQuery({
     queryKey: ['cards'],
     queryFn: async () => {
@@ -99,12 +97,6 @@ export default function Dashboard() {
       return api.entities.BusinessCard.filter({ created_by: me.email });
     }
   });
-
-  useEffect(() => {
-    if (!cardsLoading && cards.filter(c => c.status === 'published').length === 0) {
-      navigate(createPageUrl('CardBuilder'));
-    }
-  }, [cards, cardsLoading]);
 
   const { data: views = [] } = useQuery({
     queryKey: ['views'],

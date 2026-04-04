@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { LayoutDashboard, CreditCard, Store, Users, LogOut, Shield } from 'lucide-react';
 
 export default function MobileBottomNav() {
@@ -16,29 +15,11 @@ export default function MobileBottomNav() {
     api.auth.logout(createPageUrl('Home'));
   };
 
-  const { data: cards = [] } = useQuery({
-    queryKey: ['cards'],
-    queryFn: async () => {
-      const me = await api.auth.me();
-      return api.entities.BusinessCard.filter({ created_by: me.email });
-    }
-  });
-
-  const hasNoCards = cards.filter(c => c.status === 'published').length === 0;
-
   const { data: user } = useQuery({
     queryKey: ['current-user'],
     queryFn: () => api.auth.me()
   });
   const isAdmin = user?.role === 'admin';
-
-  const handleLockedClick = () => {
-    toast.error(
-      isRTL
-        ? 'أنشئ بطاقة واحدة على الأقل لعرض الميزات الأخرى'
-        : 'Create at least one card to view other features'
-    );
-  };
 
   const navItems = [
     { 
@@ -79,18 +60,6 @@ export default function MobileBottomNav() {
     >
       <div className="flex items-center justify-around">
         {navItems.map(({ key, icon: Icon, label, path }) => {
-          if (!isAdmin && hasNoCards && key !== 'store') {
-            return (
-              <button
-                key={key}
-                onClick={handleLockedClick}
-                className="flex flex-col items-center gap-1 py-3 px-4 flex-1 transition-colors text-slate-400 dark:text-slate-500 opacity-40 cursor-not-allowed"
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{label}</span>
-              </button>
-            );
-          }
           return (
             <Link
               key={key}

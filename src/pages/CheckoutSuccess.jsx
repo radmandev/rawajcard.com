@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Package, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/lib/AuthContext';
 import { setPostAuthRedirect } from '@/components/store/PhysicalCardCustomizationModule';
@@ -57,7 +58,18 @@ export default function CheckoutSuccess() {
   const activateStripeSubscription = async (sessionId, plan) => {
     setIsProcessing(true);
     try {
-      const result = await api.functions.invoke('activateSubscription', { sessionId });
+      let me = null;
+      try {
+        me = await api.auth.me();
+      } catch {
+        me = null;
+      }
+
+      const result = await api.functions.invoke('activateSubscription', {
+        sessionId,
+        userId: me?.id || null,
+        userEmail: me?.email || null,
+      });
       if (result?.success) {
         setActivatedPlan(result.plan || plan || 'premium');
         setSuccessType('subscription');
@@ -69,10 +81,13 @@ export default function CheckoutSuccess() {
       }
     } catch (error) {
       console.error('Stripe activation error:', error);
-      // Even if verification fails, show success (Stripe already charged)
-      // and let the webhook handle it as fallback
-      setActivatedPlan(plan || 'premium');
-      setSuccessType('subscription');
+      const detail = error?.message || '';
+      toast.error(
+        isRTL
+          ? `تعذر تفعيل الاشتراك. ${detail || ''}`.trim()
+          : `Could not activate subscription. ${detail || ''}`.trim()
+      );
+      navigate(createPageUrl('Upgrade'));
     } finally {
       setIsProcessing(false);
     }
