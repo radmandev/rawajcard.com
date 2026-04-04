@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageProvider, useLanguage } from '@/components/shared/LanguageContext';
 import Header from '@/components/shared/Header';
@@ -9,15 +9,36 @@ import CartSidebar from '@/components/store/CartSidebar';
 import CartMiniPopup from '@/components/store/CartMiniPopup';
 import { useCart } from '@/contexts/CartContext';
 import WhatsAppButton from '@/components/shared/WhatsAppButton';
+import PromotionPopup from '@/components/shared/PromotionPopup';
 
 function LayoutContent({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
   const { isRTL } = useLanguage();
 
   // Public pages that don't need sidebar
   const publicPages = ['PublicCard', 'CheckoutSuccess', 'Home', 'Products', 'ProductDetail', 'Pricing', 'TestLanding', 'Store', 'Checkout', 'Demo3D', 'PhysicalCards'];
   const isPublicPage = publicPages.includes(currentPageName);
+  const isHomePage = currentPageName === 'Home' || currentPageName === 'TestLanding';
+
+  useEffect(() => {
+    let timer;
+
+    if (typeof window === 'undefined') return;
+
+    if (isPublicPage && isHomePage) {
+      const shown = sessionStorage.getItem('rawaj_promo_home_shown');
+      if (!shown) {
+        timer = setTimeout(() => {
+          setPromoOpen(true);
+          sessionStorage.setItem('rawaj_promo_home_shown', '1');
+        }, 3000);
+      }
+    }
+
+    return () => timer && clearTimeout(timer);
+  }, [isPublicPage, isHomePage]);
 
 
 
@@ -38,6 +59,7 @@ function LayoutContent({ children, currentPageName }) {
         />
         <CartMiniPopup />
         <WhatsAppButton />
+        <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />
       </div>
     );
   }
@@ -130,6 +152,7 @@ function LayoutContent({ children, currentPageName }) {
       />
       <CartMiniPopup />
       <WhatsAppButton />
+      <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />
     </div>
   );
 }

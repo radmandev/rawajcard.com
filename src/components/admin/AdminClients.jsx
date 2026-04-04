@@ -128,7 +128,7 @@ export default function AdminClients() {
 
   const manageSubMutation = useMutation({
     mutationFn: async ({ userEmail, plan, existingSub }) => {
-      const LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
+      const LIMITS = { free: 2, premium: 5, teams: 10, enterprise: 30 };
       const userProfile = users.find(u => u.email === userEmail);
       const userUuid = userProfile?.id;
 
@@ -158,7 +158,7 @@ export default function AdminClients() {
         user_id: userUuid,
         created_by: userEmail,
         created_by_user_id: userUuid,
-        card_limit: LIMITS[plan] ?? 2,
+        card_limit: LIMITS[plan] ?? LIMITS.free,
       };
       const payload = safePayload(full, validCols);
 

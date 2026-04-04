@@ -8,6 +8,8 @@ import { useLanguage } from '@/components/shared/LanguageContext';
 import { useTheme } from '@/components/shared/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import { productsData, productCategories } from '@/components/shared/productsData';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/supabaseAPI';
 
 const productItems = {
   categories: productCategories.map(cat => ({
@@ -94,6 +96,8 @@ export default function Navbar({ onLoginClick } = {}) {
 
   // Cart from global context (works for guests & authenticated users)
   const { totalCount: cartCount, setIsCartOpen } = useCart();
+  const { data: me } = useQuery({ queryKey: ['current-user'], queryFn: () => api.auth.me(), enabled: isAuthenticated });
+  const mainAppPage = me?.role === 'admin' ? 'Admin' : 'Dashboard';
 
   // Use local products data
   const displayedProducts = selectedCategory
@@ -367,10 +371,14 @@ export default function Navbar({ onLoginClick } = {}) {
             {/* Auth CTA */}
             <Button 
               className="hidden md:inline-flex bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
-              onClick={() => isAuthenticated ? navigate(createPageUrl('Dashboard')) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')))}
+              onClick={() => isAuthenticated ? navigate(createPageUrl(mainAppPage)) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')))}
             >
               <LogIn className="w-4 h-4 mr-1.5" />
-              {isAuthenticated ? (language === 'ar' ? 'لوحة التحكم' : 'Dashboard') : translations[language].createCard}
+              {isAuthenticated
+                ? (me?.role === 'admin'
+                    ? (language === 'ar' ? 'لوحة المسؤول' : 'Admin Panel')
+                    : (language === 'ar' ? 'لوحة التحكم' : 'Dashboard'))
+                : translations[language].createCard}
             </Button>
 
             {/* Mobile menu toggle */}
@@ -447,10 +455,14 @@ export default function Navbar({ onLoginClick } = {}) {
             <div className="pt-2">
               <Button
                 className="w-full bg-gradient-to-r from-teal-600 to-blue-500 text-white rounded-full"
-                onClick={() => { isAuthenticated ? navigate(createPageUrl('Dashboard')) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))); setMobileMenuOpen(false); }}
+                onClick={() => { isAuthenticated ? navigate(createPageUrl(mainAppPage)) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))); setMobileMenuOpen(false); }}
               >
                 <LogIn className="w-4 h-4 mr-1.5" />
-                {isAuthenticated ? (language === 'ar' ? 'لوحة التحكم' : 'Dashboard') : translations[language].createCard}
+                {isAuthenticated
+                  ? (me?.role === 'admin'
+                      ? (language === 'ar' ? 'لوحة المسؤول' : 'Admin Panel')
+                      : (language === 'ar' ? 'لوحة التحكم' : 'Dashboard'))
+                  : translations[language].createCard}
               </Button>
             </div>
           </div>

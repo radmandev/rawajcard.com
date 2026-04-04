@@ -77,8 +77,20 @@ export default function CardBuilder() {
   const { data: subscription } = useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
-      const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free' };
+      const me = await api.auth.me();
+      if (!me?.id && !me?.email) return { plan: 'free' };
+
+      const subsByUserId = me?.id
+        ? await api.entities.Subscription.filter({ created_by_user_id: me.id }, '-created_at')
+        : [];
+
+      if (subsByUserId[0]) return subsByUserId[0];
+
+      const subsByEmail = me?.email
+        ? await api.entities.Subscription.filter({ created_by: me.email }, '-created_at')
+        : [];
+
+      return subsByEmail[0] || { plan: 'free' };
     }
   });
 
@@ -158,7 +170,7 @@ export default function CardBuilder() {
   }, [currentStep, card.status]);
 
   // Plan card limits (single source of truth)
-  const PLAN_LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
+  const PLAN_LIMITS = { free: 2, premium: 5, teams: 10, enterprise: 30 };
 
   const refreshCardCaches = () => {
     queryClient.invalidateQueries({ queryKey: ['my-cards'] });
@@ -169,7 +181,7 @@ export default function CardBuilder() {
   const canCreateNewCard = () => {
     if (cardId) return true; // Editing existing card
     if (!subscription) return true; // Loading
-    const limit = PLAN_LIMITS[subscription.plan] ?? 2;
+    const limit = PLAN_LIMITS[subscription.plan] ?? PLAN_LIMITS.free;
     return existingCards.length < limit;
   };
 

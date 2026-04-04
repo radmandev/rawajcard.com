@@ -71,8 +71,20 @@ export default function TeamManagement() {
   const { data: subscription } = useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
-      const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free', card_limit: 2, status: 'active' };
+      const me = await api.auth.me();
+      if (!me?.id && !me?.email) return { plan: 'free', card_limit: 2, status: 'active' };
+
+      const subsByUserId = me?.id
+        ? await api.entities.Subscription.filter({ created_by_user_id: me.id }, '-created_at')
+        : [];
+
+      if (subsByUserId[0]) return subsByUserId[0];
+
+      const subsByEmail = me?.email
+        ? await api.entities.Subscription.filter({ created_by: me.email }, '-created_at')
+        : [];
+
+      return subsByEmail[0] || { plan: 'free', card_limit: 2, status: 'active' };
     }
   });
 

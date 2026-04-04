@@ -6,12 +6,16 @@ import { useTheme } from './ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, Menu, X, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { api } from '@/api/supabaseAPI';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Header({ onMenuToggle, isMenuOpen, cartCount = 0 }) {
   const { lang, setLang, t, isRTL } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: user } = useQuery({ queryKey: ['current-user'], queryFn: () => api.auth.me() });
+  const homePage = user?.role === 'admin' ? 'Admin' : 'Dashboard';
 
   // Determine if we're on a child route
   const childRoutes = ['/card-builder', '/client-details', '/analytics', '/checkout'];
@@ -35,7 +39,7 @@ export default function Header({ onMenuToggle, isMenuOpen, cartCount = 0 }) {
             {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
         ) : (
-          <Link to={createPageUrl('Dashboard')} className="flex items-center gap-3">
+          <Link to={createPageUrl(homePage)} className="flex items-center gap-3">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/e91911fe6_rawajcardlogo.png"
               alt="Rawajcard"

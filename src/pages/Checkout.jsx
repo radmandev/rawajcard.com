@@ -53,12 +53,6 @@ const PAYMENT_METHODS = [
     color: 'border-teal-500 bg-teal-50/60 dark:bg-teal-950/20',
   },
   {
-    id: 'paypal',
-    label: 'PayPal',
-    labelAr: 'PayPal',
-    color: 'border-slate-200 dark:border-slate-700',
-  },
-  {
     id: 'bank_transfer',
       label: 'Bank',
       labelAr: 'تحويل',
@@ -215,33 +209,6 @@ export default function Checkout() {
     },
   });
 
-  // ── PayPal ────────────────────────────────────────────────
-  const createPayPalOrderMutation = useMutation({
-    mutationFn: async () => {
-      return await api.functions.invoke('createPayPalOrder', {
-        amount: total,
-        orderData: {
-          cartItems: normalizedCartItems,
-          shippingInfo: submitShippingRef.current || shippingInfo,
-          subtotal,
-          shippingCost,
-          total,
-        },
-      });
-    },
-    onSuccess: (data) => {
-      if (data?.approvalUrl) {
-        localStorage.setItem('checkout_cart', JSON.stringify(cartItems));
-        localStorage.setItem('checkout_shipping', JSON.stringify(submitShippingRef.current || shippingInfo));
-        localStorage.setItem('checkout_total', total.toString());
-        window.location.href = data.approvalUrl;
-      } else {
-        toast.error(isRTL ? 'خطأ في رابط الدفع' : 'Payment link error');
-      }
-    },
-    onError: () => toast.error(isRTL ? 'حدث خطأ في الدفع' : 'Payment error'),
-  });
-
   // ── Bank Transfer ─────────────────────────────────────────
   const bankTransferMutation = useMutation({
     mutationFn: async () => {
@@ -290,7 +257,7 @@ export default function Checkout() {
     },
   });
 
-  const isPending = stripeOrderMutation.isPending || createPayPalOrderMutation.isPending || bankTransferMutation.isPending;
+  const isPending = stripeOrderMutation.isPending || bankTransferMutation.isPending;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -333,7 +300,6 @@ export default function Checkout() {
       return;
     }
     if (paymentMethod === 'stripe') { stripeOrderMutation.mutate(); }
-    else if (paymentMethod === 'paypal') { createPayPalOrderMutation.mutate(); }
     else { bankTransferMutation.mutate(); }
   };
 
@@ -439,7 +405,7 @@ export default function Checkout() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                   {PAYMENT_METHODS.map((method) => (
                     <motion.div
                       key={method.id}
@@ -476,12 +442,6 @@ export default function Checkout() {
                           <div className="h-6 px-1.5 bg-[#00a76f] rounded flex items-center">
                             <span className="text-white text-[10px] font-bold">mada</span>
                           </div>
-                        </div>
-                      )}
-                      {method.id === 'paypal' && (
-                        <div className="h-6 px-2 bg-[#003087] rounded flex items-center flex-shrink-0">
-                          <span className="text-white text-[10px] font-black">Pay</span>
-                          <span className="text-[#009cde] text-[10px] font-black">Pal</span>
                         </div>
                       )}
                       {method.id === 'bank_transfer' && (
@@ -728,11 +688,6 @@ export default function Checkout() {
                         <CreditCard className="h-4 w-4 mr-2" />
                         {isRTL ? 'الدفع بالبطاقة' : 'Pay with Card'}
                         <ChevronRight className="h-4 w-4 ml-auto" />
-                      </>
-                    ) : paymentMethod === 'paypal' ? (
-                      <>
-                        {isRTL ? 'الدفع عبر PayPal' : 'Pay with PayPal'}
-                        {isRTL ? <ArrowLeft className="h-4 w-4 mr-2" /> : <ArrowRight className="h-4 w-4 ml-2" />}
                       </>
                     ) : (
                       <>

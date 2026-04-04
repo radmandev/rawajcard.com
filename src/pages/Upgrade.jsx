@@ -10,6 +10,7 @@ import { Check, Sparkles, Zap, Building2, Users, Loader2, ArrowLeft, ArrowRight 
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { getUserSubscriptions, isEligibleForIntroTrial } from '@/lib/subscriptionEligibility';
 
 const PLANS = [
   {
@@ -22,14 +23,14 @@ const PLANS = [
     period_en: '/month',
     period_ar: '/شهر',
     features_en: [
-      '2 Digital Cards',
+      'Up to 2 Digital Cards',
       'Basic Templates',
       'QR Code',
       'Limited Analytics',
       'Email Support',
     ],
     features_ar: [
-      'بطاقتان رقميتان',
+      'حتى بطاقتين رقميتين',
       'قوالب أساسية',
       'رمز QR',
       'تحليلات محدودة',
@@ -46,7 +47,7 @@ const PLANS = [
     period_en: '/month',
     period_ar: '/شهر',
     features_en: [
-      '2 Digital Cards',
+      'Up to 5 Digital Cards',
       'All Templates',
       'Advanced Analytics',
       'Lead Capture',
@@ -55,7 +56,7 @@ const PLANS = [
       'Export Data',
     ],
     features_ar: [
-      'بطاقتان رقميتان',
+      'حتى 5 بطاقات رقمية',
       'جميع القوالب',
       'تحليلات متقدمة',
       'التقاط المتابعة',
@@ -127,15 +128,35 @@ export default function Upgrade() {
   const queryClient = useQueryClient();
   const [loadingPlan, setLoadingPlan] = useState(null);
 
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription'],
-    queryFn: async () => {
-      const subs = await api.entities.Subscription.list();
-      return subs[0] || { plan: 'free' };
-    },
+  const { data: me } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => api.auth.me(),
   });
 
+  const { data: earlyBirdOffer } = useQuery({
+    queryKey: ['premium-early-bird-offer-public'],
+    queryFn: () => api.appSettings.get('premium_early_bird_offer'),
+  });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['subscription-trial-eligibility', me?.id || me?.email || 'guest'],
+    queryFn: async () => getUserSubscriptions(api, me || await api.auth.me()),
+    enabled: !!me,
+  });
+
+  const subscription = subscriptions[0] || { plan: 'free' };
   const currentPlan = subscription?.plan || 'free';
+  const newUserWindowDays = Number(earlyBirdOffer?.new_user_window_days || 30);
+  const isTrialEligible = isEligibleForIntroTrial({ me, subscriptions, newUserWindowDays });
+
+  const getPlanCta = (plan) => {
+    if (isTrialEligible) {
+      if (plan.key === 'premium') return isRTL ? 'تجربة 90 يوم على بريميوم' : '90 days Trial on Premium';
+      if (plan.key === 'teams') return isRTL ? 'تجربة 14 يوم على الفرق' : '14 days Trial on Teams';
+      if (plan.key === 'enterprise') return isRTL ? 'تجربة 14 يوم على المؤسسي' : '14 days Trial on Enterprise';
+    }
+    return isRTL ? `الترقية إلى ${plan.name_ar}` : `Upgrade to ${plan.name_en}`;
+  };
 
   const handleUpgrade = async (planKey) => {
     if (planKey === 'free') return;
@@ -322,7 +343,7 @@ export default function Upgrade() {
                         ? <Users className="h-4 w-4 mr-2" />
                         : <Building2 className="h-4 w-4 mr-2" />
                       }
-                      {isRTL ? `الترقية إلى ${plan.name_ar}` : `Upgrade to ${plan.name_en}`}
+                      {getPlanCta(plan)}
                     </>
                   )}
                 </Button>

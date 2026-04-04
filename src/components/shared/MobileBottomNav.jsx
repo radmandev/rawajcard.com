@@ -6,7 +6,7 @@ import { useLanguage } from '@/components/shared/LanguageContext';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LayoutDashboard, CreditCard, Store, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Store, Users, LogOut, Shield } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const location = useLocation();
@@ -26,6 +26,12 @@ export default function MobileBottomNav() {
 
   const hasNoCards = cards.filter(c => c.status === 'published').length === 0;
 
+  const { data: user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => api.auth.me()
+  });
+  const isAdmin = user?.role === 'admin';
+
   const handleLockedClick = () => {
     toast.error(
       isRTL
@@ -37,9 +43,9 @@ export default function MobileBottomNav() {
   const navItems = [
     { 
       key: 'dashboard', 
-      icon: LayoutDashboard, 
-      label: t('dashboard'),
-      path: createPageUrl('Dashboard')
+      icon: isAdmin ? Shield : LayoutDashboard,
+      label: isAdmin ? (isRTL ? 'المسؤول' : 'Admin') : t('dashboard'),
+      path: createPageUrl(isAdmin ? 'Admin' : 'Dashboard')
     },
     { 
       key: 'cards', 
@@ -73,7 +79,7 @@ export default function MobileBottomNav() {
     >
       <div className="flex items-center justify-around">
         {navItems.map(({ key, icon: Icon, label, path }) => {
-          if (hasNoCards && key !== 'store') {
+          if (!isAdmin && hasNoCards && key !== 'store') {
             return (
               <button
                 key={key}

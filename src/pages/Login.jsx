@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
+import { api } from '@/api/supabaseAPI';
 import { useTheme } from '@/components/shared/ThemeContext';
 import { clearPostAuthRedirect, getPostAuthRedirect } from '@/components/store/PhysicalCardCustomizationModule';
 import { Sun, Moon, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
@@ -18,9 +19,22 @@ export default function Login() {
   const { theme, toggleTheme, isDark } = useTheme();
   const nextParam = new URLSearchParams(window.location.search).get('next');
 
-  const getRedirectPath = () => {
+  const getRedirectPath = async () => {
     const stored = getPostAuthRedirect();
-    const target = nextParam || stored || createPageUrl('Dashboard');
+    if (nextParam || stored) {
+      const target = nextParam || stored;
+      return target.startsWith('/') ? target : createPageUrl('Dashboard');
+    }
+    try {
+      const me = await api.auth.me();
+      return me?.role === 'admin' ? createPageUrl('Admin') : createPageUrl('Dashboard');
+    } catch {
+      return createPageUrl('Dashboard');
+    }
+  };
+
+  const getPasswordResetRedirect = async () => {
+    const target = await getRedirectPath();
     return target.startsWith('/') ? target : createPageUrl('Dashboard');
   };
 
@@ -40,8 +54,8 @@ export default function Login() {
     };
   }, []);
 
-  const redirectAfterAuth = () => {
-    const target = getRedirectPath();
+  const redirectAfterAuth = async () => {
+    const target = await getRedirectPath();
     clearPostAuthRedirect();
     window.location.href = target;
   };
@@ -54,7 +68,7 @@ export default function Login() {
 
     if (forgotMode) {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + getRedirectPath(),
+        redirectTo: window.location.origin + await getPasswordResetRedirect(),
       });
       setIsSubmitting(false);
       if (resetError) { setError(resetError.message); return; }
@@ -66,7 +80,7 @@ export default function Login() {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + getRedirectPath() }
+        options: { emailRedirectTo: window.location.origin + await getPasswordResetRedirect() }
       });
       setIsSubmitting(false);
       if (signUpError) { setError(signUpError.message); return; }
@@ -87,7 +101,7 @@ export default function Login() {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${base}${getRedirectPath()}`,
+        redirectTo: `${base}${createPageUrl('Login')}`,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });

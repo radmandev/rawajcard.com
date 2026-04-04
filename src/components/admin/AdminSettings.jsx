@@ -18,7 +18,7 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const DEFAULT_EARLY_BIRD_OFFER = {
     enabled: false,
-    trial_days: 365,
+    trial_days: 90,
     popup_delay_ms: 5000,
     new_user_window_days: 30,
   };
@@ -148,8 +148,8 @@ export default function AdminSettings() {
           </CardTitle>
           <CardDescription>
             {isRTL
-              ? 'تفعيل سنة مجانية للمستخدمين الجدد على خطة بريميوم مع مطالبتهم ببدء تجربة مجانية عبر Stripe.'
-              : 'Enable a 1-year free Premium trial for new users and prompt them to start trial checkout via Stripe.'}
+              ? 'تفعيل تجربة مجانية لمدة 3 أشهر للمستخدمين الجدد على خطة بريميوم مع مطالبتهم ببدء تجربة مجانية عبر Stripe.'
+              : 'Enable a 3-month free Premium trial for new users and prompt them to start trial checkout via Stripe.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -158,8 +158,8 @@ export default function AdminSettings() {
               <Label>{isRTL ? 'تفعيل العرض' : 'Enable offer'}</Label>
               <p className="text-sm text-slate-500">
                 {isRTL
-                  ? 'عند التفعيل، المستخدمون الجدد المؤهلون يحصلون على تجربة 365 يومًا على بريميوم.'
-                  : 'When enabled, eligible new users get a 365-day Premium trial.'}
+                  ? 'عند التفعيل، المستخدمون الجدد المؤهلون يحصلون على تجربة 90 يومًا على بريميوم.'
+                  : 'When enabled, eligible new users get a 90-day Premium trial.'}
               </p>
             </div>
             <Switch
@@ -174,8 +174,8 @@ export default function AdminSettings() {
               <Input
                 type="number"
                 min={1}
-                value={Number(earlyBirdOffer.trial_days || 365)}
-                onChange={(e) => setEarlyBirdOffer(prev => ({ ...prev, trial_days: Math.max(1, Number(e.target.value || 365)) }))}
+                value={Number(earlyBirdOffer.trial_days || 90)}
+                onChange={(e) => setEarlyBirdOffer(prev => ({ ...prev, trial_days: Math.max(1, Number(e.target.value || 90)) }))}
               />
             </div>
             <div className="space-y-2">
@@ -201,8 +201,8 @@ export default function AdminSettings() {
 
           <div className="rounded-lg border border-amber-200/80 bg-amber-50 dark:bg-amber-950/20 p-3 text-sm text-amber-800 dark:text-amber-200">
             {isRTL
-              ? 'النص المستخدم في النافذة: "Special offer: 1 year premium subscitpiton for early birds"'
-              : 'Popup text used: "Special offer: 1 year premium subscitpiton for early birds"'}
+              ? 'النص المستخدم في النافذة: "Special offer: 3 months premium subscription for early birds"'
+              : 'Popup text used: "Special offer: 3 months premium subscription for early birds"'}
           </div>
 
           <div className="flex justify-end">

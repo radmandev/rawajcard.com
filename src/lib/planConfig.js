@@ -5,7 +5,7 @@
 
 export const PLAN_LIMITS = {
   free:       2,
-  premium:    2,
+  premium:    5,
   teams:      10,
   enterprise: 30,
 };
@@ -19,7 +19,7 @@ export const PLAN_PRICES = {
 
 /**
  * Returns the card limit for a given plan key.
- * Defaults to 2 (free limit) if plan is unrecognised.
+ * Defaults to free plan limit if plan is unrecognised.
  */
 export function getCardLimit(plan) {
   return PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;

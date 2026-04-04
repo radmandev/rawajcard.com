@@ -17,14 +17,14 @@ const pricingPlans = [
     description: "Perfect for getting started",
     descriptionAr: "مثالي للبدء",
     features: [
-      "2 Digital Cards",
+      "Up to 2 Digital Cards",
       "Basic Templates",
       "QR Code",
       "Limited Analytics",
       "Email Support"
     ],
     featuresAr: [
-      "بطاقتان رقميتان",
+      "حتى بطاقتين رقميتين",
       "قوالب أساسية",
       "رمز QR",
       "تحليلات محدودة",
@@ -45,7 +45,7 @@ const pricingPlans = [
     description: "For growing professionals",
     descriptionAr: "للمحترفين المتنامين",
     features: [
-      "2 Digital Cards",
+      "Up to 5 Digital Cards",
       "All Templates",
       "Advanced Analytics",
       "Lead Capture",
@@ -54,7 +54,7 @@ const pricingPlans = [
       "Export Data"
     ],
     featuresAr: [
-      "بطاقتان رقميتان",
+      "حتى 5 بطاقات رقمية",
       "جميع القوالب",
       "تحليلات متقدمة",
       "التقاط المتابعة",
@@ -141,8 +141,8 @@ const faqs = [
   {
     question: "Is there a free trial?",
     questionAr: "هل هناك نسخة تجريبية مجانية؟",
-    answer: "Yes, all Professional plans include a 14-day free trial with no credit card required.",
-    answerAr: "نعم، جميع الخطط الاحترافية تشمل نسخة تجريبية مجانية لمدة 14 يوم بدون الحاجة إلى بطاقة ائتمان."
+    answer: "Yes, eligible new users can get up to a 3-month Premium trial.",
+    answerAr: "نعم، يمكن للمستخدمين الجدد المؤهلين الحصول على تجربة بريميوم مجانية لمدة تصل إلى 3 أشهر."
   },
   {
     question: "What happens if I exceed my limits?",

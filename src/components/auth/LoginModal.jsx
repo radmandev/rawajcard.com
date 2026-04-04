@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
+import { api } from '@/api/supabaseAPI';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
 
@@ -13,6 +14,15 @@ export default function LoginModal({ open, onClose }) {
   const [successMsg, setSuccessMsg] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
+
+  const redirectAfterAuth = async () => {
+    try {
+      const me = await api.auth.me();
+      window.location.href = me?.role === 'admin' ? createPageUrl('Admin') : createPageUrl('Dashboard');
+    } catch {
+      window.location.href = createPageUrl('Dashboard');
+    }
+  };
 
   // Reset state when modal opens
   useEffect(() => {
@@ -32,7 +42,7 @@ export default function LoginModal({ open, onClose }) {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        window.location.href = createPageUrl('Dashboard');
+        redirectAfterAuth();
       }
     });
 
@@ -67,7 +77,7 @@ export default function LoginModal({ open, onClose }) {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setIsSubmitting(false);
     if (signInError) { setError(signInError.message); return; }
-    window.location.href = createPageUrl('Dashboard');
+    redirectAfterAuth();
   };
 
   const handleGoogleSignIn = async () => {
@@ -76,7 +86,7 @@ export default function LoginModal({ open, onClose }) {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${base}/Dashboard`,
+        redirectTo: `${base}${createPageUrl('Login')}`,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });
