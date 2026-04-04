@@ -8,6 +8,7 @@ import PublicMobileBar from '@/components/shared/PublicMobileBar';
 import CartSidebar from '@/components/store/CartSidebar';
 import CartMiniPopup from '@/components/store/CartMiniPopup';
 import { useCart } from '@/contexts/CartContext';
+import WhatsAppButton from '@/components/shared/WhatsAppButton';
 
 function LayoutContent({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +37,7 @@ function LayoutContent({ children, currentPageName }) {
           onRemove={removeItem}
         />
         <CartMiniPopup />
+        <WhatsAppButton />
       </div>
     );
   }
@@ -127,6 +129,7 @@ function LayoutContent({ children, currentPageName }) {
         onRemove={removeItem}
       />
       <CartMiniPopup />
+      <WhatsAppButton />
     </div>
   );
 }

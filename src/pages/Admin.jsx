@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '@/components/shared/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Shield, Layout, Users, CreditCard, Settings, Sparkles, Package, ShoppingBag } from 'lucide-react';
+import { Shield, Layout, Users, CreditCard, Settings, Sparkles, Package, ShoppingBag, BarChart2 } from 'lucide-react';
 import AdminTemplates from '@/components/admin/AdminTemplates';
 import AdminClients from '@/components/admin/AdminClients';
 import AdminCards from '@/components/admin/AdminCards';
@@ -10,6 +10,7 @@ import AdminSettings from '@/components/admin/AdminSettings';
 import AdminCustomizationRequests from '@/components/admin/AdminCustomizationRequests';
 import AdminProducts from '@/components/admin/AdminProducts';
 import AdminOrders from '@/components/admin/AdminOrders';
+import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import { api } from '@/api/supabaseAPI';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -82,7 +83,11 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-8 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart2 className="h-4 w-4" />
+            <span className="hidden sm:inline">{isRTL ? 'التحليلات' : 'Analytics'}</span>
+          </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <ShoppingBag className="h-4 w-4" />
             <span className="hidden sm:inline">{isRTL ? 'الطلبات' : 'Orders'}</span>
@@ -112,6 +117,10 @@ export default function Admin() {
             <span className="hidden sm:inline">{isRTL ? 'الإعدادات' : 'Settings'}</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <AdminAnalytics />
+        </TabsContent>
 
         <TabsContent value="orders" className="space-y-6">
           <AdminOrders />

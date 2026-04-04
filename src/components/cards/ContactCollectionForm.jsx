@@ -23,6 +23,40 @@ export default function ContactCollectionForm({ card, isRTL }) {
   const borderRadius = design.border_radius || '12px';
   const fontFamily = design.font_family || 'Inter';
 
+  const normalizeKey = (label = '') => label.toLowerCase().trim().replace(/\s+/g, '_');
+
+  const extractMappedFields = () => {
+    const fields = settings?.fields || [];
+    const entries = fields.map((field) => {
+      const key = normalizeKey(field.label);
+      return { field, key, value: formData[key] || '' };
+    });
+
+    const findValue = (matcher) => entries.find(({ field }) => matcher(field))?.value || '';
+
+    const name =
+      findValue((f) => /name|اسم/i.test(f.label || '')) ||
+      findValue((f) => (f.type || '').toLowerCase() === 'text') ||
+      '';
+
+    const email =
+      findValue((f) => (f.type || '').toLowerCase() === 'email') ||
+      findValue((f) => /email|بريد/i.test(f.label || '')) ||
+      '';
+
+    const phone =
+      findValue((f) => ['phone', 'tel'].includes((f.type || '').toLowerCase())) ||
+      findValue((f) => /phone|mobile|tel|هاتف|جوال/i.test(f.label || '')) ||
+      '';
+
+    const message =
+      findValue((f) => (f.type || '').toLowerCase() === 'textarea') ||
+      findValue((f) => /message|notes|comment|ملاحظة|رسالة/i.test(f.label || '')) ||
+      '';
+
+    return { name, email, phone, message };
+  };
+
   useEffect(() => {
     if (!settings?.enabled || hasShown) return;
 
@@ -64,14 +98,16 @@ export default function ContactCollectionForm({ card, isRTL }) {
     setIsSubmitting(true);
 
     try {
-      // Map form data to ContactSubmission fields
+      // Map dynamic form fields to Supabase contact_submissions schema
+      const mapped = extractMappedFields();
       const submission = {
         card_id: card.id,
-        card_owner: card.created_by,
-        visitor_name: formData.name || '',
-        visitor_email: formData.email || '',
-        visitor_phone: formData.phone || '',
-        notes: formData.message || ''
+        card_owner: card.created_by || '',
+        name: mapped.name,
+        email: mapped.email,
+        phone: mapped.phone,
+        message: mapped.message,
+        data: formData
       };
 
       const createdSubmission = await api.entities.ContactSubmission.create(submission);

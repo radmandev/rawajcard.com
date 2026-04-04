@@ -285,7 +285,7 @@ export default function MyCards() {
                   {/* Action Buttons at Bottom - Visible on Hover */}
                   <div className="px-3 pb-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-4">
                     <div className="grid grid-cols-4 gap-2">
-                      <Link to={createPageUrl(`CardBuilder?id=${card.id}`)}>
+                      <Link to={createPageUrl(`CardBuilder?id=${card.id}&step=1`)}>
                         <Button variant="ghost" size="sm" className="w-full flex flex-col items-center gap-1 h-auto py-2">
                           <Edit className="h-4 w-4 text-blue-600" />
                           <span className="text-xs">{isRTL ? 'تعديل' : 'Edit'}</span>

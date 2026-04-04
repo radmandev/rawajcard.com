@@ -48,6 +48,7 @@ export default function CardBuilder() {
   
   const urlParams = new URLSearchParams(window.location.search);
   const cardId = urlParams.get('id');
+  const stepParam = urlParams.get('step');
 
   const [currentStep, setCurrentStep] = useState(0);
   const [focusedTemplate, setFocusedTemplate] = useState('navy_gold');
@@ -105,8 +106,11 @@ export default function CardBuilder() {
       if (existingCard.slug) {
         setSlugValid(true);
       }
-      // If already published, go to last step
-      if (existingCard.status === 'published') {
+      // If a step was requested via URL param, honour it;
+      // otherwise auto-jump to publish step for already-published cards
+      if (stepParam !== null) {
+        setCurrentStep(parseInt(stepParam, 10));
+      } else if (existingCard.status === 'published') {
         setCurrentStep(STEPS.length - 1);
       }
     }
@@ -235,8 +239,13 @@ export default function CardBuilder() {
         queryClient.invalidateQueries({ queryKey: ['my-cards'] });
       } catch (error) {
         console.error('Auto-save failed:', error);
-        // Don't block navigation — we'll retry the save on the slug step
-        toast.error(isRTL ? 'تحذير: فشل الحفظ التلقائي' : 'Warning: Auto-save failed. You can still continue.');
+        const missingFloatingActionsColumn = typeof error?.message === 'string' && error.message.includes('floating_actions');
+        if (missingFloatingActionsColumn) {
+          toast.error(isRTL ? 'يلزم تحديث قاعدة البيانات لتفعيل الأزرار العائمة' : 'Database update required to enable floating actions');
+        } else {
+          // Don't block navigation — we'll retry the save on the slug step
+          toast.error(isRTL ? 'تحذير: فشل الحفظ التلقائي' : 'Warning: Auto-save failed. You can still continue.');
+        }
       }
     }
 
@@ -532,7 +541,6 @@ export default function CardBuilder() {
                             setCard({ ...card, qr_settings });
                             saveMutation.mutate({ qr_settings });
                           }}
-                          slug={card.slug}
                         />
 
                         <QRCodeDisplay slug={card.slug} qrSettings={card.qr_settings} size={200} />

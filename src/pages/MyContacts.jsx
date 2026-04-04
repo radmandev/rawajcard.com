@@ -51,6 +51,47 @@ export default function MyContacts() {
   const [pullDistance, setPullDistance] = useState(0);
   const [startY, setStartY] = useState(0);
 
+  const getExtraData = (contact) => {
+    if (!contact?.data) return {};
+    return typeof contact.data === 'object' ? contact.data : {};
+  };
+
+  const getContactName = (contact) => {
+    const data = getExtraData(contact);
+    return contact?.visitor_name || contact?.name || data.visitor_name || data.name || '';
+  };
+
+  const getContactEmail = (contact) => {
+    const data = getExtraData(contact);
+    return contact?.visitor_email || contact?.email || data.visitor_email || data.email || '';
+  };
+
+  const getContactPhone = (contact) => {
+    const data = getExtraData(contact);
+    return contact?.visitor_phone || contact?.phone || data.visitor_phone || data.phone || '';
+  };
+
+  const getContactCompany = (contact) => {
+    const data = getExtraData(contact);
+    return contact?.visitor_company || data.visitor_company || data.company || '';
+  };
+
+  const getContactNotes = (contact) => {
+    const data = getExtraData(contact);
+    return contact?.notes || contact?.message || data.notes || data.message || '';
+  };
+
+  const getContactCreatedAt = (contact) => {
+    return contact?.created_date || contact?.created_at || null;
+  };
+
+  const formatContactDate = (value, pattern) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return format(date, pattern);
+  };
+
   // Pull to refresh handler
   const handleTouchStart = useCallback((e) => {
     if (window.scrollY === 0) {
@@ -91,7 +132,7 @@ export default function MyContacts() {
     queryKey: ['contact-submissions'],
     queryFn: async () => {
       const me = await api.auth.me();
-      return api.entities.ContactSubmission.filter({ card_owner: me.email }, '-created_date');
+      return api.entities.ContactSubmission.filter({ card_owner: me.email }, '-created_at');
     }
   });
 
@@ -107,10 +148,13 @@ export default function MyContacts() {
   // Filter contacts
   const filteredContacts = contacts.filter(contact => {
     const matchesCard = selectedCard === 'all' || contact.card_id === selectedCard;
+    const name = getContactName(contact);
+    const email = getContactEmail(contact);
+    const phone = getContactPhone(contact);
     const matchesSearch = !searchQuery || 
-      contact.visitor_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.visitor_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.visitor_phone?.includes(searchQuery);
+      name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      phone?.includes(searchQuery);
     return matchesCard && matchesSearch;
   });
 
@@ -123,13 +167,13 @@ export default function MyContacts() {
   // Export to Excel
   const exportToExcel = () => {
     const data = filteredContacts.map(c => ({
-      'Name': c.visitor_name || '',
-      'Email': c.visitor_email || '',
-      'Phone': c.visitor_phone || '',
-      'Company': c.visitor_company || '',
-      'Notes': c.notes || '',
+      'Name': getContactName(c),
+      'Email': getContactEmail(c),
+      'Phone': getContactPhone(c),
+      'Company': getContactCompany(c),
+      'Notes': getContactNotes(c),
       'From Card': getCardName(c.card_id),
-      'Date': format(new Date(c.created_date), 'yyyy-MM-dd HH:mm')
+      'Date': formatContactDate(getContactCreatedAt(c), 'yyyy-MM-dd HH:mm')
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -273,7 +317,8 @@ export default function MyContacts() {
                 <p className="text-purple-100 text-sm">{isRTL ? 'هذا الأسبوع' : 'This Week'}</p>
                 <p className="text-3xl font-bold mt-1">
                   {contacts.filter(c => {
-                    const date = new Date(c.created_date);
+                    const date = new Date(getContactCreatedAt(c));
+                    if (Number.isNaN(date.getTime())) return false;
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);
                     return date > weekAgo;
@@ -324,28 +369,28 @@ export default function MyContacts() {
                 >
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {contact.visitor_name?.charAt(0)?.toUpperCase()}
+                      {getContactName(contact)?.charAt(0)?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-900 dark:text-white truncate">
-                        {contact.visitor_name}
+                        {getContactName(contact)}
                       </p>
                       <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        {contact.visitor_email && (
+                        {getContactEmail(contact) && (
                           <span className="flex items-center gap-1 truncate">
                             <Mail className="h-3 w-3" />
-                            {contact.visitor_email}
+                            {getContactEmail(contact)}
                           </span>
                         )}
-                        {contact.visitor_phone && (
+                        {getContactPhone(contact) && (
                           <span className="flex items-center gap-1">
                             <Phone className="h-3 w-3" />
-                            {contact.visitor_phone}
+                            {getContactPhone(contact)}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-slate-400 mt-1">
-                        {isRTL ? 'من: ' : 'From: '}{getCardName(contact.card_id)} • {format(new Date(contact.created_date), 'MMM dd, yyyy')}
+                        {isRTL ? 'من: ' : 'From: '}{getCardName(contact.card_id)} • {formatContactDate(getContactCreatedAt(contact), 'MMM dd, yyyy')}
                       </p>
                     </div>
                   </div>
@@ -379,37 +424,37 @@ export default function MyContacts() {
           <DialogHeader>
             <DialogTitle>{isRTL ? 'تفاصيل جهة الاتصال' : 'Contact Details'}</DialogTitle>
             <DialogDescription>
-              {viewContact && format(new Date(viewContact.created_date), 'MMMM dd, yyyy • HH:mm')}
+              {viewContact && formatContactDate(getContactCreatedAt(viewContact), 'MMMM dd, yyyy • HH:mm')}
             </DialogDescription>
           </DialogHeader>
           {viewContact && (
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-slate-500">{isRTL ? 'الاسم' : 'Name'}</label>
-                <p className="text-lg font-medium mt-1">{viewContact.visitor_name}</p>
+                <p className="text-lg font-medium mt-1">{getContactName(viewContact)}</p>
               </div>
-              {viewContact.visitor_email && (
+              {getContactEmail(viewContact) && (
                 <div>
                   <label className="text-sm font-medium text-slate-500">{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
-                  <p className="text-lg font-medium mt-1">{viewContact.visitor_email}</p>
+                  <p className="text-lg font-medium mt-1">{getContactEmail(viewContact)}</p>
                 </div>
               )}
-              {viewContact.visitor_phone && (
+              {getContactPhone(viewContact) && (
                 <div>
                   <label className="text-sm font-medium text-slate-500">{isRTL ? 'الهاتف' : 'Phone'}</label>
-                  <p className="text-lg font-medium mt-1">{viewContact.visitor_phone}</p>
+                  <p className="text-lg font-medium mt-1">{getContactPhone(viewContact)}</p>
                 </div>
               )}
-              {viewContact.visitor_company && (
+              {getContactCompany(viewContact) && (
                 <div>
                   <label className="text-sm font-medium text-slate-500">{isRTL ? 'الشركة' : 'Company'}</label>
-                  <p className="text-lg font-medium mt-1">{viewContact.visitor_company}</p>
+                  <p className="text-lg font-medium mt-1">{getContactCompany(viewContact)}</p>
                 </div>
               )}
-              {viewContact.notes && (
+              {getContactNotes(viewContact) && (
                 <div>
                   <label className="text-sm font-medium text-slate-500">{isRTL ? 'ملاحظات' : 'Notes'}</label>
-                  <p className="text-lg font-medium mt-1">{viewContact.notes}</p>
+                  <p className="text-lg font-medium mt-1">{getContactNotes(viewContact)}</p>
                 </div>
               )}
               <div>
