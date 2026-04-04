@@ -1,10 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-
 const PAYPAL_API = 'https://api-m.paypal.com';
 
 async function getPayPalAccessToken() {
   const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
   const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+
+  if (!clientId || !clientSecret) {
+    throw new Error('PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is missing');
+  }
   
   const auth = btoa(`${clientId}:${clientSecret}`);
   
@@ -23,17 +25,14 @@ async function getPayPalAccessToken() {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { amount, orderData } = await req.json();
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return Response.json({ error: 'Invalid amount' }, { status: 400 });
+    }
     
-    // Convert SAR to USD (approximate rate: 1 SAR = 0.27 USD)
-    const amountInUSD = (amount * 0.27).toFixed(2);
+    // Keep order currency in SAR
+    const amountInSAR = numericAmount.toFixed(2);
     
     const accessToken = await getPayPalAccessToken();
     
@@ -47,14 +46,14 @@ Deno.serve(async (req) => {
         intent: 'CAPTURE',
         purchase_units: [{
           amount: {
-            currency_code: 'USD',
-            value: amountInUSD,
+            currency_code: 'SAR',
+            value: amountInSAR,
           },
           description: 'Rawajcard Order',
         }],
         application_context: {
-          return_url: `${req.headers.get('origin')}/checkout-success`,
-          cancel_url: `${req.headers.get('origin')}/checkout`,
+          return_url: `${req.headers.get('origin')}/CheckoutSuccess`,
+          cancel_url: `${req.headers.get('origin')}/Checkout`,
           brand_name: 'Rawajcard',
           landing_page: 'NO_PREFERENCE',
           user_action: 'PAY_NOW',
@@ -73,6 +72,6 @@ Deno.serve(async (req) => {
       approvalUrl: order.links.find(link => link.rel === 'approve')?.href
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 });

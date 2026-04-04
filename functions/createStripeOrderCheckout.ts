@@ -72,6 +72,14 @@ Deno.serve(async (req: Request) => {
 
     if (!cartItems.length) return ok({ error: 'Cart is empty.' });
 
+    const subtotal = cartItems.reduce((sum, item) => {
+      const price = Number(item.product_price) || 0;
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      return sum + (price * qty);
+    }, 0);
+    const freeShippingThreshold = 250;
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : 20;
+
     const origin = req.headers.get('origin') || 'https://rawajcard.com';
 
     // ── Build Stripe Checkout session ──────────────────────────────────
@@ -95,11 +103,14 @@ Deno.serve(async (req: Request) => {
       p.set('shipping_address_collection[allowed_countries][4]', 'BH');
       p.set('shipping_address_collection[allowed_countries][5]', 'OM');
 
-      // Free shipping option
+      // Shipping option: free for >= 250 SAR, otherwise 20 SAR
       p.set('shipping_options[0][shipping_rate_data][type]', 'fixed_amount');
-      p.set('shipping_options[0][shipping_rate_data][fixed_amount][amount]', '0');
+      p.set('shipping_options[0][shipping_rate_data][fixed_amount][amount]', String(Math.round(shippingFee * 100)));
       p.set('shipping_options[0][shipping_rate_data][fixed_amount][currency]', 'sar');
-      p.set('shipping_options[0][shipping_rate_data][display_name]', 'Standard Shipping (2-5 days)');
+      p.set(
+        'shipping_options[0][shipping_rate_data][display_name]',
+        shippingFee === 0 ? 'Free Shipping (2-5 days)' : 'Standard Shipping (2-5 days)'
+      );
 
       // Line items
       cartItems.forEach((item, i) => {
@@ -125,6 +136,9 @@ Deno.serve(async (req: Request) => {
       p.set('metadata[shipping_address]', shippingInfo.address ?? '');
       p.set('metadata[shipping_city]', shippingInfo.city ?? '');
       p.set('metadata[shipping_country]', shippingInfo.country ?? 'Saudi Arabia');
+      p.set('metadata[subtotal_sar]', String(subtotal));
+      p.set('metadata[shipping_sar]', String(shippingFee));
+      p.set('metadata[total_sar]', String(subtotal + shippingFee));
 
       // Apply extra params (payment method config varies by attempt)
       for (const [k, v] of Object.entries(extraParams)) {

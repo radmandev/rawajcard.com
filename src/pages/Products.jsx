@@ -36,7 +36,7 @@ const staticProducts = productsData.map((p) => ({
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('ar');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [previewProduct, setPreviewProduct] = useState(null);
   const { addItem } = useCart();

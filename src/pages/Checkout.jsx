@@ -82,6 +82,9 @@ const SAUDI_CITIES = [
   'Al Ahsa', 'Jubail', 'Yanbu', 'Al Khafji',
 ];
 
+const FREE_SHIPPING_THRESHOLD = 250;
+const SHIPPING_FEE_SAR = 20;
+
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 const normalizePhone = (countryCode, input) => {
@@ -162,8 +165,10 @@ export default function Checkout() {
     product_image: i.product_image || i.image || i.image_url || '',
   }));
 
-  const total = cartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
-  const freeShipping = total >= 250;
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
+  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shippingCost = freeShipping ? 0 : SHIPPING_FEE_SAR;
+  const total = subtotal + shippingCost;
 
   const formatPrice = (price, currency = 'SAR') =>
     new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', { style: 'currency', currency }).format(price);
@@ -215,7 +220,13 @@ export default function Checkout() {
     mutationFn: async () => {
       return await api.functions.invoke('createPayPalOrder', {
         amount: total,
-        orderData: { cartItems: normalizedCartItems, shippingInfo: submitShippingRef.current || shippingInfo },
+        orderData: {
+          cartItems: normalizedCartItems,
+          shippingInfo: submitShippingRef.current || shippingInfo,
+          subtotal,
+          shippingCost,
+          total,
+        },
       });
     },
     onSuccess: (data) => {
@@ -255,6 +266,9 @@ export default function Checkout() {
           receipt_url: receiptUrl,
           shippingInfo: submitShippingRef.current || shippingInfo,
           cartItems: normalizedCartItems,
+          subtotal,
+          shipping_cost: shippingCost,
+          total,
         },
       });
       if (error) throw error;
@@ -666,19 +680,19 @@ export default function Checkout() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500">{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                      <span>{formatPrice(total)}</span>
+                      <span>{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">{isRTL ? 'الشحن' : 'Shipping'}</span>
                       {freeShipping
                         ? <span className="text-green-600 font-medium">{isRTL ? 'مجاني' : 'Free'}</span>
-                        : <span className="text-slate-500">{isRTL ? 'سيتم تحديده' : 'Calculated at next step'}</span>}
+                        : <span className="text-slate-500">{formatPrice(shippingCost)}</span>}
                     </div>
                     {!freeShipping && (
                       <p className="text-xs text-teal-600">
                         {isRTL
-                          ? `أضف ${formatPrice(250 - total)} للحصول على شحن مجاني`
-                          : `Add ${formatPrice(250 - total)} for free shipping`}
+                          ? `أضف ${formatPrice(FREE_SHIPPING_THRESHOLD - subtotal)} للحصول على شحن مجاني`
+                          : `Add ${formatPrice(FREE_SHIPPING_THRESHOLD - subtotal)} for free shipping`}
                       </p>
                     )}
                   </div>

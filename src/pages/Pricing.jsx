@@ -159,7 +159,7 @@ const faqs = [
 ];
 
 export default function Pricing() {
-  const [language, setLanguage] = React.useState('en');
+  const [language, setLanguage] = React.useState('ar');
   const [expandedFaq, setExpandedFaq] = React.useState(null);
   const navigate = useNavigate();
 

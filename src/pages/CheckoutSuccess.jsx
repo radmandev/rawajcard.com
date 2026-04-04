@@ -118,7 +118,8 @@ export default function CheckoutSuccess() {
         orderId: paypalOrderId,
         cartItems: JSON.parse(cartItemsStr),
         shippingInfo: JSON.parse(shippingInfoStr),
-        totalSAR: parseFloat(totalSAR)
+        totalSAR: parseFloat(totalSAR),
+        createdBy: JSON.parse(shippingInfoStr)?.email || null,
       });
 
       if (response?.success) {

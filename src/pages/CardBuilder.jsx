@@ -160,6 +160,11 @@ export default function CardBuilder() {
   // Plan card limits (single source of truth)
   const PLAN_LIMITS = { free: 2, premium: 2, teams: 10, enterprise: 30 };
 
+  const refreshCardCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+    queryClient.invalidateQueries({ queryKey: ['cards'] });
+  };
+
   // Check card limit before creating new card
   const canCreateNewCard = () => {
     if (cardId) return true; // Editing existing card
@@ -186,7 +191,7 @@ export default function CardBuilder() {
     },
     onSuccess: (result) => {
       setCard(result);
-      queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+      refreshCardCaches();
     }
   });
 
@@ -211,7 +216,7 @@ export default function CardBuilder() {
     },
     onSuccess: (result) => {
       setCard(result);
-      queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+      refreshCardCaches();
       toast.success(isRTL ? 'تم النشر بنجاح!' : 'Published successfully!');
     },
     onError: (error) => {
@@ -236,7 +241,7 @@ export default function CardBuilder() {
           saved = await api.entities.BusinessCard.create(cleanData);
         }
         setCard(saved);
-        queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+        refreshCardCaches();
       } catch (error) {
         console.error('Auto-save failed:', error);
         const missingFloatingActionsColumn = typeof error?.message === 'string' && error.message.includes('floating_actions');
@@ -287,7 +292,7 @@ export default function CardBuilder() {
         saved = await api.entities.BusinessCard.create(cleanData);
       }
       setCard(saved);
-      queryClient.invalidateQueries({ queryKey: ['my-cards'] });
+      refreshCardCaches();
       toast.success(isRTL ? 'تم حفظ المسودة' : 'Draft saved!');
     } catch (err) {
       console.error('Save draft failed:', err);

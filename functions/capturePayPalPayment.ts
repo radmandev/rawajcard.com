@@ -5,6 +5,10 @@ const PAYPAL_API = 'https://api-m.paypal.com';
 async function getPayPalAccessToken() {
   const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
   const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+
+  if (!clientId || !clientSecret) {
+    throw new Error('PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET is missing');
+  }
   
   const auth = btoa(`${clientId}:${clientSecret}`);
   
@@ -24,13 +28,14 @@ async function getPayPalAccessToken() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch {
+      user = null;
     }
 
-    const { orderId, cartItems, shippingInfo, totalSAR } = await req.json();
+    const { orderId, cartItems, shippingInfo, totalSAR, createdBy } = await req.json();
     
     const accessToken = await getPayPalAccessToken();
     
@@ -48,31 +53,27 @@ Deno.serve(async (req) => {
     if (capture.status === 'COMPLETED') {
       // Create order in database
       const orderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
+      const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
       
       const order = await base44.asServiceRole.entities.Order.create({
         order_number: orderNumber,
-        items: cartItems.map(item => ({
+        items: safeCartItems.map(item => ({
           product_id: item.product_id,
           product_name: item.product_name,
           quantity: item.quantity,
           price: item.product_price
         })),
-        total: totalSAR,
+        total: Number(totalSAR) || 0,
         status: 'processing',
         shipping_address: shippingInfo,
         payment_method: 'paypal',
-        created_by: user.email
+        created_by: user?.email || createdBy || shippingInfo?.email || null
       });
-      
-      // Clear cart
-      await Promise.all(cartItems.map(item => 
-        base44.asServiceRole.entities.CartItem.delete(item.id)
-      ));
       
       return Response.json({ 
         success: true,
         order_number: orderNumber,
-        paypal_transaction_id: capture.id
+        paypal_transaction_id: capture.id || capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id || null
       });
     }
     

@@ -84,7 +84,7 @@ const translations = {
 };
 
 export default function StepsSection() {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('ar');
 
   useEffect(() => {
     const dir = document.documentElement.getAttribute('dir');
