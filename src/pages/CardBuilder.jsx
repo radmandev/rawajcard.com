@@ -543,7 +543,7 @@ export default function CardBuilder() {
                           }}
                         />
 
-                        <QRCodeDisplay slug={card.slug} qrSettings={card.qr_settings} size={200} trackable={true} />
+                        <QRCodeDisplay cardId={card.id} slug={card.slug} qrSettings={card.qr_settings} size={200} trackable={true} />
 
                         {/* NFC Card Advertisement */}
                         <NFCCardAd 

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from 'sonner'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -17,6 +17,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
 import TestLandingPage from '@/pages/TestLanding';
+import { supabase } from '@/lib/supabaseClient';
 
 class AppErrorBoundary extends React.Component {
   constructor(props) {
@@ -75,6 +76,67 @@ const TrackQRScanRedirect = () => {
   return null;
 };
 
+const QRCardRedirect = () => {
+  const { pathname } = useLocation();
+  const cardId = (pathname.split('/q/')[1] || '').split('?')[0];
+  const [state, setState] = useState('loading');
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const cleanId = decodeURIComponent(cardId || '').trim();
+        if (!cleanId) {
+          setState('not_found');
+          return;
+        }
+
+        const visitorKey = 'rawajcard_visitor_id';
+        let visitorId = localStorage.getItem(visitorKey);
+        if (!visitorId) {
+          visitorId = 'v_' + Math.random().toString(36).slice(2, 11);
+          localStorage.setItem(visitorKey, visitorId);
+        }
+
+        const { data: card, error: cardError } = await supabase
+          .from('business_cards')
+          .select('id, slug, status')
+          .eq('id', cleanId)
+          .eq('status', 'published')
+          .maybeSingle();
+
+        if (cardError || !card?.slug) {
+          setState('not_found');
+          return;
+        }
+
+        await supabase.rpc('track_qr_scan', {
+          p_card_id: card.id,
+          p_visitor_id: visitorId,
+          p_user_agent: navigator.userAgent,
+          p_referrer: document.referrer || ''
+        });
+
+        const target = `/c/${encodeURIComponent(card.slug)}?source=qr&trk=1`;
+        window.location.replace(target);
+      } catch {
+        setState('not_found');
+      }
+    };
+
+    run();
+  }, [cardId]);
+
+  if (state === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-teal-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <PageNotFound />;
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -82,7 +144,7 @@ const AuthenticatedApp = () => {
   const isPublicRoute = [
     '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards',
     '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
-  ].includes(location.pathname) || location.pathname.startsWith('/c/');
+  ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
   if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
@@ -129,6 +191,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/c/:slug" element={<PublicCard />} />
+        <Route path="/q/:cardId" element={<QRCardRedirect />} />
         <Route path="/trackQRScan" element={<TrackQRScanRedirect />} />
         <Route path="/" element={
           <LayoutWrapper currentPageName="TestLanding">

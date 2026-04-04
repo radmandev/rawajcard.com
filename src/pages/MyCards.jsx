@@ -388,6 +388,7 @@ export default function MyCards() {
           </DialogHeader>
           {qrDialog && (
             <QRCodeDisplay 
+              cardId={qrDialog.id}
               slug={qrDialog.slug} 
               qrSettings={qrDialog.qr_settings} 
               size={250}

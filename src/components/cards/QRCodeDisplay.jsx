@@ -5,15 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Download, Share2, Copy, Check } from 'lucide-react';
 import QRCode from 'qrcode';
 
-export default function QRCodeDisplay({ slug, qrSettings, size = 200, showActions = true, trackable = false }) {
+export default function QRCodeDisplay({ cardId, slug, qrSettings, size = 200, showActions = true, trackable = false }) {
   const { t, isRTL } = useLanguage();
   const canvasRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
 
-  // Use tracking URL for QR codes, direct URL for links
-  const cardUrl = trackable 
-    ? `https://rawajcard.com/c/${slug}?source=qr`
+  // Use dedicated QR route so scan tracking runs before opening the public card.
+  // Falls back to the legacy URL if cardId is not available.
+  const cardUrl = trackable
+    ? (cardId
+      ? `https://rawajcard.com/q/${cardId}`
+      : `https://rawajcard.com/c/${slug}?source=qr`)
     : `https://rawajcard.com/c/${slug}`;
   
   const displayUrl = `https://rawajcard.com/c/${slug}`;

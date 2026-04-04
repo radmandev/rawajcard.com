@@ -237,7 +237,11 @@ export default function LoginModal({ open, onClose }) {
                   {mode === 'signin' ? "Need an account? " : "Have an account? "}
                   <button
                     type="button"
-                    onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setSuccessMsg(null); }}
+                    onClick={() => {
+                      setMode(mode === 'signin' ? 'signup' : 'signin');
+                      setError(null);
+                      setSuccessMsg(null);
+                    }}
                     className="font-semibold text-slate-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                   >
                     {mode === 'signin' ? 'Sign up' : 'Sign in'}

@@ -50,8 +50,13 @@ const TemplateFallback = () => (
 export default function PublicCard() {
   const { slug: slugParam } = useParams();
   const urlParams = new URLSearchParams(window.location.search);
-  const slug = slugParam || urlParams.get('slug') || 'demo';
+  const rawSlug = slugParam || urlParams.get('slug') || '';
+  const slug = decodeURIComponent(String(rawSlug))
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width chars from some QR scanners
+    .replace(/^\/+|\/+$/g, '')
+    .trim();
   const source = urlParams.get('source'); // 'qr' if from QR scan
+  const trackedByRedirect = urlParams.get('trk') === '1';
 
   const [visitorId] = useState(() => {
     let id = localStorage.getItem('rawajcard_visitor_id');
@@ -63,6 +68,15 @@ export default function PublicCard() {
   });
 
   const [showContactForm, setShowContactForm] = useState(false);
+
+  // Some mobile QR scanner apps append hidden characters/newlines to the URL.
+  // Canonicalize the URL once so slug lookup works consistently.
+  useEffect(() => {
+    if (!slug || !rawSlug) return;
+    if (slug === rawSlug) return;
+    const next = `/c/${encodeURIComponent(slug)}${window.location.search || ''}`;
+    window.history.replaceState({}, '', next);
+  }, [slug, rawSlug]);
 
   // Fetch card by slug — cached for 5 minutes so repeat visits are instant
   // @ts-ignore
@@ -93,7 +107,7 @@ export default function PublicCard() {
   useEffect(() => {
     if (!card) return;
     const timer = setTimeout(() => {
-      const viewType = source === 'qr' ? 'qr_scan' : 'page_view';
+      const viewType = source === 'qr' && !trackedByRedirect ? 'qr_scan' : 'page_view';
       trackViewMutation.mutate({
         card_id: card.id,
         card_owner: card.created_by,
@@ -109,7 +123,7 @@ export default function PublicCard() {
       api.entities.BusinessCard.update(card.id, updateData);
     }, 2000); // defer 2s — user sees card first
     return () => clearTimeout(timer);
-  }, [card?.id]);
+  }, [card?.id, source, trackedByRedirect, visitorId]);
 
   // Track link clicks
   const handleLinkClick = (linkType) => {
