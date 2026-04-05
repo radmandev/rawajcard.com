@@ -26,6 +26,7 @@ export default function CheckoutSuccess() {
   const [successType, setSuccessType] = useState(null); // 'order' | 'subscription'
   const [activatedPlan, setActivatedPlan] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const [orderValue, setOrderValue] = useState(1.0);
 
   useEffect(() => {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -54,6 +55,26 @@ export default function CheckoutSuccess() {
       setSuccessType('order');
     }
   }, []);
+
+  useEffect(() => {
+    if (successType !== 'order') return;
+    if (typeof window === 'undefined') return;
+
+    const urlMethod = new URLSearchParams(window.location.search).get('method');
+    if (paymentMethod === 'bank_transfer' || urlMethod === 'bank_transfer') return;
+
+    /** @type {any} */
+    const win = window;
+    if (typeof win.gtag_report_purchase_conversion !== 'function') return;
+
+    const transactionId = orderNumber || 'pending_order';
+    const conversionKey = `rawaj_purchase_conversion_${transactionId}`;
+    const alreadyTracked = sessionStorage.getItem(conversionKey);
+    if (alreadyTracked) return;
+
+    win.gtag_report_purchase_conversion(transactionId, Number(orderValue) || 1.0, undefined);
+    sessionStorage.setItem(conversionKey, '1');
+  }, [successType, paymentMethod, orderNumber, orderValue]);
 
   const activateStripeSubscription = async (sessionId, plan) => {
     setIsProcessing(true);
@@ -100,6 +121,7 @@ export default function CheckoutSuccess() {
       const result = await api.functions.invoke('confirmStripeOrder', { sessionId });
       if (result?.success) {
         setOrderNumber(result.order_number);
+        setOrderValue(Number(result.amount) || 1.0);
         setSuccessType('order');
         queryClient.invalidateQueries({ queryKey: ['cart'] });
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });

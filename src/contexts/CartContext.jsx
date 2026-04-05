@@ -2,6 +2,32 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 const CartContext = createContext(null);
 
+const trackAddToCart = (product) => {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+
+  const price = Number(product?.price ?? 0) || 0;
+  const itemId = product?.id?.toString?.() || '';
+  const itemName = product?.name || product?.name_en || product?.title || product?.name_ar || 'Rawaj Card Item';
+
+  window.gtag('event', 'add_to_cart', {
+    currency: 'SAR',
+    value: price,
+    items: [
+      {
+        item_id: itemId,
+        item_name: itemName,
+        price,
+        quantity: 1,
+      },
+    ],
+  });
+};
+
+const trackGoogleAdsAddToCartConversion = () => {
+  if (typeof window === 'undefined' || typeof window.gtag_report_conversion !== 'function') return;
+  window.gtag_report_conversion();
+};
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
@@ -19,6 +45,9 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const addItem = useCallback((product) => {
+    trackAddToCart(product);
+    trackGoogleAdsAddToCartConversion();
+
     setItems(prev => {
       const existing = prev.find(i => i.product_id === product.id);
       if (existing) {

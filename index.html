@@ -83,6 +83,46 @@
 
   gtag('config', 'G-8J8PT8NQV5');
 </script>
+<script>
+  function gtag_report_conversion(url) {
+    var callback = function () {
+      if (typeof(url) != 'undefined') {
+        window.location = url;
+      }
+    };
+    gtag('event', 'conversion', {
+      'send_to': 'AW-17934411422/5lLuCL6KkJYcEJ7N5edC',
+      'value': 1.0,
+      'currency': 'SAR',
+      'event_callback': callback
+    });
+    return false;
+  }
+</script>
+<script>
+  function gtag_report_purchase_conversion(transactionId, value, newCustomer, url) {
+    var callback = function () {
+      if (typeof(url) != 'undefined') {
+        window.location = url;
+      }
+    };
+
+    var payload = {
+      'send_to': 'AW-17934411422/EKBLCJHVp5YcEJ7N5edC',
+      'value': Number(value) || 1.0,
+      'currency': 'SAR',
+      'transaction_id': transactionId || '',
+      'event_callback': callback,
+    };
+
+    if (typeof newCustomer === 'boolean') {
+      payload.new_customer = newCustomer;
+    }
+
+    gtag('event', 'conversion', payload);
+    return false;
+  }
+</script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
