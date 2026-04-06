@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import ContactFormDialog from '@/components/cards/ContactFormDialog';
 import FloatingActions from '@/components/cards/FloatingActions';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { buildTemplateSampleCard, getTemplateSampleBySlug } from '@/lib/templateSampleCards';
 
 // Template map: lazy-loaded so only the 1 template used by this card is downloaded
 const templateComponents = {
@@ -57,6 +58,7 @@ export default function PublicCard() {
     .trim();
   const source = urlParams.get('source'); // 'qr' if from QR scan
   const trackedByRedirect = urlParams.get('trk') === '1';
+  const sampleTemplate = getTemplateSampleBySlug(slug);
 
   const [visitorId] = useState(() => {
     let id = localStorage.getItem('rawajcard_visitor_id');
@@ -89,7 +91,8 @@ export default function PublicCard() {
     gcTime: 10 * 60 * 1000,    // keep in memory 10 minutes
   });
 
-  const card = cards?.[0];
+  const card = cards?.[0] || buildTemplateSampleCard(sampleTemplate, slug);
+  const isSampleCard = !!card?.is_sample;
 
   // Detect RTL from browser language
   // @ts-ignore
@@ -105,7 +108,7 @@ export default function PublicCard() {
 
   // Track page view — deferred so it never delays render
   useEffect(() => {
-    if (!card) return;
+    if (!card || isSampleCard) return;
     const timer = setTimeout(() => {
       const viewType = source === 'qr' && !trackedByRedirect ? 'qr_scan' : 'page_view';
       trackViewMutation.mutate({
@@ -123,11 +126,11 @@ export default function PublicCard() {
       api.entities.BusinessCard.update(card.id, updateData);
     }, 2000); // defer 2s — user sees card first
     return () => clearTimeout(timer);
-  }, [card?.id, source, trackedByRedirect, visitorId]);
+  }, [card?.id, isSampleCard, source, trackedByRedirect, visitorId]);
 
   // Track link clicks
   const handleLinkClick = (linkType) => {
-    if (card) {
+    if (card && !isSampleCard) {
       // @ts-ignore
       trackViewMutation.mutate({
         card_id: card.id,
@@ -148,6 +151,9 @@ export default function PublicCard() {
   }
 
   if (!card || error) {
+    if (card && isSampleCard) {
+      // handled below
+    } else {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950">
         <div className="text-center p-8">
@@ -157,17 +163,20 @@ export default function PublicCard() {
         </div>
       </div>
     );
+    }
   }
 
   const TemplateComponent = templateComponents[card.template] || templateComponents.navy_gold;
 
   const cardWithActions = {
     ...card,
-    onShareDetails: () => setShowContactForm(true)
+    onShareDetails: () => {
+      if (!isSampleCard) setShowContactForm(true);
+    }
   };
 
   const shouldRenderExternalContactForm =
-    !!card?.contact_form?.enabled && card?.contact_form?.form_type !== 'inline';
+    !isSampleCard && !!card?.contact_form?.enabled && card?.contact_form?.form_type !== 'inline';
 
   return (
     <div className={cn("min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4", isRTL && "rtl")}>
@@ -206,13 +215,15 @@ export default function PublicCard() {
         </div>
       </div>
 
-      <ContactFormDialog
-        isOpen={showContactForm}
-        onClose={() => setShowContactForm(false)}
-        cardId={card.id}
-        cardOwner={card.created_by}
-        cardName={isRTL && card.name_ar ? card.name_ar : card.name}
-      />
+      {!isSampleCard && (
+        <ContactFormDialog
+          isOpen={showContactForm}
+          onClose={() => setShowContactForm(false)}
+          cardId={card.id}
+          cardOwner={card.created_by}
+          cardName={isRTL && card.name_ar ? card.name_ar : card.name}
+        />
+      )}
 
       <FloatingActions
         card={card}

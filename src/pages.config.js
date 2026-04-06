@@ -55,6 +55,7 @@ const Admin           = lazy(() => import('./pages/Admin'));
 const Analytics       = lazy(() => import('./pages/Analytics'));
 const CRMSettings     = lazy(() => import('./pages/CRMSettings'));
 const CardBuilder     = lazy(() => import('./pages/CardBuilder'));
+const CardSamples     = lazy(() => import('./pages/CardSamples'));
 const Checkout        = lazy(() => import('./pages/Checkout'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 const ClientDetails   = lazy(() => import('./pages/ClientDetails'));
@@ -86,6 +87,7 @@ export const PAGES = {
     "Analytics": Analytics,
     "CRMSettings": CRMSettings,
     "CardBuilder": CardBuilder,
+    "CardSamples": CardSamples,
     "Checkout": Checkout,
     "CheckoutSuccess": CheckoutSuccess,
     "ClientDetails": ClientDetails,

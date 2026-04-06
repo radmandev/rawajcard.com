@@ -59,6 +59,7 @@ const navItems = [
     hasDropdown: true,
     type: "freetools"
   },
+  { label: "Card Samples", labelAr: "نماذج البطاقات", hasDropdown: false, path: createPageUrl('CardSamples') },
   { label: "NFC Cards", labelAr: "بطاقات NFC", hasDropdown: false, path: '/Products' },
 ];
 

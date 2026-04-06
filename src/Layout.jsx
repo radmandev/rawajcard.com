@@ -20,7 +20,7 @@ function LayoutContent({ children, currentPageName }) {
   const { isAuthenticated, isLoadingAuth } = useAuth();
 
   // Public pages that don't need sidebar
-  const publicPages = ['PublicCard', 'CheckoutSuccess', 'Home', 'Products', 'ProductDetail', 'Pricing', 'TestLanding', 'Store', 'Checkout', 'Demo3D', 'PhysicalCards'];
+  const publicPages = ['PublicCard', 'CheckoutSuccess', 'Home', 'Products', 'ProductDetail', 'Pricing', 'TestLanding', 'Store', 'Checkout', 'Demo3D', 'PhysicalCards', 'CardSamples'];
   const isPublicPage = publicPages.includes(currentPageName);
   const isHomePage = currentPageName === 'Home' || currentPageName === 'TestLanding';
 
