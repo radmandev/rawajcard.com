@@ -55,6 +55,7 @@ class AppErrorBoundary extends React.Component {
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+const ProductDetailPage = Pages.ProductDetail;
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -144,7 +145,7 @@ const AuthenticatedApp = () => {
   const isPublicRoute = [
     '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples',
     '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
-  ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/');
+  ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/') || location.pathname.startsWith('/products/');
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
   if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
@@ -193,6 +194,16 @@ const AuthenticatedApp = () => {
         <Route path="/c/:slug" element={<PublicCard />} />
         <Route path="/q/:cardId" element={<QRCardRedirect />} />
         <Route path="/trackQRScan" element={<TrackQRScanRedirect />} />
+        {ProductDetailPage && (
+          <Route
+            path="/products/:slug"
+            element={
+              <LayoutWrapper currentPageName="ProductDetail">
+                <ProductDetailPage />
+              </LayoutWrapper>
+            }
+          />
+        )}
         <Route path="/" element={
           <LayoutWrapper currentPageName="TestLanding">
             <TestLandingPage />

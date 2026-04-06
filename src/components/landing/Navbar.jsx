@@ -222,7 +222,7 @@ export default function Navbar({ onLoginClick } = {}) {
                             {displayedProducts.map((product, idx) => (
                               <Link
                                 key={idx}
-                                to={`/ProductDetail?id=${product.id}`}
+                                to={`/products/${encodeURIComponent(product.slug || product.id)}`}
                                 onClick={() => setActiveDropdown(null)}
                                 className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-slate-100 dark:border-slate-700"
                               >

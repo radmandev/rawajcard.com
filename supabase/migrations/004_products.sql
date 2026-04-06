@@ -63,7 +63,7 @@ values
     'metal-nfc-card',
     'Premium metal NFC card with custom design',
     'بطاقة معدنية فاخرة مع تصميمك الخاص',
-    'https://rawaj.click/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/12/Frame_44_1b99c720-5d9b-492e-b5fa-ea176d50a2ad-450x450.webp',
     130, null, 'business_cards', 'published', 1, true,
     '["Metal material","Magnetic","Custom design","Premium finish"]',
     '["مادة معدنية","مغناطيسي","تصميم مخصص","لمسة نهائية فاخرة"]'
@@ -74,7 +74,7 @@ values
     'wooden-nfc-card',
     'Elegant wooden NFC business card with custom design',
     'بطاقة خشبية أنيقة بتصميم مخصص',
-    'https://rawaj.click/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3-450x450.png',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/10/%D8%B9%D9%85%D8%A7%D8%AF-%D8%B1%D8%AF%D9%85%D8%A7%D9%86-3-450x450.png',
     100, null, 'business_cards', 'published', 2, true,
     '["Natural wood","Laser engraving","Eco-friendly","Custom design"]',
     '["خشب طبيعي","حفر بالليزر","صديق للبيئة","تصميم مخصص"]'
@@ -85,7 +85,7 @@ values
     'magnetic-nfc-card',
     'Premium plastic NFC card with magnetic feature',
     'بطاقة بلاستيكية فاخرة مع ميزة مغناطيسية',
-    'https://rawaj.click/wp-content/uploads/2024/10/6-450x450.png',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/10/6-450x450.png',
     50, null, 'business_cards', 'published', 3, true,
     '["Magnetic back","Custom design","Premium plastic","Quick sharing"]',
     '["ظهر مغناطيسي","تصميم مخصص","بلاستيك فاخر","مشاركة سريعة"]'
@@ -96,7 +96,7 @@ values
     'google-review-card',
     'Collect Google reviews effortlessly',
     'اجمع تقييمات جوجل بسهولة',
-    'https://rawaj.click/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/12/Google-NFC-Instagam-Facebook-WhatsApp-Youtube-Snapchat-Android-iPhone-450x450.webp',
     60, 35, 'business_cards', 'published', 4, true,
     '["Direct to Google","Instant reviews","Professional look","Easy to use"]',
     '["مباشرة لجوجل","تقييمات فورية","مظهر احترافي","سهل الاستخدام"]'
@@ -107,7 +107,7 @@ values
     'review-keychain',
     'Portable NFC keychain for collecting reviews',
     'تعليقة مفاتيح محمولة لجمع التقييمات',
-    'https://rawaj.click/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/12/NFC-Epoxy-Keychain-NFC-Google-450x450.webp',
     75, 45, 'keychains', 'published', 5, true,
     '["Compact design","Durable","Multiple colors","Review collection"]',
     '["تصميم مدمج","متين","ألوان متعددة","جمع التقييمات"]'
@@ -118,7 +118,7 @@ values
     'social-keychain',
     'Share social media profiles instantly',
     'شارك حساباتك على وسائل التواصل فوراً',
-    'https://rawaj.click/wp-content/uploads/2024/12/Instagram-NFC-Epoxy-Tag-NFC-Key-Card-13-56MHz-URL-Link-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/12/Instagram-NFC-Epoxy-Tag-NFC-Key-Card-13-56MHz-URL-Link-450x450.webp',
     35, null, 'keychains', 'published', 6, true,
     '["All platforms","Instant connect","Stylish design","Multiple options"]',
     '["جميع المنصات","اتصال فوري","تصميم أنيق","خيارات متعددة"]'
@@ -129,7 +129,7 @@ values
     'premium-table-stand',
     'Elegant table stand for collecting reviews',
     'ستاند طاولة أنيق لجمع التقييمات',
-    'https://rawaj.click/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/12/unnamed-file-12-450x450.webp',
     120, null, 'stands', 'published', 7, false,
     '["Premium acrylic","Desk stand","Professional look","Easy placement"]',
     '["أكريليك فاخر","حامل مكتب","مظهر احترافي","وضع سهل"]'
@@ -140,7 +140,7 @@ values
     'quick-share-stand',
     'Share contacts, menu, location instantly',
     'شارك جهات الاتصال والمنيو والموقع فوراً',
-    'https://rawaj.click/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800-450x450.webp',
+    'https://beta.rawajcard.com/wp-content/uploads/2024/10/InstagramStandwhite_1800x1800-450x450.webp',
     159, 129, 'stands', 'published', 8, true,
     '["Multi-purpose","Acrylic stand","Custom info","Restaurant ready"]',
     '["متعدد الأغراض","حامل أكريليك","معلومات مخصصة","جاهز للمطاعم"]'

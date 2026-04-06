@@ -20,6 +20,7 @@ export default function ProductPreviewModal({ product, onClose }) {
   const description = isRTL ? (product.description_ar || product.description_en || '') : (product.description_en || product.description_ar || '');
   const features    = isRTL ? (product.features_ar || product.features || []) : (product.features || product.features_en || product.features_ar || []);
   const image       = product.image || product.image_url;
+  const productIdentifier = product.slug || product.id;
   const origPrice   = product.originalPrice || product.original_price;
   const discountPct = origPrice && origPrice > product.price
     ? Math.round((1 - product.price / origPrice) * 100)
@@ -39,12 +40,30 @@ export default function ProductPreviewModal({ product, onClose }) {
     navigate(createPageUrl('Checkout'));
   };
 
+  const handleImageClick = () => {
+    if (!productIdentifier) return;
+    onClose();
+    navigate(`/products/${encodeURIComponent(productIdentifier)}`);
+  };
+
   return (
     <Dialog open={!!product} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
         <div className={cn('grid grid-cols-1 md:grid-cols-2', isRTL && 'rtl')}>
           {/* Image panel */}
-          <div className="relative bg-slate-100 dark:bg-slate-800 aspect-square md:aspect-auto md:min-h-[400px]">
+          <div
+            className="relative bg-slate-100 dark:bg-slate-800 aspect-square md:aspect-auto md:min-h-[400px] cursor-pointer"
+            onClick={handleImageClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleImageClick();
+              }
+            }}
+            aria-label={isRTL ? 'فتح صفحة المنتج' : 'Open product page'}
+          >
             {image ? (
               <img src={image} alt={name} className="w-full h-full object-cover" />
             ) : (

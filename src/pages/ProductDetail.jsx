@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Check, ChevronRight, Minus, Plus, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Check, ChevronRight, Minus, Plus, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { productsData, productCategories } from '@/components/shared/productsData';
 import { useCart } from '@/contexts/CartContext';
@@ -22,9 +22,18 @@ const normalizeProduct = (p) => ({
     : 0,
 });
 
+const staticProducts = productsData.map((p) => ({
+  ...p,
+  slug: p.slug || p.id,
+  main_image: p.image_url,
+  extra_images: p.extra_images ?? [],
+}));
+
 export default function ProductDetail() {
+  const { slug: slugParam } = useParams();
   const [searchParams] = useSearchParams();
-  const productId = searchParams.get('id');
+  const legacyProductId = searchParams.get('id');
+  const productIdentifier = slugParam || legacyProductId;
   const { lang, isRTL } = useLanguage();
   const language = lang;
   const { addItem } = useCart();
@@ -32,33 +41,87 @@ export default function ProductDetail() {
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
   // Try fetching from Supabase
-  const { data: dbProduct } = useQuery({
-    queryKey: ['product-detail', productId],
+  const { data: dbProduct, isLoading: isLoadingProduct } = useQuery({
+    queryKey: ['product-detail', productIdentifier],
     queryFn: async () => {
+      if (!productIdentifier) return null;
+      if (slugParam) {
+        const { data: bySlug, error: slugError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('status', 'published')
+          .eq('slug', productIdentifier)
+          .maybeSingle();
+
+        if (bySlug && !slugError) return normalizeProduct(bySlug);
+
+        const { data: byId, error: idError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('status', 'published')
+          .eq('id', productIdentifier)
+          .maybeSingle();
+
+        if (idError || !byId) return null;
+        return normalizeProduct(byId);
+      }
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('id', productId)
-        .single();
+        .eq('status', 'published')
+        .eq('id', productIdentifier)
+        .maybeSingle();
+
       if (error || !data) return null;
       return normalizeProduct(data);
     },
-    enabled: !!productId,
+    enabled: !!productIdentifier,
     staleTime: 1000 * 60 * 5,
   });
 
   // Fallback to static data
-  const staticProduct = productsData.find((p) => p.id === productId);
+  const staticProduct = staticProducts.find((p) => p.slug === productIdentifier || p.id === productIdentifier);
   const product = dbProduct || staticProduct;
+
+  const galleryImages = [
+    product?.main_image || product?.image_url,
+    ...(Array.isArray(product?.extra_images) ? product.extra_images : []),
+  ].filter(Boolean);
+
+  useEffect(() => {
+    setSelectedImage(galleryImages[0] || '');
+  }, [product?.id, product?.slug]);
 
   const category = productCategories.find((c) => c.value === product?.category);
 
   // Related products (same category, exclude current)
-  const relatedProducts = productsData
-    .filter((p) => p.category === product?.category && p.id !== productId)
-    .slice(0, 4);
+  const { data: dbRelatedProducts = [] } = useQuery({
+    queryKey: ['related-products', product?.category, product?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'published')
+        .eq('category', product.category)
+        .neq('id', product.id)
+        .order('sort_order', { ascending: true })
+        .limit(4);
+      if (error) return [];
+      return (data || []).map(normalizeProduct);
+    },
+    enabled: !!product?.category,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const relatedProducts = dbRelatedProducts.length
+    ? dbRelatedProducts
+    : staticProducts
+        .filter((p) => p.category === product?.category && p.id !== product?.id)
+        .slice(0, 4);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -66,6 +129,18 @@ export default function ProductDetail() {
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
   };
+
+  if (isLoadingProduct && !product) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-900">
+        <Navbar />
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-teal-600" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -112,7 +187,7 @@ export default function ProductDetail() {
           )}
           <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="text-slate-900 dark:text-white font-medium line-clamp-1">
-            {language === 'ar' ? product.name_ar : product.name_en}
+            {language === 'ar' ? (product.name_ar || product.name_en || product.name) : (product.name_en || product.name || product.name_ar)}
           </span>
         </nav>
 
@@ -120,10 +195,11 @@ export default function ProductDetail() {
         <div className="grid lg:grid-cols-2 gap-12 mb-24">
 
           {/* Product Image */}
+          <div className="space-y-4">
           <div className="relative rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-800 aspect-square shadow-xl">
             <img
-              src={product.image_url}
-              alt={language === 'ar' ? product.name_ar : product.name_en}
+              src={selectedImage || product.main_image || product.image_url}
+              alt={language === 'ar' ? (product.name_ar || product.name_ar || product.name_en) : (product.name_en || product.name || product.name_ar)}
               className="w-full h-full object-contain"
             />
             {product.discount_percentage > 0 && (
@@ -136,6 +212,25 @@ export default function ProductDetail() {
                 {language === 'ar' ? 'قابل للتخصيص' : 'Customizable'}
               </div>
             )}
+          </div>
+          {galleryImages.length > 1 && (
+            <div className="grid grid-cols-5 gap-2">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={`${img}-${idx}`}
+                  type="button"
+                  onClick={() => setSelectedImage(img)}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === img
+                      ? 'border-teal-500 ring-2 ring-teal-200'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-teal-400'
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           </div>
 
           {/* Product Info */}
@@ -154,13 +249,13 @@ export default function ProductDetail() {
 
             {/* Name */}
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white leading-snug">
-              {language === 'ar' ? product.name_ar : product.name_en}
+              {language === 'ar' ? (product.name_ar || product.name_en || product.name) : (product.name_en || product.name || product.name_ar)}
             </h1>
 
             {/* Description */}
             {(product.description_ar || product.description_en) && (
               <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                {language === 'ar' ? product.description_ar : product.description_en}
+                {language === 'ar' ? (product.description_ar || product.description_en || product.description) : (product.description_en || product.description || product.description_ar)}
               </p>
             )}
 
@@ -270,13 +365,13 @@ export default function ProductDetail() {
               {relatedProducts.map((p) => (
                 <Link
                   key={p.id}
-                  to={`/ProductDetail?id=${p.id}`}
+                  to={`/products/${encodeURIComponent(p.slug || p.id)}`}
                   className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow hover:shadow-xl transition-all duration-300 border border-slate-100 dark:border-slate-700"
                 >
                   <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-900">
                     <img
                       src={p.image_url}
-                      alt={language === 'ar' ? p.name_ar : p.name_en}
+                      alt={language === 'ar' ? (p.name_ar || p.name_en || p.name) : (p.name_en || p.name || p.name_ar)}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     {p.discount_percentage > 0 && (
@@ -287,7 +382,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-2 line-clamp-2">
-                      {language === 'ar' ? p.name_ar : p.name_en}
+                      {language === 'ar' ? (p.name_ar || p.name_en || p.name) : (p.name_en || p.name || p.name_ar)}
                     </h3>
                     <div className="flex items-center gap-2">
                       <span className="text-teal-600 dark:text-teal-400 font-bold">

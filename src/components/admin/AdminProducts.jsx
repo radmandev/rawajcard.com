@@ -23,7 +23,7 @@ import {
 import {
   Plus, Pencil, Trash2, Eye, EyeOff, Search,
   Package, ImagePlus, X, Loader2, GripVertical,
-  Tag, Globe, FileText, DollarSign, ChevronDown,
+  Tag, Globe, FileText, DollarSign, ChevronDown, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -39,6 +39,12 @@ const slugify = (str) =>
     .replace(/[\s_]+/g, '-')
     .replace(/[^\w-]/g, '')
     .replace(/--+/g, '-');
+
+const parseFeatureList = (value) =>
+  String(value || '')
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 const EMPTY_PRODUCT = {
   name: '',
@@ -207,6 +213,8 @@ function ProductDialog({ open, onClose, initialData, onSave, isSaving, isRTL }) 
         ...EMPTY_PRODUCT,
         ...initialData,
         extra_images: initialData.extra_images ?? [],
+        features_en: Array.isArray(initialData.features_en) ? initialData.features_en : [],
+        features_ar: Array.isArray(initialData.features_ar) ? initialData.features_ar : [],
         price: initialData.price ?? '',
         sale_price: initialData.sale_price ?? '',
       } : { ...EMPTY_PRODUCT });
@@ -331,6 +339,29 @@ function ProductDialog({ open, onClose, initialData, onSave, isSaving, isRTL }) 
               onChange={(e) => set('seo_keywords', e.target.value)}
               placeholder="NFC card, business card, metal card, Saudi Arabia"
             />
+          </div>
+
+          {/* ── Features ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{isRTL ? 'المميزات (إنجليزي)' : 'Features (English)'}</Label>
+              <Textarea
+                value={(form.features_en || []).join(', ')}
+                onChange={(e) => set('features_en', parseFeatureList(e.target.value))}
+                rows={3}
+                placeholder={isRTL ? 'ميزة 1، ميزة 2' : 'Feature 1, Feature 2'}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{isRTL ? 'المميزات (عربي)' : 'Features (Arabic)'}</Label>
+              <Textarea
+                value={(form.features_ar || []).join(', ')}
+                onChange={(e) => set('features_ar', parseFeatureList(e.target.value))}
+                rows={3}
+                placeholder={isRTL ? 'ميزة ١، ميزة ٢' : 'ميزة 1، ميزة 2'}
+                dir="rtl"
+              />
+            </div>
           </div>
 
           <Separator />
@@ -676,6 +707,21 @@ export default function AdminProducts() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <a
+                        href={`/products/${encodeURIComponent(product.slug || product.id)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={isRTL ? 'فتح صفحة المنتج' : 'Open product page'}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

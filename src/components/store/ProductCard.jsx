@@ -13,6 +13,12 @@ export default function ProductCard({ product, onAddToCart, onView }) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { isRTL } = useLanguage();
+  const productIdentifier = product?.slug || product?.id;
+
+  const goToProductPage = () => {
+    if (!productIdentifier) return;
+    navigate(`/products/${encodeURIComponent(productIdentifier)}`);
+  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-SA', {
@@ -40,7 +46,10 @@ export default function ProductCard({ product, onAddToCart, onView }) {
       )}
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+      <div
+        className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800 cursor-pointer"
+        onClick={goToProductPage}
+      >
         {product.image ? (
           <img
             src={product.image}
@@ -75,7 +84,7 @@ export default function ProductCard({ product, onAddToCart, onView }) {
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => onView(product)}
+            onClick={(e) => { e.stopPropagation(); onView(product); }}
             className="bg-white/90 hover:bg-white"
           >
             <Eye className="h-4 w-4 mr-1" />

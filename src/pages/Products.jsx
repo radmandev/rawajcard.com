@@ -6,9 +6,8 @@ import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
-import { productsData, productCategories } from '@/components/shared/productsData';
+import { productsData } from '@/components/shared/productsData';
 import { useCart } from '@/contexts/CartContext';
-import ProductPreviewModal from '@/components/store/ProductPreviewModal';
 
 // Map Supabase row → display shape
 const normalizeProduct = (p) => ({
@@ -38,7 +37,6 @@ export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [language, setLanguage] = useState('ar');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [previewProduct, setPreviewProduct] = useState(null);
   const { addItem } = useCart();
 
   // Sync category with URL param changes
@@ -145,7 +143,7 @@ export default function Products() {
               {filteredProducts.map((product) => (
                 <Link
                   key={product.id}
-                  to={`/ProductDetail?id=${product.id}`}
+                  to={`/products/${encodeURIComponent(product.slug || product.id)}`}
                   className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 dark:border-slate-700 cursor-pointer block"
                   onClick={(e) => {
                     // Let the Link handle navigation unless clicking Add to Cart
@@ -155,7 +153,7 @@ export default function Products() {
                   <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-900">
                     <img
                       src={product.image_url}
-                      alt={language === 'ar' ? product.name_ar : product.name_en}
+                      alt={language === 'ar' ? (product.name_ar || product.name_en || product.name) : (product.name_en || product.name || product.name_ar)}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     {product.discount_percentage > 0 && (
@@ -173,10 +171,10 @@ export default function Products() {
                   {/* Info */}
                   <div className="p-5">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
-                      {language === 'ar' ? product.name_ar : product.name_en}
+                      {language === 'ar' ? (product.name_ar || product.name_en || product.name) : (product.name_en || product.name || product.name_ar)}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                      {language === 'ar' ? product.description_ar : product.description_en}
+                      {language === 'ar' ? (product.description_ar || product.description_en || product.description) : (product.description_en || product.description || product.description_ar)}
                     </p>
 
                     {/* Price */}
