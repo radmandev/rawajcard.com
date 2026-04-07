@@ -25,9 +25,9 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/9f16258e0_Rawajcard.png" 
+                src="https://rawajcard.com/Rawajcard_logo.png" 
                 alt="Rawajcard" 
-                className="h-10 w-auto"
+                className="h-10 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.95)]"
               />
             </div>
             <p className="text-slate-400 dark:text-slate-500 mb-6 max-w-xs">

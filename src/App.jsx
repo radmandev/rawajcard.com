@@ -17,6 +17,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
 import TestLandingPage from '@/pages/TestLanding';
+import AlternateLandingPage from '@/pages/AlternateLanding';
 import { supabase } from '@/lib/supabaseClient';
 
 class AppErrorBoundary extends React.Component {
@@ -143,7 +144,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/AlternateLanding', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples',
+    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/NFC', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples',
     '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
   ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/') || location.pathname.startsWith('/products/');
 
@@ -209,6 +210,10 @@ const AuthenticatedApp = () => {
             <TestLandingPage />
           </LayoutWrapper>
         } />
+        <Route path="/NFC" element={
+          <AlternateLandingPage />
+        } />
+        <Route path="/AlternateLanding" element={<Navigate to="/NFC" replace />} />
         <Route path="/Home" element={<Navigate to="/" replace />} />
         <Route path="/PhysicalCards" element={<Navigate to={createPageUrl('MyOrders')} replace />} />
         <Route path="/returns" element={<Navigate to={createPageUrl('Return')} replace />} />

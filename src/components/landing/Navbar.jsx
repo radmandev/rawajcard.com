@@ -78,11 +78,10 @@ const translations = {
   }
 };
 
-export default function Navbar({ onLoginClick } = {}) {
+export default function Navbar({ onLoginClick, hideFreeTools = false, logoPath = '/' } = {}) {
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [showFreeTools, setShowFreeTools] = useState(false);
   const [closeTimeout, setCloseTimeout] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -99,6 +98,7 @@ export default function Navbar({ onLoginClick } = {}) {
   const { totalCount: cartCount, setIsCartOpen } = useCart();
   const { data: me } = useQuery({ queryKey: ['current-user'], queryFn: () => api.auth.me(), enabled: isAuthenticated });
   const mainAppPage = me?.role === 'admin' ? 'Admin' : 'Dashboard';
+  const visibleNavItems = hideFreeTools ? navItems.filter(item => item.type !== 'freetools') : navItems;
 
   // Use local products data
   const displayedProducts = selectedCategory
@@ -132,24 +132,23 @@ export default function Navbar({ onLoginClick } = {}) {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          <Link to={logoPath} className="flex items-center gap-3">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/9f16258e0_Rawajcard.png" 
+              src="https://rawajcard.com/Rawajcard_logo.png" 
               alt="Rawajcard" 
-              className="h-10 w-auto"
+              className="h-10 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.95)]"
             />
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item, index) => (
+            {visibleNavItems.map((item, index) => (
               <div
                 key={index}
                 className="relative"
                 onMouseEnter={() => {
                   if (closeTimeout) clearTimeout(closeTimeout);
                   if (item.hasDropdown) setActiveDropdown(index);
-                  setShowFreeTools(false);
                 }}
                 onMouseLeave={() => {
                   if (item.hasDropdown) {
@@ -372,14 +371,9 @@ export default function Navbar({ onLoginClick } = {}) {
             {/* Auth CTA */}
             <Button 
               className="hidden md:inline-flex bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white rounded-full px-6 shadow-lg shadow-teal-500/20"
-              onClick={() => isAuthenticated ? navigate(createPageUrl(mainAppPage)) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login')))}
+              onClick={() => navigate(createPageUrl('Products'))}
             >
-              <LogIn className="w-4 h-4 mr-1.5" />
-              {isAuthenticated
-                ? (me?.role === 'admin'
-                    ? (language === 'ar' ? 'لوحة المسؤول' : 'Admin Panel')
-                    : (language === 'ar' ? 'لوحة التحكم' : 'Dashboard'))
-                : translations[language].createCard}
+              NFC كروت التعارف الممغنطة
             </Button>
 
             {/* Mobile menu toggle */}
@@ -397,7 +391,7 @@ export default function Navbar({ onLoginClick } = {}) {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <div className="container mx-auto px-4 py-4 space-y-1">
-            {navItems.map((item, index) => (
+            {visibleNavItems.map((item, index) => (
               item.type === 'product' ? (
                 <div key={index}>
                   <button
@@ -456,14 +450,9 @@ export default function Navbar({ onLoginClick } = {}) {
             <div className="pt-2">
               <Button
                 className="w-full bg-gradient-to-r from-teal-600 to-blue-500 text-white rounded-full"
-                onClick={() => { isAuthenticated ? navigate(createPageUrl(mainAppPage)) : (onLoginClick ? onLoginClick() : navigate(createPageUrl('Login'))); setMobileMenuOpen(false); }}
+                onClick={() => { navigate(createPageUrl('Products')); setMobileMenuOpen(false); }}
               >
-                <LogIn className="w-4 h-4 mr-1.5" />
-                {isAuthenticated
-                  ? (me?.role === 'admin'
-                      ? (language === 'ar' ? 'لوحة المسؤول' : 'Admin Panel')
-                      : (language === 'ar' ? 'لوحة التحكم' : 'Dashboard'))
-                  : translations[language].createCard}
+                تسوق كروت التعارف الممغنطة
               </Button>
             </div>
           </div>

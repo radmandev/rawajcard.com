@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { CreditCard, Settings, Share2, BarChart3 } from 'lucide-react';
 import { normalizeImageUrl } from '@/lib/normalizeImageUrl';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import LoginModal from '@/components/auth/LoginModal';
 
 const translations = {
   en: {
@@ -14,7 +17,7 @@ const translations = {
         description: "Choose your favorite design. Customize it with your logo, colors, and personal branding.",
         icon: CreditCard,
         cta: "Get Yours Now",
-        image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F001b013bafa8005c41af5d6b3bff1ca60a9ef36d9124cf57b1539f36ff9215f8.png&w=3840&q=75"
+        image: "https://rawajcard.com/rawajcard-items.png"
       },
       {
         step: 2,
@@ -52,7 +55,7 @@ const translations = {
         description: "اختر تصميمك المفضل. خصصه بشعارك وألوانك وعلامتك التجارية الشخصية.",
         icon: CreditCard,
         cta: "احصل عليها الآن",
-        image: "https://tapni.com/_next/image?url=https%3A%2F%2Fcdn.tapni.co%2Fcompany-media%2Fe411a6e5-e8c1-40b3-aa4c-1214cfb43e8a%2Fgallery%2Fimage%2F001b013bafa8005c41af5d6b3bff1ca60a9ef36d9124cf57b1539f36ff9215f8.png&w=3840&q=75"
+        image: "https://rawajcard.com/rawajcard-items.png"
       },
       {
         step: 2,
@@ -84,6 +87,8 @@ const translations = {
 
 export default function GetStartedSteps() {
   const [language, setLanguage] = useState('ar');
+  const [loginOpen, setLoginOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const dir = document.documentElement.getAttribute('dir');
@@ -104,6 +109,17 @@ export default function GetStartedSteps() {
 
   const t = translations[language];
   const steps = t.steps;
+
+  const handleStepAction = (stepNumber) => {
+    if (stepNumber === 1) {
+      navigate(createPageUrl('Products'));
+      return;
+    }
+
+    if (stepNumber === 2) {
+      setLoginOpen(true);
+    }
+  };
 
   return (
     <section className="py-20 bg-slate-50 dark:bg-slate-800">
@@ -147,7 +163,8 @@ export default function GetStartedSteps() {
                 
                 <Button 
                   variant="outline" 
-                  className="w-full rounded-full border-2 hover:bg-teal-50 hover:border-teal-200"
+                  onClick={() => handleStepAction(item.step)}
+                  className="w-full rounded-full border-2 hover:bg-teal-600 hover:border-teal-600 hover:text-white"
                 >
                   {item.cta}
                 </Button>
@@ -156,6 +173,8 @@ export default function GetStartedSteps() {
           ))}
         </div>
       </div>
+
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </section>
   );
 }

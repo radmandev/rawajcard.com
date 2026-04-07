@@ -341,8 +341,7 @@ export default function AlternateLanding() {
       </div>
 
       {/* ── Navbar (existing) ────────────────────────────────────── */}
-      {/* eslint-disable-next-line @typescript-eslint/no-unsafe-jsx-props */}
-      <Navbar onLoginClick={() => setLoginOpen(true)} />
+      <Navbar hideFreeTools logoPath="/NFC" />
 
       {/* ── Hero Section ─────────────────────────────────────────── */}
       <section
@@ -463,23 +462,14 @@ export default function AlternateLanding() {
                 transition={{ duration: 0.7, delay: 0.65 }}
                 className="flex flex-wrap gap-4"
               >
-                <button onClick={() => setLoginOpen(true)}>
+                <Link to={createPageUrl('Products')}>
                   <motion.span
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base cursor-pointer"
                   >
-                    {isRTL ? 'انشئ كرت رقمي مجاني' : 'Create your free digital card'}
+                    احصل على بطاقتك الآن
                     <ArrowLeft className="h-5 w-5" />
-                  </motion.span>
-                </button>
-                <Link to={createPageUrl('Store')}>
-                  <motion.span
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base cursor-pointer"
-                  >
-                    {isRTL ? 'تسوق الآن' : 'Shop Now'}
                   </motion.span>
                 </Link>
               </motion.div>
@@ -710,24 +700,14 @@ export default function AlternateLanding() {
           </Reveal>
           <Reveal delay={0.3}>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to={createPageUrl('Login')}>
+              <Link to={createPageUrl('Products')}>
                 <motion.span
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg cursor-pointer"
-                  onClick={(e) => { e.preventDefault(); setLoginOpen(true); }}
                 >
-                  {midPageCtaLabel}
+                  تسوق كروت التعارف الممغنطة
                   <ArrowLeft className="h-5 w-5" />
-                </motion.span>
-              </Link>
-              <Link to={createPageUrl('Store')}>
-                <motion.span
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-10 py-5 rounded-2xl border border-white/20 transition-all text-lg cursor-pointer"
-                >
-                  {isRTL ? 'خصص كرتك المفضل' : 'Customize Your Favorite Card'}
                 </motion.span>
               </Link>
             </div>
@@ -819,13 +799,13 @@ export default function AlternateLanding() {
               <h3 className="text-xl font-black mb-1">{isRTL ? 'جاهز تبدأ؟' : 'Ready to start?'}</h3>
               <p className="text-slate-400 text-sm">{isRTL ? 'انشئ كرتك الرقمي مجاناً الآن' : 'Create your digital card for free today'}</p>
             </div>
-            <button
-              onClick={() => setLoginOpen(true)}
+            <Link
+              to={createPageUrl('Products')}
               className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors"
             >
-              {footerCtaLabel}
+              تسوق كروت التعارف الممغنطة
               <ArrowLeft className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
         </div>
 
