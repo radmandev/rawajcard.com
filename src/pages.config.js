@@ -52,6 +52,7 @@ import { lazy } from 'react';
 import __Layout from './Layout.jsx';
 
 const Admin           = lazy(() => import('./pages/Admin'));
+const AlternateLanding = lazy(() => import('./pages/AlternateLanding'));
 const Analytics       = lazy(() => import('./pages/Analytics'));
 const CRMSettings     = lazy(() => import('./pages/CRMSettings'));
 const CardBuilder     = lazy(() => import('./pages/CardBuilder'));
@@ -84,6 +85,7 @@ const PhysicalCards   = lazy(() => import('./pages/PhysicalCards'));
 
 export const PAGES = {
     "Admin": Admin,
+    "AlternateLanding": AlternateLanding,
     "Analytics": Analytics,
     "CRMSettings": CRMSettings,
     "CardBuilder": CardBuilder,
