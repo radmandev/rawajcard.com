@@ -205,7 +205,7 @@ export default function PublicCard() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg text-sm text-slate-500 hover:text-teal-600 transition-colors"
           >
             <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/e91911fe6_rawajcardlogo.png"
+              src="/rawajcard-logo.png"
               alt="Rawajcard"
               className="h-4 w-4"
               loading="lazy"

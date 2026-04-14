@@ -1008,7 +1008,7 @@ export default function TestLanding() {
             {/* Brand */}
             <div className="md:col-span-1">
               <img
-                src="https://rawajcard.com/wp-content/uploads/2024/09/rawajcard-logo.webp"
+                src="/rawajcard-logo.png"
                 alt="Rawajcard"
                 className="h-12 w-auto mb-4 brightness-200"
                 onError={(e) => {

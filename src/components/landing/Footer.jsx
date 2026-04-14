@@ -25,7 +25,7 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <img 
-                src="https://rawajcard.com/Rawajcard_logo.png" 
+                src="/rawajcard-logo.png" 
                 alt="Rawajcard" 
                 className="h-10 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.95)]"
               />

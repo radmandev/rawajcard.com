@@ -41,7 +41,7 @@ export default function Header({ onMenuToggle, isMenuOpen, cartCount = 0 }) {
         ) : (
           <Link to={createPageUrl(homePage)} className="flex items-center gap-3">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6962369d7645fd9abc56cb8f/e91911fe6_rawajcardlogo.png"
+              src="/rawajcard-logo.png"
               alt="Rawajcard"
               className="h-10 w-10 object-contain"
             />

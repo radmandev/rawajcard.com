@@ -236,7 +236,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
           <div className="flex items-center justify-center shrink-0 px-2 lg:order-2">
             <Link to={logoPath} className="flex items-center gap-3">
               <img
-                src="https://rawajcard.com/Rawajcard_logo.png"
+                src="/rawajcard-logo.png"
                 alt="Rawajcard"
                 className="h-10 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.95)]"
               />
