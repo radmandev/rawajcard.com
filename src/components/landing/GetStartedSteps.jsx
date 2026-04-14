@@ -122,7 +122,7 @@ export default function GetStartedSteps() {
   };
 
   return (
-    <section className="py-20 bg-slate-50 dark:bg-slate-800">
+    <section id="how-it-works" className="py-20 bg-slate-50 dark:bg-slate-800">
       <div className="container mx-auto px-4 md:px-6">
         <span className="text-teal-600 dark:text-teal-400 text-sm font-semibold tracking-wider uppercase mb-4 block text-center">
           {t.subtitle}

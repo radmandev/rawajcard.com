@@ -706,7 +706,7 @@ export default function AlternateLanding() {
                   whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black px-10 py-5 rounded-2xl shadow-2xl shadow-teal-500/40 transition-all text-lg cursor-pointer"
                 >
-                  تسوق كروت التعارف الممغنطة
+              {isRTL ? 'اختر بطاقتك الآن' : 'Choose Your Card Now'}
                   <ArrowLeft className="h-5 w-5" />
                 </motion.span>
               </Link>
@@ -803,7 +803,7 @@ export default function AlternateLanding() {
               to={createPageUrl('Products')}
               className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors"
             >
-              تسوق كروت التعارف الممغنطة
+              {isRTL ? 'اختر بطاقتك الآن' : 'Choose Your Card Now'}
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </div>

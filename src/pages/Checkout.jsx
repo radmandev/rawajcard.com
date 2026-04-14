@@ -307,7 +307,7 @@ export default function Checkout() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
-        <div className="max-w-md mx-auto text-center py-32 px-4">
+        <div className="public-subpage-offset max-w-md mx-auto text-center pb-20 px-4">
           <ShoppingBag className="h-16 w-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">{t('emptyCart')}</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-6">
@@ -322,7 +322,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navbar />
-      <div className="max-w-5xl mx-auto pt-28 pb-16 px-4">
+      <div className="public-subpage-offset max-w-5xl mx-auto pb-16 px-4">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-8">
           {t('checkout')}
         </h1>

@@ -103,7 +103,7 @@ export default function Products() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <section className="public-subpage-offset pb-16 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <div className="container mx-auto px-4 md:px-6 text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">{t.title}</h1>
           <p className="text-lg text-slate-600 dark:text-slate-300">{t.subtitle}</p>

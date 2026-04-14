@@ -86,3 +86,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .public-subpage-offset {
+    padding-top: calc(env(safe-area-inset-top) + 10.5rem);
+  }
+
+  @media (min-width: 768px) {
+    .public-subpage-offset {
+      padding-top: calc(env(safe-area-inset-top) + 12.5rem);
+    }
+  }
+}

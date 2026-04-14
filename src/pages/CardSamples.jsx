@@ -96,7 +96,7 @@ export default function CardSamples() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-white dark:bg-slate-900">
+      <section className="relative public-subpage-offset pb-16 md:pb-20 overflow-hidden bg-white dark:bg-slate-900">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-teal-50/30 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 -z-10" />
         <div className="container mx-auto px-4 md:px-6 max-w-4xl text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">

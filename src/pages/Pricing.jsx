@@ -181,7 +181,7 @@ export default function Pricing() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="public-subpage-offset pb-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
             {language === 'ar' ? 'خطط التسعير البسيطة والشفافة' : 'Simple, Transparent Pricing'}

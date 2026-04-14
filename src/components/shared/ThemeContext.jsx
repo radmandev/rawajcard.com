@@ -5,7 +5,15 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('rawajcard_theme') || 'light';
+      const savedTheme = localStorage.getItem('rawajcard_theme');
+      if (savedTheme) return savedTheme;
+
+      const path = window.location.pathname;
+      if (path === '/' || path === '/Home') {
+        return 'dark';
+      }
+
+      return 'light';
     }
     return 'light';
   });

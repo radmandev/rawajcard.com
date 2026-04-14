@@ -134,7 +134,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-900">
         <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="public-subpage-offset flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
           <Loader2 className="h-10 w-10 animate-spin text-teal-600" />
         </div>
         <Footer />
@@ -146,7 +146,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-900">
         <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="public-subpage-offset flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
           <p className="text-xl text-slate-600 dark:text-slate-400">
             {language === 'ar' ? 'المنتج غير موجود' : 'Product not found'}
           </p>
@@ -163,7 +163,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-white dark:bg-slate-900" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
-      <div className="container mx-auto px-4 md:px-6 pt-32 pb-20">
+      <div className="container public-subpage-offset mx-auto px-4 md:px-6 pb-20">
 
         {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-slate-500 mb-10">

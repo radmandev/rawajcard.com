@@ -144,7 +144,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/NFC', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples',
+    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/NFC', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples', '/HeaderVariants',
     '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
   ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/') || location.pathname.startsWith('/products/');
 

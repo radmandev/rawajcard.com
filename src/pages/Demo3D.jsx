@@ -5,8 +5,8 @@ export default function Demo3D() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950">
       <Navbar />
-      <main className="flex-1 flex flex-col">
-        <div className="container mx-auto px-4 py-10 text-center">
+      <main className="public-subpage-offset flex-1 flex flex-col">
+        <div className="container mx-auto px-4 pb-10 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
             Experience Our 3D Showroom
           </h1>
