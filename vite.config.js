@@ -31,7 +31,16 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: {
       chunkSizeWarningLimit: 600,
-
+      // Target browsers that support native ESM + dynamic import + import.meta
+      target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+      // Explicit hashed filenames so stale caches never serve mismatched assets
+      rollupOptions: {
+        output: {
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]',
+        },
+      },
     }
   }
 })

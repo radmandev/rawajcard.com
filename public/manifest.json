@@ -1,0 +1,21 @@
+{
+  "name": "Rawajcard",
+  "short_name": "Rawajcard",
+  "description": "Smart NFC business cards & digital profiles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "/images/rawajcard_icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/rawajcard_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

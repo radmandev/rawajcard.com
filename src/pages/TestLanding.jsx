@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   Wifi, Star, ShoppingCart, ChevronLeft, ChevronRight,
   Phone, Mail, MessageCircle, MapPin, ArrowLeft, Check,
-  Zap, Smartphone, RefreshCw, Shield, Award, Users
+  Zap, Smartphone, RefreshCw, Shield, Award, Users, LogIn
 } from 'lucide-react';
 
 /* ─── helpers ─────────────────────────────────────────────────────── */
@@ -314,6 +314,18 @@ export default function TestLanding() {
     return () => clearInterval(t);
   }, [CYCLING_WORDS.length]);
 
+  // Auto-cycle hero product types every 3.5s
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSelectedProductTypeIdx(prev => {
+        const next = (prev + 1) % HERO_PRODUCT_TYPES.length;
+        setHeroProduct(next);
+        return next;
+      });
+    }, 3500);
+    return () => clearInterval(t);
+  }, []);
+
   const filteredIds = PRODUCT_CATEGORY_MAP[activeTab] || PRODUCT_CATEGORY_MAP.all;
   const filteredProducts = PRODUCTS.filter(p => filteredIds.includes(p.id));
 
@@ -428,59 +440,93 @@ export default function TestLanding() {
                 {isRTL ? 'الجيل الجديد من كروت التعارف في عالم الأعمال' : 'The next generation of business networking cards'}
               </motion.p>
 
-              {/* Product Type Tabs */}
+              {/* Product Type Slider */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.5 }}
-                className="flex flex-wrap gap-2 mb-10"
+                className="mb-10"
               >
-                {HERO_PRODUCT_TYPES.map((item, i) => (
-                  <motion.span
-                    key={i}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.97 }}
+                <div className="flex items-center gap-2">
+                  {/* Left arrow */}
+                  <button
                     onClick={() => {
-                      setSelectedProductTypeIdx(i);
-                      setHeroProduct(i);
+                      const prev = (selectedProductTypeIdx - 1 + HERO_PRODUCT_TYPES.length) % HERO_PRODUCT_TYPES.length;
+                      setSelectedProductTypeIdx(prev);
+                      setHeroProduct(prev);
                     }}
-                    className={`flex items-center gap-1.5 text-white text-sm font-medium px-4 py-2 rounded-xl border cursor-pointer transition-all ${
-                      selectedProductTypeIdx === i
-                        ? 'bg-teal-500/40 border-teal-400/60 ring-1 ring-teal-400/40'
-                        : 'bg-white/10 hover:bg-teal-500/25 border-white/15'
-                    }`}
+                    className="group flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-teal-300 hover:bg-white/10 transition-all duration-200"
                   >
-                    <span>{item.icon}</span>
-                    {isRTL ? item.labelAr : item.labelEn}
-                  </motion.span>
-                ))}
+                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                  </button>
+
+                  {/* Items */}
+                  <div className="flex items-center gap-5 overflow-hidden text-sm">
+                    {HERO_PRODUCT_TYPES.map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setSelectedProductTypeIdx(i);
+                          setHeroProduct(i);
+                        }}
+                        className="relative flex items-center gap-1.5 pb-2 transition-colors duration-300 whitespace-nowrap"
+                        style={{ color: selectedProductTypeIdx === i ? '#5eead4' : undefined }}
+                      >
+                        <span className="text-base">{item.icon}</span>
+                        <span className={`font-medium transition-colors duration-300 ${selectedProductTypeIdx === i ? 'text-teal-300' : 'text-slate-400 hover:text-slate-200'}`}>
+                          {isRTL ? item.labelAr : item.labelEn}
+                        </span>
+                        {/* Animated underline */}
+                        <motion.span
+                          className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-teal-400 to-cyan-400"
+                          initial={false}
+                          animate={{ scaleX: selectedProductTypeIdx === i ? 1 : 0, opacity: selectedProductTypeIdx === i ? 1 : 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          style={{ transformOrigin: isRTL ? 'right' : 'left' }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Right arrow */}
+                  <button
+                    onClick={() => {
+                      const next = (selectedProductTypeIdx + 1) % HERO_PRODUCT_TYPES.length;
+                      setSelectedProductTypeIdx(next);
+                      setHeroProduct(next);
+                    }}
+                    className="group flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-teal-300 hover:bg-white/10 transition-all duration-200"
+                  >
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.65 }}
-                className="flex flex-wrap gap-4"
+                className="flex flex-wrap items-center gap-3"
               >
-                <button onClick={() => setLoginOpen(true)}>
-                  <motion.span
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base cursor-pointer"
-                  >
-                    {isRTL ? 'انشئ كرت رقمي مجاني' : 'Create your free digital card'}
-                    <ArrowLeft className="h-5 w-5" />
-                  </motion.span>
-                </button>
-                <Link to={createPageUrl('Store')}>
-                  <motion.span
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-2xl border border-white/20 transition-all text-base cursor-pointer"
-                  >
-                    {isRTL ? 'تسوق الآن' : 'Shop Now'}
-                  </motion.span>
-                </Link>
+                <motion.button
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => navigate('/customize')}
+                  className="inline-flex items-center gap-2 bg-gradient-to-l from-teal-600 via-cyan-600 to-teal-500 hover:from-teal-500 hover:via-cyan-500 hover:to-teal-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-teal-600/30 transition-all text-base cursor-pointer border border-white/20"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {isRTL ? 'اشتر بطاقة NFC' : 'Buy NFC Card'}
+                </motion.button>
+                <span className="text-sm font-medium text-slate-400">{isRTL ? 'أو' : 'or'}</span>
+                <motion.button
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => isAuthenticated ? navigate(createPageUrl('Dashboard')) : setLoginOpen(true)}
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-2xl border border-white/20 shadow-lg shadow-slate-900/20 transition-all text-base cursor-pointer backdrop-blur-sm"
+                >
+                  <LogIn className="h-5 w-5" />
+                  {isRTL ? 'أنشئ بطاقة رقمية' : 'Create Digital Card'}
+                </motion.button>
               </motion.div>
 
               {/* Stats row */}
@@ -491,9 +537,9 @@ export default function TestLanding() {
                 className="flex gap-8 mt-12"
               >
                 {[
-                  { value: '+5000', labelAr: 'عميل سعيد', labelEn: 'Happy Clients' },
-                  { value: '+1000', labelAr: 'تقييم ⭐', labelEn: '5-Star Reviews' },
-                  { value: '2 يوم', labelAr: 'توصيل سريع', labelEn: 'Fast Delivery' },
+                  { value: '+10', labelAr: 'منتجات NFC', labelEn: 'NFC Products' },
+                  { value: '+20', labelAr: 'قالب كرت ⭐', labelEn: 'Card Templates' },
+                  { value: '2 يوم', labelAr: 'توصيل سريع', labelEn: '2 days Delivery' },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
                     <div className="text-2xl font-black text-teal-400">{stat.value}</div>

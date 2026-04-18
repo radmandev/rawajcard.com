@@ -18,6 +18,7 @@ import Login from '@/pages/Login';
 import PublicCard from '@/pages/PublicCard';
 import TestLandingPage from '@/pages/TestLanding';
 import AlternateLandingPage from '@/pages/AlternateLanding';
+import NFCCustomizerPage from '@/pages/NFCCustomizer';
 import { supabase } from '@/lib/supabaseClient';
 
 class AppErrorBoundary extends React.Component {
@@ -144,7 +145,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = [
-    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/NFC', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples', '/HeaderVariants',
+    '/', '/login', '/Pricing', '/Products', '/ProductDetail', '/Store', '/TestLanding', '/NFC', '/customize', '/Checkout', '/CheckoutSuccess', '/Demo3D', '/MyOrders', '/PhysicalCards', '/CardSamples', '/HeaderVariants',
     '/Return', '/PrivacyPolicy', '/Payments', '/returns', '/privacy-policy', '/payments', '/trackQRScan'
   ].includes(location.pathname) || location.pathname.startsWith('/c/') || location.pathname.startsWith('/q/') || location.pathname.startsWith('/products/');
 
@@ -208,6 +209,11 @@ const AuthenticatedApp = () => {
         <Route path="/" element={
           <LayoutWrapper currentPageName="TestLanding">
             <TestLandingPage />
+          </LayoutWrapper>
+        } />
+        <Route path="/customize" element={
+          <LayoutWrapper currentPageName="NFCCustomizer">
+            <NFCCustomizerPage />
           </LayoutWrapper>
         } />
         <Route path="/NFC" element={

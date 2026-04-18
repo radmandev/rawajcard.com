@@ -107,7 +107,7 @@ const translations = {
   }
 };
 
-export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
+export default function Navbar({ onLoginClick, hideFreeTools = false, logoPath = '/' } = {}) {
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -249,7 +249,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
             <div className="hidden md:flex items-center gap-2">
               <button
                 className="group h-10 rounded-full px-5 text-sm font-semibold text-white bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 hover:from-teal-500 hover:via-cyan-500 hover:to-teal-600 border border-white/20 shadow-[0_8px_28px_-10px_rgba(13,148,136,0.85)] hover:shadow-[0_14px_36px_-12px_rgba(6,182,212,0.85)] transition-all duration-300 hover:-translate-y-0.5"
-                onClick={() => navigate('/Products')}
+                onClick={() => navigate('/customize')}
               >
                 <span className="flex items-center gap-1.5">
                   <ShoppingCart className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
               </button>
               <button
                 className="group h-10 rounded-full px-5 text-sm font-semibold text-white bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 dark:from-slate-100 dark:to-white dark:text-slate-900 dark:hover:from-white dark:hover:to-slate-100 border border-slate-700/40 dark:border-slate-200 shadow-[0_8px_28px_-10px_rgba(15,23,42,0.78)] transition-all duration-300 hover:-translate-y-0.5"
-                onClick={() => navigate(createPageUrl('Dashboard'))}
+                onClick={() => isAuthenticated ? navigate(createPageUrl('Dashboard')) : onLoginClick?.()}
               >
                 <span className="flex items-center gap-1.5">
                   <LogIn className="w-4 h-4" />
@@ -737,7 +737,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
                           {language === 'ar' ? 'اطلب بطاقتك الآن' : 'Order Your Card Now'}
                         </button>
                         <button
-                          onClick={() => { navigate(createPageUrl('Dashboard')); setActiveDropdown(null); }}
+                          onClick={() => { setActiveDropdown(null); isAuthenticated ? navigate(createPageUrl('Dashboard')) : onLoginClick?.(); }}
                           className="flex-1 h-9 rounded-full text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 transition-all"
                         >
                           {language === 'ar' ? 'أنشئ بطاقة رقمية مجاناً' : 'Create Free Digital Card'}
@@ -1054,7 +1054,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
             <div className="pt-2 flex flex-col gap-2">
               <button
                 className="w-full h-11 rounded-full font-semibold text-white bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 hover:from-teal-500 hover:via-cyan-500 hover:to-teal-600 border border-white/20 shadow-[0_8px_24px_-12px_rgba(13,148,136,0.85)] transition-all duration-300"
-                onClick={() => { navigate('/Products'); setMobileMenuOpen(false); }}
+                onClick={() => { navigate('/customize'); setMobileMenuOpen(false); }}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   <ShoppingCart className="w-4 h-4" />
@@ -1063,7 +1063,7 @@ export default function Navbar({ hideFreeTools = false, logoPath = '/' } = {}) {
               </button>
               <button
                 className="w-full h-11 rounded-full font-semibold text-white bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 dark:from-slate-100 dark:to-white dark:text-slate-900 border border-slate-700/40 dark:border-slate-200 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.78)] transition-all duration-300"
-                onClick={() => { navigate(createPageUrl('Dashboard')); setMobileMenuOpen(false); }}
+                onClick={() => { setMobileMenuOpen(false); isAuthenticated ? navigate(createPageUrl('Dashboard')) : onLoginClick?.(); }}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   <LogIn className="w-4 h-4" />

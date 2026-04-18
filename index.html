@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/images/rawajcard_icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="manifest" href="/manifest.json" />
     <title>Rawajcard</title>
     <!-- Preconnect so font bytes start flowing as early as possible -->
@@ -141,5 +144,26 @@
         style="display:none"
         src="https://tr.snapchat.com/cm/i?pid=fb1f2ea8-15f7-412d-85d5-55c12eef47f3&ev=PAGE_VIEW&noscript=1"
     /></noscript>
+    <script>
+      // Recover from stale chunk errors: if a JS/CSS file 404s after deploy, force-reload once.
+      window.addEventListener('error', function(e) {
+        var src = (e.target && (e.target.src || e.target.href)) || '';
+        if (src && /\.(js|css)$/.test(src) && !sessionStorage.getItem('chunk_reload')) {
+          sessionStorage.setItem('chunk_reload', '1');
+          window.location.reload();
+        }
+      }, true);
+      // Also catch dynamic import() failures (code-split chunks)
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && /Loading chunk|Failed to fetch|import/i.test(e.reason.message || '')) {
+          if (!sessionStorage.getItem('chunk_reload')) {
+            sessionStorage.setItem('chunk_reload', '1');
+            window.location.reload();
+          }
+        }
+      });
+      // Clear the flag on successful load so future deploys can trigger it again
+      window.addEventListener('load', function() { sessionStorage.removeItem('chunk_reload'); });
+    </script>
   </body>
 </html>

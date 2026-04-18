@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Linkedin, MessageCircle, Mail, Calendar } from 'lucide-react';
+import { Linkedin, MessageCircle, Mail, Calendar, ShoppingCart, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const translations = {
   en: {
@@ -11,6 +13,9 @@ const translations = {
     description1: "Capture contacts instantly. Sync to your CRM. Follow up 10x faster.",
     description2: "Rawajcard helps you turn real-life meetings into real revenue.",
     cta: "Start Closing Smarter",
+    ctaBuyNfc: "Buy NFC Card",
+    ctaDigitalCard: "Create Digital Card",
+    or: "or",
     featuredProductsLabel: "Featured NFC Products",
     featuredProducts: [
       "Digital NFC Metal Card",
@@ -32,6 +37,9 @@ const translations = {
     description1: "التقط جهات الاتصال فوراً. مزامنة مع نظام إدارة علاقات العملاء. متابعة أسرع بـ 10 مرات.",
     description2: "يساعدك روائج كارد على تحويل اللقاءات الحقيقية إلى إيرادات حقيقية.",
     cta: "ابدأ الإغلاق بذكاء",
+    ctaBuyNfc: "اشتر بطاقة NFC",
+    ctaDigitalCard: "أنشئ بطاقة رقمية",
+    or: "أو",
     featuredProductsLabel: "منتجات NFC المميزة",
     featuredProducts: [
       "البطاقة المعدنية الرقمية NFC",
@@ -49,6 +57,7 @@ const translations = {
 
 export default function HeroSection() {
   const [language, setLanguage] = useState('ar');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const dir = document.documentElement.getAttribute('dir');
@@ -94,13 +103,26 @@ export default function HeroSection() {
               {t.description2}
             </p>
             
-            <div>
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-teal-600 to-blue-500 hover:from-teal-700 hover:to-blue-600 text-white px-8 py-6 text-lg rounded-full shadow-lg shadow-teal-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/30"
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                className="group h-12 rounded-full px-6 text-sm font-semibold text-white bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 hover:from-teal-500 hover:via-cyan-500 hover:to-teal-600 border border-white/20 shadow-[0_8px_28px_-10px_rgba(13,148,136,0.85)] hover:shadow-[0_14px_36px_-12px_rgba(6,182,212,0.85)] transition-all duration-300 hover:-translate-y-0.5"
+                onClick={() => navigate('/Products')}
               >
-                {t.cta}
-              </Button>
+                <span className="flex items-center gap-1.5">
+                  <ShoppingCart className="w-4 h-4" />
+                  {t.ctaBuyNfc}
+                </span>
+              </button>
+              <span className="text-sm font-medium text-slate-400 dark:text-slate-500">{t.or}</span>
+              <button
+                className="group h-12 rounded-full px-6 text-sm font-semibold text-white bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 dark:from-slate-100 dark:to-white dark:text-slate-900 dark:hover:from-white dark:hover:to-slate-100 border border-slate-700/40 dark:border-slate-200 shadow-[0_8px_28px_-10px_rgba(15,23,42,0.78)] transition-all duration-300 hover:-translate-y-0.5"
+                onClick={() => navigate(createPageUrl('Dashboard'))}
+              >
+                <span className="flex items-center gap-1.5">
+                  <LogIn className="w-4 h-4" />
+                  {t.ctaDigitalCard}
+                </span>
+              </button>
             </div>
             
             {/* Featured products */}
