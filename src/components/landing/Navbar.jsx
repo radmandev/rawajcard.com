@@ -239,6 +239,9 @@ export default function Navbar({ onLoginClick, hideFreeTools = false, logoPath =
                 src="/rawajcard-logo.png"
                 alt="Rawajcard"
                 className="h-10 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.95)]"
+                width="120"
+                height="40"
+                fetchPriority="high"
               />
             </Link>
           </div>
@@ -475,6 +478,8 @@ export default function Navbar({ onLoginClick, hideFreeTools = false, logoPath =
                                       src={product.image_url} 
                                       alt={language === 'ar' ? product.name_ar : product.name_en}
                                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                      decoding="async"
                                     />
                                     {product.discount_percentage > 0 && (
                                       <div className={`absolute top-2 ${language === 'ar' ? 'left-2' : 'right-2'} bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold`}>

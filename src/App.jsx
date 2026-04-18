@@ -14,11 +14,11 @@ import { LanguageProvider } from '@/components/shared/LanguageContext';
 import { ThemeProvider } from '@/components/shared/ThemeContext';
 import { CartProvider } from '@/contexts/CartContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import Login from '@/pages/Login';
-import PublicCard from '@/pages/PublicCard';
-import TestLandingPage from '@/pages/TestLanding';
-import AlternateLandingPage from '@/pages/AlternateLanding';
-import NFCCustomizerPage from '@/pages/NFCCustomizer';
+const Login = React.lazy(() => import('@/pages/Login'));
+const PublicCard = React.lazy(() => import('@/pages/PublicCard'));
+const TestLandingPage = React.lazy(() => import('@/pages/TestLanding'));
+const AlternateLandingPage = React.lazy(() => import('@/pages/AlternateLanding'));
+const NFCCustomizerPage = React.lazy(() => import('@/pages/NFCCustomizer'));
 import { supabase } from '@/lib/supabaseClient';
 
 class AppErrorBoundary extends React.Component {

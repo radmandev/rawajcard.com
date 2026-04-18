@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import moment from 'moment';
+import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import AnalyticsChart from '@/components/analytics/AnalyticsChart';
 
@@ -163,13 +163,13 @@ export default function ClientDetails() {
 
   // Prepare chart data (last 7 days)
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = moment().subtract(6 - i, 'days');
-    const dateStr = date.format('YYYY-MM-DD');
+    const date = subDays(new Date(), 6 - i);
+    const dateStr = format(date, 'yyyy-MM-dd');
     const dayViews = cardViews.filter(v => 
-      moment(v.created_date).format('YYYY-MM-DD') === dateStr
+      format(new Date(v.created_date), 'yyyy-MM-dd') === dateStr
     ).length;
     return {
-      date: date.format('MMM D'),
+      date: format(date, 'MMM d'),
       views: dayViews
     };
   });
@@ -231,7 +231,7 @@ export default function ClientDetails() {
                 <Calendar className="h-5 w-5 text-slate-400" />
                 <div>
                   <p className="text-sm text-slate-500">{isRTL ? 'تاريخ التسجيل' : 'Joined Date'}</p>
-                  <p className="font-medium">{moment(user.created_date).format('MMMM D, YYYY')}</p>
+                  <p className="font-medium">{format(new Date(user.created_date), 'MMMM d, yyyy')}</p>
                 </div>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function ClientDetails() {
                           {cardViewCount} {isRTL ? 'مشاهدة' : 'views'}
                         </span>
                         <span>
-                          {isRTL ? 'نُشر في' : 'Published'} {moment(card.published_at).format('MMM D, YYYY')}
+                          {isRTL ? 'نُشر في' : 'Published'} {format(new Date(card.published_at), 'MMM d, yyyy')}
                         </span>
                       </div>
                     </div>
@@ -552,7 +552,7 @@ export default function ClientDetails() {
                         {isRTL ? 'طلب رقم' : 'Order'} #{order.order_number}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {moment(order.created_date).format('MMMM D, YYYY')}
+                        {format(new Date(order.created_date), 'MMMM d, yyyy')}
                       </p>
                     </div>
                     <Badge variant={

@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/images/rawajcard_icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <link rel="manifest" href="/manifest.json" />
     <title>Rawajcard</title>
     <!-- Preconnect so font bytes start flowing as early as possible -->
@@ -27,65 +24,67 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap" />
     </noscript>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WL49SVTP');</script>
-    <!-- End Google Tag Manager -->
-    <!-- Meta Pixel Code -->
+    <!-- Tracking scripts deferred until after page is interactive -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1876116629702667');
-    fbq('track', 'PageView');
+      function loadTrackingScripts() {
+        // Google Tag Manager
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-WL49SVTP');
+
+        // Meta Pixel
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1876116629702667');
+        fbq('track', 'PageView');
+
+        // Snapchat Pixel
+        (function(e, t, n) {
+          if (e.snaptr) return;
+          var a = (e.snaptr = function() {
+            a.handleRequest ? a.handleRequest.apply(a, arguments) : a.queue.push(arguments);
+          });
+          a.queue = [];
+          var s = "script";
+          var r = t.createElement(s);
+          r.async = true;
+          r.src = n;
+          var u = t.getElementsByTagName(s)[0];
+          u.parentNode.insertBefore(r, u);
+        })(window, document, "https://sc-static.net/scevent.min.js");
+        snaptr("init", "fb1f2ea8-15f7-412d-85d5-55c12eef47f3");
+        snaptr("track", "PAGE_VIEW");
+
+        // Google Ads + GA4
+        var g1 = document.createElement('script');
+        g1.async = true; g1.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17934411422';
+        document.head.appendChild(g1);
+        var g2 = document.createElement('script');
+        g2.async = true; g2.src = 'https://www.googletagmanager.com/gtag/js?id=G-8J8PT8NQV5';
+        document.head.appendChild(g2);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', 'AW-17934411422');
+        gtag('config', 'G-8J8PT8NQV5');
+      }
+
+      // Defer tracking: use requestIdleCallback or fallback to 3.5s delay
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadTrackingScripts, { timeout: 4000 });
+      } else {
+        setTimeout(loadTrackingScripts, 3500);
+      }
     </script>
-    <!-- End Meta Pixel Code -->
-    <!-- Snapchat Pixel Code -->
-    <script type="text/javascript">
-      (function(e, t, n) {
-        if (e.snaptr) return;
-        var a = (e.snaptr = function() {
-          a.handleRequest ? a.handleRequest.apply(a, arguments) : a.queue.push(arguments);
-        });
-        a.queue = [];
-        var s = "script";
-        var r = t.createElement(s);
-        r.async = true;
-        r.src = n;
-        var u = t.getElementsByTagName(s)[0];
-        u.parentNode.insertBefore(r, u);
-      })(window, document, "https://sc-static.net/scevent.min.js");
-
-      snaptr("init", "fb1f2ea8-15f7-412d-85d5-55c12eef47f3");
-      snaptr("track", "PAGE_VIEW");
-    </script>
-    <!-- End Snapchat Pixel Code -->
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17934411422"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-17934411422');
-</script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-8J8PT8NQV5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-8J8PT8NQV5');
-</script>
 <script>
   function gtag_report_conversion(url) {
     var callback = function () {
