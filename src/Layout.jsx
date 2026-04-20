@@ -15,7 +15,7 @@ import PromotionPopup from '@/components/shared/PromotionPopup';
 function LayoutContent({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [promoOpen, setPromoOpen] = useState(false);
+  // const [promoOpen, setPromoOpen] = useState(false); // Disabled promo popup
   const { isRTL } = useLanguage();
   const { isAuthenticated, isLoadingAuth } = useAuth();
 
@@ -33,14 +33,16 @@ function LayoutContent({ children, currentPageName }) {
       const shown = sessionStorage.getItem('rawaj_promo_home_shown');
       if (!shown) {
         timer = setTimeout(() => {
-          setPromoOpen(true);
+          // setPromoOpen(true);
           sessionStorage.setItem('rawaj_promo_home_shown', '1');
         }, 6000);
       }
     }
 
-    return () => timer && clearTimeout(timer);
-  }, [isPublicPage, isHomePage, isAuthenticated, isLoadingAuth]);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isPublicPage, isHomePage, isLoadingAuth, isAuthenticated]);
 
 
 
@@ -61,7 +63,7 @@ function LayoutContent({ children, currentPageName }) {
         />
         <CartMiniPopup />
         <WhatsAppButton />
-        {!isAuthenticated && <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />}
+        {/* {!isAuthenticated && <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />} */}
       </div>
     );
   }
@@ -154,7 +156,7 @@ function LayoutContent({ children, currentPageName }) {
       />
       <CartMiniPopup />
       <WhatsAppButton />
-      {!isAuthenticated && <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />}
+      {/* {!isAuthenticated && <PromotionPopup open={promoOpen} onOpenChange={setPromoOpen} isRTL={isRTL} />} */}
     </div>
   );
 }

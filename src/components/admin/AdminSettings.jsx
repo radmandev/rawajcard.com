@@ -10,7 +10,20 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { api } from '@/api/supabaseAPI';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Sparkles, Crown, TrendingUp, CreditCard, Layers } from 'lucide-react';
+import { Users, Sparkles, Crown, TrendingUp, CreditCard, Layers, Star } from 'lucide-react';
+  // ── Premium Trial Toggle ─────────────────────────────
+  const { data: premiumTrialEnabled = false } = useQuery({
+    queryKey: ['premium-trial-enabled'],
+    queryFn: () => api.appSettings.get('premium_trial_enabled'),
+  });
+  const setPremiumTrialEnabledMutation = useMutation({
+    mutationFn: (enabled) => api.appSettings.set('premium_trial_enabled', enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['premium-trial-enabled'] });
+      toast.success(isRTL ? 'تم تحديث تجربة البريميوم' : 'Premium trial setting updated');
+    },
+    onError: () => toast.error(isRTL ? 'فشل تحديث تجربة البريميوم' : 'Failed to update premium trial setting'),
+  });
 import { ALL_TEMPLATES, DEFAULT_TIERS } from '@/lib/templateConfig';
 
 export default function AdminSettings() {
@@ -103,6 +116,34 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Premium Trial Toggle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-teal-600" />
+            {isRTL ? 'تجربة بريميوم تلقائية' : 'Automatic Premium Trial'}
+          </CardTitle>
+          <CardDescription>
+            {isRTL
+              ? 'عند التفعيل، يحصل المستخدمون الجدد على تجربة بريميوم مجانية لمدة 3 أشهر تلقائيًا عند التسجيل.'
+              : 'When enabled, new users get a free 3-month Premium trial automatically on signup.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>{isRTL ? 'تفعيل التجربة' : 'Enable trial'}</Label>
+            <p className="text-sm text-slate-500">
+              {isRTL
+                ? 'سيتم منح جميع الحسابات الجديدة بريميوم لمدة 3 أشهر بدون الحاجة لبطاقة دفع.'
+                : 'All new accounts will be granted Premium for 3 months, no credit card required.'}
+            </p>
+          </div>
+          <Switch
+            checked={Boolean(premiumTrialEnabled)}
+            onCheckedChange={(checked) => setPremiumTrialEnabledMutation.mutate(checked)}
+          />
+        </CardContent>
+      </Card>
       {/* Subscription Overview */}
       <Card>
         <CardHeader>

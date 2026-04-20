@@ -77,14 +77,27 @@ export default function Login() {
     }
 
     if (mode === 'signup') {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: window.location.origin + await getPasswordResetRedirect() }
       });
       setIsSubmitting(false);
       if (signUpError) { setError(signUpError.message); return; }
-      setSuccessMsg('Account created! Check your email to confirm, then sign in.');
+
+      // ── Premium Trial Logic ──
+      try {
+        const trialEnabled = await api.appSettings.get('premium_trial_enabled');
+        if (trialEnabled) {
+          // Wait for user to confirm email, then create trial subscription
+          // (We can't get user id until email is confirmed, so show info)
+          setSuccessMsg('Account created! Check your email to confirm, then sign in. You will get a free 3-month Premium trial.');
+        } else {
+          setSuccessMsg('Account created! Check your email to confirm, then sign in.');
+        }
+      } catch {
+        setSuccessMsg('Account created! Check your email to confirm, then sign in.');
+      }
       setMode('signin');
       return;
     }

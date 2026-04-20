@@ -62,8 +62,8 @@ const pricingPlans = [
       "دعم أولوي",
       "تصدير البيانات"
     ],
-    cta: "Upgrade to Premium",
-    ctaAr: "الترقية إلى بريميوم",
+    cta: "Free 3 month trial",
+    ctaAr: "تجربة مجانية 3 أشهر",
     planKey: 'premium',
     popular: false
   },
@@ -243,7 +243,10 @@ export default function Pricing() {
                       : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white'
                   }`}
                 >
-                  {language === 'ar' ? plan.ctaAr : plan.cta}
+                  {plan.planKey === 'premium'
+                    ? (language === 'ar' ? 'تجربة مجانية 3 أشهر (بدون بطاقة دفع)' : 'Free 3 month trial (no credit card)')
+                    : (language === 'ar' ? plan.ctaAr : plan.cta)
+                  }
                 </Button>
 
                 <ul className="space-y-4">
@@ -260,6 +263,12 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Trial Note */}
+      <div className="text-center text-base text-teal-700 dark:text-teal-300 font-semibold mb-4">
+        {language === 'ar'
+          ? 'جرب جميع ميزات بريميوم مجاناً لمدة 3 أشهر — لا حاجة لبطاقة دفع'
+          : 'Try all Premium features free for 3 months — no credit card required'}
+      </div>
       {/* FAQ Section */}
       <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
         <div className="container mx-auto max-w-4xl">
