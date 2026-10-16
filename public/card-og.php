@@ -2,9 +2,9 @@
 // Link-preview bots (WhatsApp, Facebook, X, Telegram, …) never run JS, so on /c/:slug they'd only
 // see the app-wide tags baked into index.html — i.e. the Rawajcard logo. public/.htaccess routes
 // those bots here instead. We look the card up through the same public RPC the SPA uses and swap
-// the seo:start…seo:end block for the card's own title/description, using the card's uploaded
-// company logo as the preview image (no image at all when it has none). The page still boots the
-// normal SPA bundle, and any failure falls back to the untouched shell.
+// the seo:start…seo:end block for the card's own title/description, using the card's profile
+// image (else its company logo) as the preview image, and no image at all when it has neither.
+// The page still boots the normal SPA bundle, and any failure falls back to the untouched shell.
 //
 // card-og-config.php is written into dist/ at build time by scripts/generate-snapshots.mjs.
 
@@ -82,8 +82,14 @@ function build_head_block(array $card, $slug) {
     }
 
     $url = SITE_URL . '/c/' . rawurlencode($slug);
-    $logo = trim((string) ($card['company_logo'] ?? ''));
-    $hasLogo = (bool) preg_match('#^https?://#i', $logo);
+    $image = '';
+    foreach (['profile_image', 'company_logo'] as $field) {
+        $candidate = trim((string) ($card[$field] ?? ''));
+        if (preg_match('#^https?://#i', $candidate)) {
+            $image = $candidate;
+            break;
+        }
+    }
 
     $lines = [
         '<!-- seo:start — replaced per-card by card-og.php -->',
@@ -96,11 +102,11 @@ function build_head_block(array $card, $slug) {
         '<meta property="og:description" content="' . e($description) . '" />',
         '<meta property="og:url" content="' . e($url) . '" />',
     ];
-    if ($hasLogo) $lines[] = '<meta property="og:image" content="' . e($logo) . '" />';
+    if ($image) $lines[] = '<meta property="og:image" content="' . e($image) . '" />';
     $lines[] = '<meta name="twitter:card" content="summary" />';
     $lines[] = '<meta name="twitter:title" content="' . e($title) . '" />';
     $lines[] = '<meta name="twitter:description" content="' . e($description) . '" />';
-    if ($hasLogo) $lines[] = '<meta name="twitter:image" content="' . e($logo) . '" />';
+    if ($image) $lines[] = '<meta name="twitter:image" content="' . e($image) . '" />';
     $lines[] = '<!-- seo:end -->';
 
     return implode("\n    ", $lines);
