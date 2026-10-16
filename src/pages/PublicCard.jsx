@@ -185,7 +185,7 @@ export default function PublicCard() {
  title={cardSeoTitle}
  description={displayBio || (cardIsRTL ? `تواصل مع ${displayName} عبر بطاقة رواج كارد الرقمية.` : `Connect with ${displayName}'s digital business card on Rawajcard.`)}
  path={`/c/${encodeURIComponent(slug)}`}
- image={card.profile_image}
+ image={card.company_logo || null}
  type="profile"
  />
  )}

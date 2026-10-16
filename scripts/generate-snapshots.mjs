@@ -11,9 +11,9 @@
 //
 // Scope: static routes + published products only. /c/:slug (public cards) is intentionally
 // excluded — the `business_cards` table blocks anonymous bulk SELECT via RLS (by design, to
-// stop card enumeration/scraping), and only a single-slug lookup RPC is exposed. Card pages
-// still get correct tags client-side via react-helmet-async, which covers Googlebot; fixing
-// social-preview bots for individual cards would need a small per-slug edge function later.
+// stop card enumeration/scraping), and only a single-slug lookup RPC is exposed. Instead,
+// public/card-og.php renders card tags per request for link-preview bots (routed there by
+// public/.htaccess); this script just writes the Supabase config it needs into dist/.
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -277,3 +277,17 @@ for (const page of pages) {
 }
 
 console.log(`[snapshots] Wrote ${pages.length} static route snapshots into dist/`);
+
+// card-og.php calls the public get_public_card_by_slug RPC with the same URL + anon key the
+// SPA bundle already ships, so they're not secrets — PHP just can't read Vite's env.
+if (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY) {
+  const phpString = (s) => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  writeFileSync(
+    resolve(distDir, 'card-og-config.php'),
+    `<?php\nreturn ['url' => ${phpString(env.VITE_SUPABASE_URL)}, 'key' => ${phpString(env.VITE_SUPABASE_ANON_KEY)}];\n`,
+    'utf8'
+  );
+  console.log('[snapshots] Wrote dist/card-og-config.php for card link previews');
+} else {
+  console.warn('[snapshots] Supabase env vars missing — card link previews will fall back to the default tags.');
+}

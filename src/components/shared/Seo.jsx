@@ -7,7 +7,7 @@ const SITE_NAME = 'Rawajcard';
 
 /**
  * Per-route head tags. `path` must be the route's canonical path (e.g. "/products/metal-nfc-card").
- * `jsonLd` accepts one schema object or an array of them.
+ * `jsonLd` accepts one schema object or an array of them. Pass `image={null}` to emit no image tags.
  */
 export default function Seo({
   title,
@@ -32,13 +32,13 @@ export default function Seo({
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={title} />
       {description && <meta property="og:description" content={description} />}
-      <meta property="og:image" content={image} />
+      {image && <meta property="og:image" content={image} />}
       <meta property="og:url" content={url} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       {description && <meta name="twitter:description" content={description} />}
-      <meta name="twitter:image" content={image} />
+      {image && <meta name="twitter:image" content={image} />}
 
       {schemas.map((schema, i) => (
         <script key={i} type="application/ld+json">

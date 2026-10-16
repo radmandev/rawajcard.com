@@ -11,6 +11,11 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # Link-preview bots never run JS, so give them /c/:slug with the card's own title and
+  # logo baked in (see card-og.php). Real visitors keep getting the plain SPA shell.
+  RewriteCond %{HTTP_USER_AGENT} (WhatsApp|facebookexternalhit|Facebot|meta-externalagent|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|SkypeUriPreview|Pinterest|redditbot|Applebot|Snapchat|vkShare|Iframely|Embedly) [NC]
+  RewriteRule ^c/[^/]+/?$ card-og.php [L]
+
   # SPA fallback for React Router.
   RewriteRule ^ index.html [L]
 </IfModule>
