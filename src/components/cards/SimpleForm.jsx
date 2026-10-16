@@ -29,6 +29,7 @@ import {
   Lock as LockIcon
 } from 'lucide-react';
 import { ALL_TEMPLATES } from '@/lib/templateConfig';
+import { toSocialAccounts } from '@/lib/cardContactFields';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
@@ -108,16 +109,16 @@ export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow
     });
   };
 
-  // A platform holds one URL string, or an array when the user adds extra accounts
-  const getSocialValues = (platform) => {
-    const val = card.social_links?.[platform];
-    if (Array.isArray(val)) return val.length ? val : [''];
-    return [val || ''];
+  const getSocialAccounts = (platform) => {
+    const accounts = toSocialAccounts(card.social_links?.[platform]);
+    return accounts.length ? accounts : [{ url: '', label: '' }];
   };
 
-  const setSocialValues = (platform, values) => {
-    // Collapse back to a plain string for a single account so existing cards keep their shape
-    handleSocialChange(platform, values.length > 1 ? values : values[0] || '');
+  const setSocialAccounts = (platform, accounts) => {
+    // Unnamed accounts stay plain URL strings and a lone account isn't wrapped in
+    // an array, so cards without names or extra accounts keep their old shape
+    const stored = accounts.map(({ url, label }) => (label ? { url, label } : url));
+    handleSocialChange(platform, stored.length > 1 ? stored : stored[0] || '');
   };
 
   const handleDesignChange = (property, value) => {
@@ -576,41 +577,52 @@ export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {socialPlatforms.map((platform) => {
-            const values = getSocialValues(platform.key);
+            const accounts = getSocialAccounts(platform.key);
+            const updateAccount = (i, patch) =>
+              setSocialAccounts(platform.key, accounts.map((a, j) => (j === i ? { ...a, ...patch } : a)));
             return (
               <div key={platform.key} className="space-y-2">
                 <Label>{platform.label}</Label>
-                {values.map((url, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-xs text-slate-300 whitespace-nowrap">{platform.prefix}</span>
-                    <Input
-                      value={url.replace(platform.prefix, '')}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const next = [...values];
-                        next[i] = value ? platform.prefix + value : '';
-                        setSocialValues(platform.key, next);
-                      }}
-                      placeholder={platform.placeholder}
-                      className="flex-1"
-                    />
-                    {i > 0 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={() => setSocialValues(platform.key, values.filter((_, j) => j !== i))}
-                        aria-label={isRTL ? 'حذف الحساب' : 'Remove account'}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                {accounts.map((account, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-300 whitespace-nowrap">{platform.prefix}</span>
+                      <Input
+                        value={account.url.replace(platform.prefix, '')}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updateAccount(i, { url: value ? platform.prefix + value : '' });
+                        }}
+                        placeholder={platform.placeholder}
+                        className="flex-1"
+                      />
+                      {i > 0 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => setSocialAccounts(platform.key, accounts.filter((_, j) => j !== i))}
+                          aria-label={isRTL ? 'حذف الحساب' : 'Remove account'}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {(account.url || account.label) && (
+                      <Input
+                        value={account.label}
+                        onChange={(e) => updateAccount(i, { label: e.target.value })}
+                        placeholder={isRTL ? 'اسم الحساب (اختياري) — يظهر على البطاقة' : 'Account name (optional) — shown on your card'}
+                        maxLength={40}
+                        className="h-8 text-xs"
+                      />
                     )}
                   </div>
                 ))}
                 <button
                   type="button"
-                  onClick={() => setSocialValues(platform.key, [...values, ''])}
+                  onClick={() => setSocialAccounts(platform.key, [...accounts, { url: '', label: '' }])}
                   className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
                   <Plus className="h-3 w-3" />

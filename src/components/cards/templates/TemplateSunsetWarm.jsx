@@ -120,7 +120,7 @@ export default function TemplateSunsetWarm({ card, isRTL, onLinkClick }) {
         {/* Social Links */}
         {getSocialEntries(card.social_links).length > 0 && (
           <div className="flex justify-center gap-3 flex-wrap">
-            {getSocialEntries(card.social_links).map(([platform, url], i) => {
+            {getSocialEntries(card.social_links).map(([platform, url, label], i) => {
               if (!url) return null;
               const Icon = socialIcons[platform];
               if (!Icon) return null;
@@ -132,9 +132,12 @@ export default function TemplateSunsetWarm({ card, isRTL, onLinkClick }) {
                   onClick={() => onLinkClick?.(platform)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-14 h-14 rounded-2xl bg-indigo-950/60/60 backdrop-blur-lg flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-white/40"
+                  className="flex flex-col items-center gap-1"
                 >
-                  <Icon className="h-6 w-6 text-orange-600" />
+                  <span className="w-14 h-14 rounded-2xl bg-indigo-950/60/60 backdrop-blur-lg flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-white/40">
+                    <Icon className="h-6 w-6 text-orange-600" />
+                  </span>
+                  {label && <span className="max-w-[96px] truncate text-xs text-orange-700">{label}</span>}
                 </a>
               );
             })}

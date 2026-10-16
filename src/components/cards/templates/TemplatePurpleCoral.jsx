@@ -226,7 +226,7 @@ END:VCARD`;
               {isRTL ? 'روابط التواصل' : 'Social Links'}
             </h2>
             <div className="space-y-2">
-              {socialLinks.map(([platform, url], i) => (
+              {socialLinks.map(([platform, url, label], i) => (
                 <a
                   key={`${platform}-${i}`}
                   href={url.startsWith('http') ? url : `https://${url}`}
@@ -237,7 +237,7 @@ END:VCARD`;
                 >
                   <div className="flex items-center gap-3">
                     <SocialIcon platform={platform} className="h-6 w-6" style={{ color: accentColor }} />
-                    <span className="capitalize font-medium text-slate-700">{platform}</span>
+                    <span className="capitalize font-medium text-slate-700">{label ? <span className="normal-case">{label}</span> : platform}</span>
                   </div>
                   <ChevronRight className="h-5 w-5 text-slate-400" />
                 </a>

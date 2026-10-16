@@ -481,7 +481,7 @@ export default function TemplateEliteCrystal({ card, isRTL, onLinkClick }) {
           }}>
             <SectionHeading light>{isRTL ? 'تابعنا' : 'FOLLOW'}</SectionHeading>
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              {socialEntries.map(([platform, url], i) => {
+              {socialEntries.map(([platform, url, label], i) => {
                 const Icon = SOCIAL_ICONS[platform] || Globe;
                 return (
                   <a key={`${platform}-${i}`}
@@ -489,13 +489,23 @@ export default function TemplateEliteCrystal({ card, isRTL, onLinkClick }) {
                     target="_blank" rel="noreferrer"
                     onClick={() => onLinkClick?.(platform)}
                     style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                      color: GOLD, textDecoration: 'none',
+                    }}>
+                    <span style={{
                       width: '42px', height: '42px', borderRadius: '50%',
                       background: 'rgba(200,169,110,0.08)',
                       border: `1px solid rgba(200,169,110,0.28)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: GOLD, textDecoration: 'none',
                     }}>
-                    <Icon className="h-5 w-5" />
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    {label && (
+                      <span style={{
+                        maxWidth: '96px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        fontSize: '11px', letterSpacing: '0.04em', opacity: 0.85,
+                      }}>{label}</span>
+                    )}
                   </a>
                 );
               })}

@@ -155,7 +155,7 @@ export default function TemplateNoqtatain2({ card, isRTL, onLinkClick }) {
           <div>
             <h2 className="text-lg font-bold text-center mb-4">{isRTL ? 'روابط التواصل' : 'Social Links'}</h2>
             <div className="space-y-3">
-              {socialLinks.map(([platform, url], i) => (
+              {socialLinks.map(([platform, url, label], i) => (
                 <a
                   key={`${platform}-${i}`}
                   href={url.startsWith('http') ? url : `https://${platform}.com/${url}`}
@@ -169,7 +169,7 @@ export default function TemplateNoqtatain2({ card, isRTL, onLinkClick }) {
                       {getSocialIcon(platform)}
                     </div>
                     <div>
-                      <p className="font-semibold capitalize">{platform}</p>
+                      <p className="font-semibold capitalize">{label ? <span className="normal-case">{label}</span> : platform}</p>
                       <p className="text-xs text-slate-400">{isRTL ? `تابعنا على ${platform}` : `Follow us on ${platform}`}</p>
                     </div>
                   </div>

@@ -149,8 +149,8 @@ export default function TemplateTechBlue({ card, isRTL, onLinkClick }) {
 
         {/* Social Links */}
         {getSocialEntries(card.social_links).length > 0 && (
-          <div className="flex justify-center gap-3">
-            {getSocialEntries(card.social_links).map(([platform, url], i) => {
+          <div className="flex justify-center gap-3 flex-wrap">
+            {getSocialEntries(card.social_links).map(([platform, url, label], i) => {
               if (!url) return null;
               const Icon = socialIcons[platform];
               if (!Icon) return null;
@@ -162,9 +162,12 @@ export default function TemplateTechBlue({ card, isRTL, onLinkClick }) {
                   onClick={() => onLinkClick?.(platform)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 rounded-lg bg-indigo-950/50 border border-blue-400/30 flex items-center justify-center hover:bg-blue-500 hover:border-blue-400 transition-all"
+                  className="flex flex-col items-center gap-1"
                 >
-                  <Icon className="h-5 w-5 text-cyan-400" />
+                  <span className="w-11 h-11 rounded-lg bg-indigo-950/50 border border-blue-400/30 flex items-center justify-center hover:bg-blue-500 hover:border-blue-400 transition-all">
+                    <Icon className="h-5 w-5 text-cyan-400" />
+                  </span>
+                  {label && <span className="max-w-[96px] truncate text-xs text-slate-400">{label}</span>}
                 </a>
               );
             })}

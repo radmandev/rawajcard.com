@@ -13,11 +13,24 @@ export function getContactArrays(card) {
   };
 }
 
-// social_links values are a URL string, or an array of URLs when the card has
-// several accounts on the same platform. Returns flat [platform, url] pairs.
+// A social_links value is a URL string, a { url, label } object for a named
+// account, or an array of either when the card has several accounts on the
+// same platform. Normalizes to [{ url, label }], keeping blank rows for the form.
+export function toSocialAccounts(val) {
+  if (val == null || val === '') return [];
+  return (Array.isArray(val) ? val : [val]).map(v =>
+    v && typeof v === 'object'
+      ? { url: v.url || '', label: v.label || '' }
+      : { url: v || '', label: '' }
+  );
+}
+
+// Flat [platform, url, label] triples for rendering, skipping accounts with no URL
 export function getSocialEntries(socialLinks) {
   return Object.entries(socialLinks || {}).flatMap(([platform, val]) =>
-    toArr(val).map(url => [platform, url])
+    toSocialAccounts(val)
+      .filter(a => a.url)
+      .map(a => [platform, a.url, a.label.trim()])
   );
 }
 

@@ -115,7 +115,7 @@ export default function TemplateModernGradient({ card, isRTL, onLinkClick }) {
  {/* Social Links */}
  {getSocialEntries(card.social_links).length > 0 && (
  <div className="flex justify-center gap-3 flex-wrap">
- {getSocialEntries(card.social_links).map(([platform, url], i) => {
+ {getSocialEntries(card.social_links).map(([platform, url, label], i) => {
  if (!url) return null;
  const Icon = socialIcons[platform];
  if (!Icon) return null;
@@ -127,9 +127,12 @@ export default function TemplateModernGradient({ card, isRTL, onLinkClick }) {
  onClick={() => onLinkClick?.(platform)}
  target="_blank"
  rel="noopener noreferrer"
- className="w-12 h-12 rounded-full bg-indigo-950/60/80 backdrop-blur-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-white/20"
+ className="flex flex-col items-center gap-1"
  >
- <Icon className="h-5 w-5 text-slate-700" />
+ <span className="w-12 h-12 rounded-full bg-indigo-950/60/80 backdrop-blur-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-white/20">
+   <Icon className="h-5 w-5 text-slate-700" />
+ </span>
+ {label && <span className="max-w-[96px] truncate text-xs text-slate-600">{label}</span>}
  </a>
  );
  })}

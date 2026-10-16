@@ -270,15 +270,18 @@ export default function TemplateAuroraGlass({ card, isRTL, onLinkClick }) {
                 {isRTL ? 'تواصل معي' : 'Connect'}
               </p>
               <div className="flex justify-center flex-wrap gap-3">
-                {socialEntries.map(([platform, url], i) => {
+                {socialEntries.map(([platform, url, label], i) => {
                   const Icon = SOCIAL_ICONS[platform] || Globe;
                   const href = url.startsWith('http') ? url : `https://${url}`;
                   return (
                     <a key={`${platform}-${i}`} href={href} target="_blank" rel="noreferrer"
                       onClick={() => onLinkClick?.(platform)}
-                      className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center text-white/80 hover:text-white hover:scale-110 transition-all"
-                      style={{ border:'1px solid rgba(255,255,255,.15)' }}>
-                      <Icon className="h-5 w-5" />
+                      className="flex flex-col items-center gap-1">
+                      <span className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center text-white/80 hover:text-white hover:scale-110 transition-all"
+                        style={{ border:'1px solid rgba(255,255,255,.15)' }}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      {label && <span className="max-w-[96px] truncate text-xs text-white/60">{label}</span>}
                     </a>
                   );
                 })}

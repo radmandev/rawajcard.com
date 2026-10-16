@@ -143,8 +143,8 @@ export default function TemplateLuxuryGold({ card, isRTL, onLinkClick }) {
 
         {/* Social Links */}
         {getSocialEntries(card.social_links).length > 0 && (
-          <div className="flex justify-center gap-4">
-            {getSocialEntries(card.social_links).map(([platform, url], i) => {
+          <div className="flex justify-center gap-4 flex-wrap">
+            {getSocialEntries(card.social_links).map(([platform, url, label], i) => {
               if (!url) return null;
               const Icon = socialIcons[platform];
               if (!Icon) return null;
@@ -156,9 +156,12 @@ export default function TemplateLuxuryGold({ card, isRTL, onLinkClick }) {
                   onClick={() => onLinkClick?.(platform)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full border-2 border-yellow-500/30 flex items-center justify-center hover:bg-yellow-500 hover:border-yellow-500 transition-all group"
+                  className="flex flex-col items-center gap-1"
                 >
-                  <Icon className="h-5 w-5 text-yellow-500 group-hover:text-black" />
+                  <span className="w-12 h-12 rounded-full border-2 border-yellow-500/30 flex items-center justify-center hover:bg-yellow-500 hover:border-yellow-500 transition-all group">
+                    <Icon className="h-5 w-5 text-yellow-500 group-hover:text-black" />
+                  </span>
+                  {label && <span className="max-w-[96px] truncate text-xs text-slate-400">{label}</span>}
                 </a>
               );
             })}
