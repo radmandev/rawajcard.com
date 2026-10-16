@@ -6,7 +6,7 @@ import {
   Share2, UserPlus, ChevronRight,
   Navigation
 } from 'lucide-react';
-import { getContactArrays } from '@/lib/cardContactFields';
+import { getContactArrays, getSocialEntries } from '@/lib/cardContactFields';
 
 const XIcon = ({ className, style }) => (
   <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
@@ -62,7 +62,7 @@ END:VCARD`;
     onLinkClick?.('share');
   };
 
-  const socialLinks = Object.entries(card.social_links || {}).filter(([_, v]) => v);
+  const socialLinks = getSocialEntries(card.social_links);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: bgColor }}>
@@ -226,9 +226,9 @@ END:VCARD`;
               {isRTL ? 'روابط التواصل' : 'Social Links'}
             </h2>
             <div className="space-y-2">
-              {socialLinks.map(([platform, url]) => (
+              {socialLinks.map(([platform, url], i) => (
                 <a
-                  key={platform}
+                  key={`${platform}-${i}`}
                   href={url.startsWith('http') ? url : `https://${url}`}
                   target="_blank"
                   rel="noopener noreferrer"

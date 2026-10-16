@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { getContactArrays, buildVCard } from '@/lib/cardContactFields';
+import { getContactArrays, buildVCard, getSocialEntries } from '@/lib/cardContactFields';
 import InlineEditableField from '@/components/cards/InlineEditableField';
 import InlineImageUpload from '@/components/cards/InlineImageUpload';
 import AppointmentSection from '@/components/cards/AppointmentSection';
@@ -87,7 +87,7 @@ export default function TemplateNavyGold({ card, isRTL, onLinkClick, editMode = 
     onLinkClick?.('share');
   };
 
-  const socialLinks = Object.entries(card.social_links || {}).filter(([_, v]) => v);
+  const socialLinks = getSocialEntries(card.social_links);
 
   return (
     <div className="min-h-screen" style={{ 
@@ -440,9 +440,9 @@ export default function TemplateNavyGold({ card, isRTL, onLinkClick, editMode = 
               }
             />
             <div className="space-y-2">
-              {socialLinks.map(([platform, url]) => (
+              {socialLinks.map(([platform, url], i) => (
                 <a
-                  key={platform}
+                  key={`${platform}-${i}`}
                   href={url.startsWith('http') ? url : `https://${url}`}
                   target="_blank"
                   rel="noopener noreferrer"

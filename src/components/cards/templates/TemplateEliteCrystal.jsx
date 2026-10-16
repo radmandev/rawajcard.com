@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getContactArrays, buildVCard } from '@/lib/cardContactFields';
+import { getContactArrays, buildVCard, getSocialEntries } from '@/lib/cardContactFields';
 import {
   Phone, Mail, MapPin, Globe, MessageCircle,
   Linkedin, Instagram, Facebook, Youtube, Github,
@@ -156,7 +156,7 @@ export default function TemplateEliteCrystal({ card, isRTL, onLinkClick }) {
   const bio     = isRTL && card.bio_ar     ? card.bio_ar     : card.bio;
   const initials = (name || 'E').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
-  const socialEntries = Object.entries(card.social_links || {}).filter(([, v]) => v);
+  const socialEntries = getSocialEntries(card.social_links);
 
   const handleSave = () => {
     const vcard = buildVCard(card);
@@ -481,10 +481,10 @@ export default function TemplateEliteCrystal({ card, isRTL, onLinkClick }) {
           }}>
             <SectionHeading light>{isRTL ? 'تابعنا' : 'FOLLOW'}</SectionHeading>
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              {socialEntries.map(([platform, url]) => {
+              {socialEntries.map(([platform, url], i) => {
                 const Icon = SOCIAL_ICONS[platform] || Globe;
                 return (
-                  <a key={platform}
+                  <a key={`${platform}-${i}`}
                     href={url.startsWith('http') ? url : `https://${url}`}
                     target="_blank" rel="noreferrer"
                     onClick={() => onLinkClick?.(platform)}

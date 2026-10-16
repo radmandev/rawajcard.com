@@ -13,6 +13,14 @@ export function getContactArrays(card) {
   };
 }
 
+// social_links values are a URL string, or an array of URLs when the card has
+// several accounts on the same platform. Returns flat [platform, url] pairs.
+export function getSocialEntries(socialLinks) {
+  return Object.entries(socialLinks || {}).flatMap(([platform, val]) =>
+    toArr(val).map(url => [platform, url])
+  );
+}
+
 export function buildVCard(card) {
   const { phones, emails, websites, locations } = getContactArrays(card);
   const lines = [

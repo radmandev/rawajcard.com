@@ -108,6 +108,18 @@ export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow
     });
   };
 
+  // A platform holds one URL string, or an array when the user adds extra accounts
+  const getSocialValues = (platform) => {
+    const val = card.social_links?.[platform];
+    if (Array.isArray(val)) return val.length ? val : [''];
+    return [val || ''];
+  };
+
+  const setSocialValues = (platform, values) => {
+    // Collapse back to a plain string for a single account so existing cards keep their shape
+    handleSocialChange(platform, values.length > 1 ? values : values[0] || '');
+  };
+
   const handleDesignChange = (property, value) => {
     onChange({
       ...card,
@@ -563,23 +575,50 @@ export default function SimpleForm({ card, onChange, onSaveDraft, sectionsToShow
         onToggle={() => toggleSection('social')}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {socialPlatforms.map((platform) => (
-            <div key={platform.key} className="space-y-2">
-              <Label>{platform.label}</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-300 whitespace-nowrap">{platform.prefix}</span>
-                <Input
-                  value={(card.social_links?.[platform.key] || '').replace(platform.prefix, '')}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    handleSocialChange(platform.key, value ? platform.prefix + value : '');
-                  }}
-                  placeholder={platform.placeholder}
-                  className="flex-1"
-                />
+          {socialPlatforms.map((platform) => {
+            const values = getSocialValues(platform.key);
+            return (
+              <div key={platform.key} className="space-y-2">
+                <Label>{platform.label}</Label>
+                {values.map((url, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs text-slate-300 whitespace-nowrap">{platform.prefix}</span>
+                    <Input
+                      value={url.replace(platform.prefix, '')}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const next = [...values];
+                        next[i] = value ? platform.prefix + value : '';
+                        setSocialValues(platform.key, next);
+                      }}
+                      placeholder={platform.placeholder}
+                      className="flex-1"
+                    />
+                    {i > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => setSocialValues(platform.key, values.filter((_, j) => j !== i))}
+                        aria-label={isRTL ? 'حذف الحساب' : 'Remove account'}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setSocialValues(platform.key, [...values, ''])}
+                  className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  {isRTL ? `إضافة حساب ${platform.label} آخر` : `Add another ${platform.label} account`}
+                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Section>
 

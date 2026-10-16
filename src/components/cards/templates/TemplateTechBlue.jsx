@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, MessageCircle, Linkedin, Instagram, Twitter, Facebook, Globe } from 'lucide-react';
-import { getContactArrays } from '@/lib/cardContactFields';
+import { getContactArrays, getSocialEntries } from '@/lib/cardContactFields';
 
 export default function TemplateTechBlue({ card, isRTL, onLinkClick }) {
   const { phones, emails, whatsapps, websites, locations } = getContactArrays(card);
@@ -148,16 +148,16 @@ export default function TemplateTechBlue({ card, isRTL, onLinkClick }) {
         </div>
 
         {/* Social Links */}
-        {card.social_links && Object.keys(card.social_links).some(key => card.social_links[key]) && (
+        {getSocialEntries(card.social_links).length > 0 && (
           <div className="flex justify-center gap-3">
-            {Object.entries(card.social_links).map(([platform, url]) => {
+            {getSocialEntries(card.social_links).map(([platform, url], i) => {
               if (!url) return null;
               const Icon = socialIcons[platform];
               if (!Icon) return null;
 
               return (
                 <a
-                  key={platform}
+                  key={`${platform}-${i}`}
                   href={url}
                   onClick={() => onLinkClick?.(platform)}
                   target="_blank"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Globe, Linkedin, Facebook, Instagram, Twitter, Youtube, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getContactArrays } from '@/lib/cardContactFields';
+import { getContactArrays, getSocialEntries } from '@/lib/cardContactFields';
 
 const getSocialIcon = (platform) => {
   switch (platform) {
@@ -23,7 +23,7 @@ export default function TemplateNoqtatain2({ card, isRTL, onLinkClick }) {
   const borderRadius = card.design?.border_radius || '16px';
   const fontFamily = card.design?.font_family || 'Inter';
 
-  const socialLinks = Object.entries(card.social_links || {}).filter(([, value]) => value);
+  const socialLinks = getSocialEntries(card.social_links);
 
   return (
     <div
@@ -155,9 +155,9 @@ export default function TemplateNoqtatain2({ card, isRTL, onLinkClick }) {
           <div>
             <h2 className="text-lg font-bold text-center mb-4">{isRTL ? 'روابط التواصل' : 'Social Links'}</h2>
             <div className="space-y-3">
-              {socialLinks.map(([platform, url]) => (
+              {socialLinks.map(([platform, url], i) => (
                 <a
-                  key={platform}
+                  key={`${platform}-${i}`}
                   href={url.startsWith('http') ? url : `https://${platform}.com/${url}`}
                   target="_blank"
                   rel="noopener noreferrer"

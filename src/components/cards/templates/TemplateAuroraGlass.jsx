@@ -5,7 +5,7 @@ import {
   UserPlus, Share2, ExternalLink, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getContactArrays } from '@/lib/cardContactFields';
+import { getContactArrays, getSocialEntries } from '@/lib/cardContactFields';
 
 /* ─── tiny X/Twitter svg ─── */
 const XIcon = ({ className }) => (
@@ -110,7 +110,7 @@ export default function TemplateAuroraGlass({ card, isRTL, onLinkClick }) {
   const bio       = isRTL && card.bio_ar     ? card.bio_ar     : card.bio;
   const initials  = (name || 'R').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
-  const socialEntries = Object.entries(card.social_links || {}).filter(([, v]) => v);
+  const socialEntries = getSocialEntries(card.social_links);
 
   const handleSave = () => {
     const vcard = [
@@ -270,11 +270,11 @@ export default function TemplateAuroraGlass({ card, isRTL, onLinkClick }) {
                 {isRTL ? 'تواصل معي' : 'Connect'}
               </p>
               <div className="flex justify-center flex-wrap gap-3">
-                {socialEntries.map(([platform, url]) => {
+                {socialEntries.map(([platform, url], i) => {
                   const Icon = SOCIAL_ICONS[platform] || Globe;
                   const href = url.startsWith('http') ? url : `https://${url}`;
                   return (
-                    <a key={platform} href={href} target="_blank" rel="noreferrer"
+                    <a key={`${platform}-${i}`} href={href} target="_blank" rel="noreferrer"
                       onClick={() => onLinkClick?.(platform)}
                       className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center text-white/80 hover:text-white hover:scale-110 transition-all"
                       style={{ border:'1px solid rgba(255,255,255,.15)' }}>
